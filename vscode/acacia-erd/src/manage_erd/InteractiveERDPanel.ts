@@ -19,7 +19,9 @@ export class InteractiveERDPanel {
                 column || vscode.ViewColumn.One,
                 {
                     enableScripts: true,
-                    localResourceRoots: [vscode.Uri.file(path.join(extensionPath, 'resources'))]
+                    localResourceRoots: [vscode.Uri.file(path.join(extensionPath, 'resources'))],
+                    retainContextWhenHidden: true
+
                 }
             );
 
@@ -40,6 +42,9 @@ export class InteractiveERDPanel {
                 case 'entityClicked':
                     vscode.window.showInformationMessage(`Entity clicked: ${message.entity}`);
                     break;
+                case 'openEntityDetails':
+                    this.openEntityDetails(message.entity);
+                    break;
             }
         });
     }
@@ -51,7 +56,31 @@ export class InteractiveERDPanel {
 
     private _update() {
         const htmlPath = path.join(this._extensionPath, 'resources', 'interactive_erd.html');
-        const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+        let htmlContent = fs.readFileSync(htmlPath, 'utf8');
+
+        const scriptPathOnDisk = vscode.Uri.file(
+            path.join(this._extensionPath, 'resources', 'interactive_erd.js')
+        );
+        const scriptUri = this._panel.webview.asWebviewUri(scriptPathOnDisk);
+
+        htmlContent = htmlContent.replace(
+            '<script src="/resources/interactive_erd.js"></script>',
+            `<script src="${scriptUri}"></script>`
+        );
+
         this._panel.webview.html = htmlContent;
     }
+
+    private async openEntityDetails(entityName: string) {
+        const entityDetails = {
+            name: entityName,
+            description: "Description of " + entityName,
+            columns: ["Column1", "Column2", "Column3"]
+        };
+
+        const jsonContent = JSON.stringify(entityDetails, null, 2);
+        const document = await vscode.workspace.openTextDocument({ content: jsonContent, language: 'json' });
+        await vscode.window.showTextDocument(document);
+    }    
+
 }
