@@ -42,6 +42,38 @@
                 entity: 'Entity 1'
             });
         });
+
+        // Dragging functionality
+        const svg = document.getElementById('erd-svg');
+        const entity = document.querySelector('.entity');
+        let isDragging = false;
+        let offsetX, offsetY;
+
+        entity.addEventListener('mousedown', (event) => {
+            isDragging = true;
+            offsetX = event.clientX - parseFloat(entity.getAttribute('x'));
+            offsetY = event.clientY - parseFloat(entity.getAttribute('y'));
+        });
+
+        svg.addEventListener('mousemove', (event) => {
+            if (isDragging) {
+                const x = event.clientX - offsetX;
+                const y = event.clientY - offsetY;
+                entity.setAttribute('x', x);
+                entity.setAttribute('y', y);
+                const text = svg.querySelector('text');
+                text.setAttribute('x', x + 25);
+                text.setAttribute('y', y + 25);
+            }
+        });
+
+        svg.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        svg.addEventListener('mouseleave', () => {
+            isDragging = false;
+        });
     </script>
 </body>
 </html>
