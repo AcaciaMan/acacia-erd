@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 
+import { InteractiveERDPanel } from './InteractiveERDPanel';
 
 export class ERDViewProvider implements vscode.WebviewViewProvider {
     constructor(private readonly context: vscode.ExtensionContext) {}
@@ -16,13 +17,15 @@ export class ERDViewProvider implements vscode.WebviewViewProvider {
         const htmlContent = fs.readFileSync(htmlPath, 'utf8');
         webviewView.webview.html = htmlContent;
 
-        webviewView.webview.onDidReceiveMessage(message => {
+        webviewView.webview.onDidReceiveMessage(async message => {
             switch (message.command) {
                 case 'createERD':
                     vscode.window.showInformationMessage('Creating a new ERD...');
                     // Add your logic to create a new ERD here
+                    InteractiveERDPanel.createOrShow(this.context.extensionPath);
                     break;
             }
         });
     }
+
 }
