@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Entity</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin-top: 10px;
+        }
+        input, textarea {
+            padding: 5px;
+            font-size: 14px;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Edit Entity</h1>
+    <form id="edit-entity-form">
+        <input type="hidden" id="entity-id" name="id">
+        <label for="entity-name">Name:</label>
+        <input type="text" id="entity-name" name="name" required>
+
+        <label for="entity-description">Description:</label>
+        <textarea id="entity-description" name="description" rows="4" required></textarea>
+
+        <label for="entity-columns">Columns (comma-separated):</label>
+        <input type="text" id="entity-columns" name="columns" required>
+
+        <button type="submit">Save</button>
+    </form>
+
+    <script>
+        const vscode = acquireVsCodeApi();
+
+        // Get the entity data from the VSCode extension
+        window.addEventListener('message', event => {
+            const entity = event.data;
+            document.getElementById('entity-id').value = entity.id;
+            document.getElementById('entity-name').value = entity.name;
+            document.getElementById('entity-description').value = entity.description;
+            document.getElementById('entity-columns').value = entity.columns.join(', ');
+        });
+
+        // Handle form submission
+        document.getElementById('edit-entity-form').addEventListener('submit', event => {
+            event.preventDefault();
+            const id = document.getElementById('entity-id').value;
+            const name = document.getElementById('entity-name').value;
+            const description = document.getElementById('entity-description').value;
+            const columns = document.getElementById('entity-columns').value.split(',').map(col => col.trim());
+
+            vscode.postMessage({
+                command: 'saveEntity',
+                entity: { id, name, description, columns }
+            });
+        });
+    </script>
+</body>
+</html>

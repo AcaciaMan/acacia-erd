@@ -3,14 +3,14 @@ const vscode = acquireVsCodeApi();
 document.querySelector('.entity').addEventListener('click', () => {
     vscode.postMessage({
         command: 'entityClicked',
-        entity: 'Entity 1'
+        entity: { id: 'entity1', name: 'Entity 1' }
     });
 });
 
 document.querySelector('.entity').addEventListener('dblclick', () => {
     vscode.postMessage({
         command: 'openEntityDetails',
-        entity: 'Entity 1'
+        entity: { id: 'entity1', name: 'Entity 1' }
     });
 });
 
@@ -58,8 +58,10 @@ svg.addEventListener('contextmenu', (event) => {
 });
 
 function addNewEntity(x, y) {
+    const newEntityId = `entity${Date.now()}`;
     const newEntity = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     newEntity.setAttribute('class', 'entity');
+    newEntity.setAttribute('id', newEntityId);
     newEntity.setAttribute('transform', `translate(${x}, ${y})`);
 
     const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -81,14 +83,36 @@ function addNewEntity(x, y) {
     newEntity.addEventListener('click', () => {
         vscode.postMessage({
             command: 'entityClicked',
-            entity: 'New Entity'
+            entity: { id: newEntityId, name: 'New Entity' }
         });
     });
 
     newEntity.addEventListener('dblclick', () => {
         vscode.postMessage({
             command: 'openEntityDetails',
-            entity: 'New Entity'
+            entity: { id: newEntityId, name: 'New Entity' }
         });
     });
+}
+
+// Handle messages from the extension
+window.addEventListener('message', event => {
+    const message = event.data;
+    switch (message.command) {
+        case 'updateEntity':
+            console.log('Updating entity:', message.entity);
+            updateEntity(message.entity);
+            break;
+    }
+});
+
+function updateEntity(entity) {
+    const entityGroup = document.getElementById(entity.id);
+    if (entityGroup) {
+        const text = entityGroup.querySelector('text');
+        text.textContent = entity.name;
+        console.log('Entity updated:', entity);
+        console.log('text content:', text.textContent);
+        // Update other attributes if needed
+    }
 }
