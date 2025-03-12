@@ -28,9 +28,11 @@
 <body>
     <h1>Interactive ERD</h1>
     <svg id="erd-svg">
-        <!-- Example ERD element -->
-        <rect class="entity" x="50" y="50" width="100" height="50" fill="lightblue" />
-        <text x="75" y="75" font-family="Arial" font-size="14">Entity 1</text>
+        <!-- Grouping the rect and text elements together -->
+        <g class="entity" transform="translate(50, 50)">
+            <rect width="100" height="50" fill="lightblue" />
+            <text x="25" y="25" font-family="Arial" font-size="14">Entity 1</text>
+        </g>
     </svg>
 
     <script>
@@ -47,23 +49,21 @@
         const svg = document.getElementById('erd-svg');
         const entity = document.querySelector('.entity');
         let isDragging = false;
-        let offsetX, offsetY;
+        let startX, startY;
 
         entity.addEventListener('mousedown', (event) => {
             isDragging = true;
-            offsetX = event.clientX - parseFloat(entity.getAttribute('x'));
-            offsetY = event.clientY - parseFloat(entity.getAttribute('y'));
+            const transform = entity.getAttribute('transform');
+            const translate = transform.match(/translate\(([^,]+),([^)]+)\)/);
+            startX = event.clientX - parseFloat(translate[1]);
+            startY = event.clientY - parseFloat(translate[2]);
         });
 
         svg.addEventListener('mousemove', (event) => {
             if (isDragging) {
-                const x = event.clientX - offsetX;
-                const y = event.clientY - offsetY;
-                entity.setAttribute('x', x);
-                entity.setAttribute('y', y);
-                const text = svg.querySelector('text');
-                text.setAttribute('x', x + 25);
-                text.setAttribute('y', y + 25);
+                const x = event.clientX - startX;
+                const y = event.clientY - startY;
+                entity.setAttribute('transform', `translate(${x}, ${y})`);
             }
         });
 
