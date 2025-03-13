@@ -29,6 +29,7 @@
 </head>
 <body>
     <button id="create-svg-button">Create SVG from ERD</button>
+    <button id="load-svg-button">Load ERD from SVG</button>
     <svg id="erd-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
         <!-- Grouping the rect and text elements together -->
         <g class="entity" id="entity1" data-entity='{"id": "entity1",  "name": "Entity 1", "description": "Description of Entity 1"}' transform="translate(50, 50)">
@@ -46,6 +47,21 @@
                 command: 'createSVG',
                 svgContent: svgContent
             });
+        });
+
+        document.getElementById('load-svg-button').addEventListener('click', () => {
+            vscode.postMessage({
+                command: 'loadSVG'
+            });
+        });
+
+        window.addEventListener('message', event => {
+            const message = event.data;
+            switch (message.command) {
+                case 'loadSVGContent':
+                    document.getElementById('erd-svg').outerHTML = message.svgContent;
+                    break;
+            }
         });
     </script>   
 </body>
