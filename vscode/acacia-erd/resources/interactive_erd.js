@@ -65,8 +65,22 @@ function updateEntity(entity) {
     if (entityGroup) {
         const text = entityGroup.querySelector('text');
         text.textContent = entity.name;
+
+        // Measure the width of the text
+        const svg = document.getElementById('erd-svg');
+        const tempText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        tempText.setAttribute('font-family', 'Arial');
+        tempText.setAttribute('font-size', '14');
+        tempText.textContent = entity.name;
+        svg.appendChild(tempText);
+        const textWidth = tempText.getBBox().width;
+        svg.removeChild(tempText);
+
+        // Update the width of the rectangle
+        const rect = entityGroup.querySelector('rect');
+        rect.setAttribute('width', textWidth + 40); // Add some padding
+
         console.log('Entity updated:', entity);
         console.log('text content:', text.textContent);
-        // Update other attributes if needed
     }
 }
