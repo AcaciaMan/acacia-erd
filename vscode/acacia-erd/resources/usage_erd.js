@@ -1,4 +1,3 @@
-
 svg.addEventListener('mousedown', (event) => {
     if (event.target.closest('.usage')) {
         isDragging = true;
@@ -116,11 +115,18 @@ function addNewUsage(x, y) {
     const newUsage = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     newUsage.setAttribute('class', 'usage');
     newUsage.setAttribute('id', newUsageId);
-    newUsage.setAttribute('x', x);
-    newUsage.setAttribute('y', y);
+    newUsage.setAttribute('transform', `translate(${x}, ${y})`);
     newUsage.setAttribute('font-family', 'Arial');
-    newUsage.setAttribute('font-size', '14');
-    newUsage.textContent = 'New Usage';
+    newUsage.setAttribute('font-size', '12');
+
+    const lines = 'New Usage'.split('\n');
+    lines.forEach((line, index) => {
+        const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+        tspan.setAttribute('x', 0);
+        tspan.setAttribute('dy', index === 0 ? '0' : '1.2em');
+        tspan.textContent = line;
+        newUsage.appendChild(tspan);
+    });
 
     svg.appendChild(newUsage);
 
@@ -152,7 +158,18 @@ window.addEventListener('message', event => {
 function updateUsage(usage) {
     const usageText = document.getElementById(usage.id);
     if (usageText) {
-        usageText.textContent = usage.text;
-        // Update other attributes if needed
+        // Clear existing tspans
+        while (usageText.firstChild) {
+            usageText.removeChild(usageText.firstChild);
+        }
+
+        const lines = usage.text.split('\n');
+        lines.forEach((line, index) => {
+            const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+            tspan.setAttribute('x', 0);
+            tspan.setAttribute('dy', index === 0 ? '0' : '1.2em');
+            tspan.textContent = line;
+            usageText.appendChild(tspan);
+        });
     }
 }
