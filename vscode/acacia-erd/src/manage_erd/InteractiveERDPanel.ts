@@ -194,7 +194,12 @@ function saveSVGFile(svgContent: string) {
 
     vscode.window.showSaveDialog(options).then(fileUri => {
         if (fileUri) {
-            fs.writeFileSync(fileUri.fsPath, svgContent);
+            const svgWithDimensions = svgContent.replace(
+                '<svg ',
+                '<svg width="1000" height="1000" style="background-color: white;" '
+            );
+
+            fs.writeFileSync(fileUri.fsPath, svgWithDimensions);
             vscode.window.showInformationMessage('SVG file saved successfully');
         }
     });
