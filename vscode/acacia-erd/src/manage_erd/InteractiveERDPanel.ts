@@ -220,9 +220,14 @@ function loadSVGFile(webview: vscode.Webview) {
     vscode.window.showOpenDialog(options).then(fileUri => {
         if (fileUri && fileUri[0]) {
             const svgContent = fs.readFileSync(fileUri[0].fsPath, 'utf8');
+
+            const svgWithoutDimensions = svgContent.replace(
+                /<svg[^>]*xml/,
+                '<svg xml'
+            );
             webview.postMessage({
                 command: 'loadSVGContent',
-                svgContent: svgContent
+                svgContent: svgWithoutDimensions
             });
         }
     });
