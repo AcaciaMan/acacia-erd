@@ -47,6 +47,15 @@ export class InteractiveERDPanel {
                 case 'saveEntity':
                     this.saveEntity(message.entity);
                     break;
+                case 'usageClicked':
+                    vscode.window.showInformationMessage(`Usage clicked: ${message.usage.text}`);
+                    break;
+                case 'openUsageDetails':
+                    this.openUsageDetails(message.usage);
+                    break;
+                case 'saveUsage':
+                    this.saveUsage(message.usage);
+                    break;
             }
         });
     }
@@ -65,9 +74,17 @@ export class InteractiveERDPanel {
         );
         const scriptUri = this._panel.webview.asWebviewUri(scriptPathOnDisk);
 
+        const usageScriptPathOnDisk = vscode.Uri.file(
+            path.join(this._extensionPath, 'resources', 'usage_erd.js')
+        );
+        const usageScriptUri = this._panel.webview.asWebviewUri(usageScriptPathOnDisk);
+
         htmlContent = htmlContent.replace(
             '<script src="/resources/interactive_erd.js"></script>',
             `<script src="${scriptUri}"></script>`
+        ).replace(
+            '<script src="/resources/usage_erd.js"></script>',
+            `<script src="${usageScriptUri}"></script>`
         );
 
         this._panel.webview.html = htmlContent;
@@ -114,6 +131,49 @@ export class InteractiveERDPanel {
             InteractiveERDPanel.currentPanel._panel.webview.postMessage({
                 command: 'updateEntity',
                 entity: entity
+            });
+        }
+    }
+
+    private async openUsageDetails(usage: { id: string, text: string }) {
+        const panel = vscode.window.createWebviewPanel(
+            'editUsage',
+            `Edit Usage`,
+            vscode.ViewColumn.One,
+            {
+                enableScripts: true,
+                localResourceRoots: [vscode.Uri.file(path.join(this._extensionPath, 'resources'))],
+                retainContextWhenHidden: true
+            }
+        );
+
+        const htmlPath = path.join(this._extensionPath, 'resources', 'edit_usage.html');
+        let htmlContent = fs.readFileSync(htmlPath, 'utf8');
+        panel.webview.html = htmlContent;
+
+        const usageDetails = {
+            id: usage.id,
+            text: usage.text
+        };
+
+        panel.webview.onDidReceiveMessage(message => {
+            switch (message.command) {
+                case 'saveUsage':
+                    this.saveUsage(message.usage);
+                    break;
+            }
+        });
+
+        panel.webview.postMessage(usageDetails);
+    }
+
+    private saveUsage(usage: { id: string, text: string }) {
+        vscode.window.showInformationMessage(`Usage saved: ${usage.text}`);
+        // Send a message to the interactive ERD webview to update the usage
+        if (InteractiveERDPanel.currentPanel) {
+            InteractiveERDPanel.currentPanel._panel.webview.postMessage({
+                command: 'updateUsage',
+                usage: usage
             });
         }
     }

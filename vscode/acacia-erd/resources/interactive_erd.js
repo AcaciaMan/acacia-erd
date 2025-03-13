@@ -49,52 +49,6 @@ svg.addEventListener('mouseleave', () => {
     currentEntity = null;
 });
 
-// Add new entity on right-click
-svg.addEventListener('contextmenu', (event) => {
-    event.preventDefault();
-    const x = event.clientX - svg.getBoundingClientRect().left;
-    const y = event.clientY - svg.getBoundingClientRect().top;
-    addNewEntity(x, y);
-});
-
-function addNewEntity(x, y) {
-    const newEntityId = `entity${Date.now()}`;
-    const newEntity = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-    newEntity.setAttribute('class', 'entity');
-    newEntity.setAttribute('id', newEntityId);
-    newEntity.setAttribute('transform', `translate(${x}, ${y})`);
-
-    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    rect.setAttribute('width', '100');
-    rect.setAttribute('height', '50');
-    rect.setAttribute('fill', 'lightblue');
-
-    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    text.setAttribute('x', '25');
-    text.setAttribute('y', '25');
-    text.setAttribute('font-family', 'Arial');
-    text.setAttribute('font-size', '14');
-    text.textContent = 'New Entity';
-
-    newEntity.appendChild(rect);
-    newEntity.appendChild(text);
-    svg.appendChild(newEntity);
-
-    newEntity.addEventListener('click', () => {
-        vscode.postMessage({
-            command: 'entityClicked',
-            entity: { id: newEntityId, name: 'New Entity' }
-        });
-    });
-
-    newEntity.addEventListener('dblclick', () => {
-        vscode.postMessage({
-            command: 'openEntityDetails',
-            entity: { id: newEntityId, name: 'New Entity' }
-        });
-    });
-}
-
 // Handle messages from the extension
 window.addEventListener('message', event => {
     const message = event.data;

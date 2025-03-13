@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Usage</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin-top: 10px;
+        }
+        textarea {
+            padding: 5px;
+            font-size: 14px;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Edit Usage</h1>
+    <form id="edit-usage-form">
+        <input type="hidden" id="usage-id" name="id">
+        <label for="usage-text">Text:</label>
+        <textarea id="usage-text" name="text" rows="4" required></textarea>
+
+        <button type="submit">Save</button>
+    </form>
+
+    <script>
+        const vscode = acquireVsCodeApi();
+
+        // Get the usage data from the VSCode extension
+        window.addEventListener('message', event => {
+            const usage = event.data;
+            document.getElementById('usage-id').value = usage.id;
+            document.getElementById('usage-text').value = usage.text;
+        });
+
+        // Handle form submission
+        document.getElementById('edit-usage-form').addEventListener('submit', event => {
+            event.preventDefault();
+            const id = document.getElementById('usage-id').value;
+            const text = document.getElementById('usage-text').value;
+
+            vscode.postMessage({
+                command: 'saveUsage',
+                usage: { id, text }
+            });
+        });
+    </script>
+</body>
+</html>
