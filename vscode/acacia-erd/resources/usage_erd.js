@@ -125,6 +125,7 @@ function addNewUsage(x, y) {
     const newUsage = document.createElementNS('http://www.w3.org/2000/svg', 'text');
     newUsage.setAttribute('class', 'usage');
     newUsage.setAttribute('id', newUsageId);
+    newUsage.setAttribute('data-usage', JSON.stringify({ id: newUsageId, text: 'New Usage' }));
     newUsage.setAttribute('transform', `translate(${x}, ${y})`);
     newUsage.setAttribute('font-family', 'Arial');
     newUsage.setAttribute('font-size', '12');
@@ -140,19 +141,27 @@ function addNewUsage(x, y) {
 
     svg.appendChild(newUsage);
 
-    newUsage.addEventListener('click', () => {
-        vscode.postMessage({
-            command: 'usageClicked',
-            usage: { id: newUsageId, text: 'New Usage' }
+
+    document.querySelectorAll('.usage').forEach(entityElement => {
+        entityElement.addEventListener('click', (event) => {
+            const entityData = JSON.parse(entityElement.getAttribute('data-usage'));
+    
+            vscode.postMessage({
+                command: 'usageClicked',
+                usage: entityData
+            });
+        });
+    
+        entityElement.addEventListener('dblclick', (event) => {
+            const entityData = JSON.parse(entityElement.getAttribute('data-usage'));
+    
+            vscode.postMessage({
+                command: 'openUsageDetails',
+                usage: entityData
+            });
         });
     });
 
-    newUsage.addEventListener('dblclick', () => {
-        vscode.postMessage({
-            command: 'openUsageDetails',
-            usage: { id: newUsageId, text: 'New Usage' }
-        });
-    });
 }
 
 // Handle messages from the extension
@@ -172,6 +181,9 @@ function updateUsage(usage) {
         while (usageText.firstChild) {
             usageText.removeChild(usageText.firstChild);
         }
+
+        // Update the data-usage attribute
+        usageText.setAttribute('data-usage', JSON.stringify(usage));
 
         const lines = usage.text.split('\n');
         lines.forEach((line, index) => {
