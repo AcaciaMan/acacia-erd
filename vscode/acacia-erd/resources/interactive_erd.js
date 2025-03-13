@@ -1,16 +1,22 @@
 const vscode = acquireVsCodeApi();
 
-document.querySelector('.entity').addEventListener('click', () => {
-    vscode.postMessage({
-        command: 'entityClicked',
-        entity: { id: 'entity1', name: 'Entity 1' }
-    });
-});
+document.querySelectorAll('.entity').forEach(entityElement => {
+    entityElement.addEventListener('click', (event) => {
+        const entityData = JSON.parse(entityElement.getAttribute('data-entity'));
 
-document.querySelector('.entity').addEventListener('dblclick', () => {
-    vscode.postMessage({
-        command: 'openEntityDetails',
-        entity: { id: 'entity1', name: 'Entity 1' }
+        vscode.postMessage({
+            command: 'entityClicked',
+            entity: entityData
+        });
+    });
+
+    entityElement.addEventListener('dblclick', (event) => {
+        const entityData = JSON.parse(entityElement.getAttribute('data-entity'));
+
+        vscode.postMessage({
+            command: 'openEntityDetails',
+            entity: entityData
+        });
     });
 });
 
@@ -63,6 +69,10 @@ window.addEventListener('message', event => {
 function updateEntity(entity) {
     const entityGroup = document.getElementById(entity.id);
     if (entityGroup) {
+
+        // Update the data-entity attribute
+        entityGroup.setAttribute('data-entity', JSON.stringify(entity));
+
         const text = entityGroup.querySelector('text');
         text.textContent = entity.name;
 

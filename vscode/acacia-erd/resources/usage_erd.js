@@ -77,6 +77,9 @@ function addNewEntity(x, y) {
     const newEntity = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     newEntity.setAttribute('class', 'entity');
     newEntity.setAttribute('id', newEntityId);
+    const entityData = { id: newEntityId, name: 'New Entity' };
+    newEntity.setAttribute('data-entity', JSON.stringify(entityData));
+
     newEntity.setAttribute('transform', `translate(${x}, ${y})`);
 
     const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
@@ -95,19 +98,26 @@ function addNewEntity(x, y) {
     newEntity.appendChild(text);
     svg.appendChild(newEntity);
 
-    newEntity.addEventListener('click', () => {
-        vscode.postMessage({
-            command: 'entityClicked',
-            entity: { id: newEntityId, name: 'New Entity' }
+    document.querySelectorAll('.entity').forEach(entityElement => {
+        entityElement.addEventListener('click', (event) => {
+            const entityData = JSON.parse(entityElement.getAttribute('data-entity'));
+    
+            vscode.postMessage({
+                command: 'entityClicked',
+                entity: entityData
+            });
+        });
+    
+        entityElement.addEventListener('dblclick', (event) => {
+            const entityData = JSON.parse(entityElement.getAttribute('data-entity'));
+    
+            vscode.postMessage({
+                command: 'openEntityDetails',
+                entity: entityData
+            });
         });
     });
 
-    newEntity.addEventListener('dblclick', () => {
-        vscode.postMessage({
-            command: 'openEntityDetails',
-            entity: { id: newEntityId, name: 'New Entity' }
-        });
-    });
 }
 
 function addNewUsage(x, y) {
