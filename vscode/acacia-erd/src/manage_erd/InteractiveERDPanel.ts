@@ -56,6 +56,9 @@ export class InteractiveERDPanel {
                 case 'saveUsage':
                     this.saveUsage(message.usage);
                     break;
+                case 'createSVG':
+                    saveSVGFile(message.svgContent);
+                    break;    
             }
         });
     }
@@ -177,4 +180,22 @@ export class InteractiveERDPanel {
             });
         }
     }
+
+    
+}
+
+function saveSVGFile(svgContent: string) {
+    const options: vscode.SaveDialogOptions = {
+        saveLabel: 'Save SVG',
+        filters: {
+            'SVG Files': ['svg']
+        }
+    };
+
+    vscode.window.showSaveDialog(options).then(fileUri => {
+        if (fileUri) {
+            fs.writeFileSync(fileUri.fsPath, svgContent);
+            vscode.window.showInformationMessage('SVG file saved successfully');
+        }
+    });
 }

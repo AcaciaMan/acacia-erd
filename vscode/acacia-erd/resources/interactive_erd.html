@@ -28,7 +28,7 @@
     </style>
 </head>
 <body>
-    <h1>Interactive ERD</h1>
+    <button id="create-svg-button">Create SVG from ERD</button>
     <svg id="erd-svg">
         <!-- Grouping the rect and text elements together -->
         <g class="entity" id="entity1" data-entity='{"id": "entity1",  "name": "Entity 1", "description": "Description of Entity 1"}' transform="translate(50, 50)">
@@ -39,5 +39,14 @@
 
     <script src="/resources/interactive_erd.js"></script>
     <script src="/resources/usage_erd.js"></script>
+    <script>
+        document.getElementById('create-svg-button').addEventListener('click', () => {
+            const svgContent = document.getElementById('erd-svg').outerHTML;
+            vscode.postMessage({
+                command: 'createSVG',
+                svgContent: svgContent
+            });
+        });
+    </script>   
 </body>
 </html>
