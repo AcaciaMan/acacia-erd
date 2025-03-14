@@ -78,6 +78,16 @@
                     attachSVGUsageEventListeners();
                     attachUsageEventListeners();
                     break;
+                case 'loadEntities':
+                    let entities = message.entities;
+                    applyForceLayout(entities, 800, 600);
+                    const svgContent = generateSVG(entities);
+                    document.getElementById('erd-svg').outerHTML = svgContent;
+                    attachSVGEntityEventListeners();
+                    attachEntityEventListeners();
+                    attachSVGUsageEventListeners();
+                    attachUsageEventListeners();
+                    break;    
             }
         });
 
@@ -90,18 +100,9 @@
 
 
         document.getElementById('generate-erd-button').addEventListener('click', () => {
-            const entities = [
-                { id: 'entity1', name: 'Entity 1', columns: ['id', 'name', 'description']  },
-                { id: 'entity2', name: 'Entity 2', columns: ['id', 'name', 'description']  }
-                // Add more entities as needed
-            ];
-            applyForceLayout(entities, 800, 600);
-            const svgContent = generateSVG(entities);
-            document.getElementById('erd-svg').outerHTML = svgContent;
-            attachSVGEntityEventListeners();
-            attachEntityEventListeners();
-            attachSVGUsageEventListeners();
-            attachUsageEventListeners();
+            vscode.postMessage({
+                command: 'chooseJSON'
+            });
         });        
 
     </script>   

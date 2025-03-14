@@ -83,16 +83,49 @@ function generateSVG(entities) {
         group.setAttribute('transform', `translate(${entity.x}, ${entity.y})`);
 
         const rect = document.createElementNS(svgNamespace, 'rect');
-        rect.setAttribute('width', '100');
-        rect.setAttribute('height', '50');
+        rect.setAttribute('x', '0');
+        rect.setAttribute('y', '0');
         rect.setAttribute('fill', 'lightblue');
 
         const text = document.createElementNS(svgNamespace, 'text');
-        text.setAttribute('x', '25');
-        text.setAttribute('y', '25');
-        text.setAttribute('font-family', 'Arial');
-        text.setAttribute('font-size', '14');
-        text.textContent = entity.name;
+        // Remove existing tspan elements
+        while (text.firstChild) {
+            text.removeChild(text.firstChild);
+        }
+
+        // Add the entity name as the first tspan
+        const nameTspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+        nameTspan.setAttribute('x', '20');
+        nameTspan.setAttribute('y', '4');
+        nameTspan.setAttribute('dy', '1.2em'); // Line height
+        nameTspan.setAttribute('font-size', '14');
+        nameTspan.textContent = entity.name;
+        text.appendChild(nameTspan);
+
+        // Add columns as tspan elements
+        if (entity.columns) {
+            entity.columns.forEach(column => {
+            const columnTspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+            columnTspan.setAttribute('x', '5');
+            columnTspan.setAttribute('font-size', '12');
+            columnTspan.setAttribute('dy', '1.2em'); // Line height
+            columnTspan.textContent = column;
+            text.appendChild(columnTspan);
+            });
+        }
+
+        // Temporarily attach to the DOM to measure
+        const tempsvg = document.createElementNS(svgNamespace, 'svg');
+        tempsvg.appendChild(text);
+        document.body.appendChild(tempsvg);
+
+        // Update rect height and width based on text content
+        const textBBox = text.getBBox();
+        rect.setAttribute('width', textBBox.width + 40);
+        rect.setAttribute('height', textBBox.height + 20);
+
+        // Remove from DOM after measuring
+        document.body.removeChild(tempsvg);
 
         group.appendChild(rect);
         group.appendChild(text);

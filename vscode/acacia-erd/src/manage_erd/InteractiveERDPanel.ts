@@ -67,6 +67,9 @@ export class InteractiveERDPanel {
                 case 'loadSVG':
                     this._place = await loadSVGFile(panel.webview);
                     break;    
+                case 'chooseJSON':
+                    chooseJSONFile(panel.webview);
+                    break;    
             }
         });
     }
@@ -256,4 +259,25 @@ async function loadSVGFile(webview: vscode.Webview): Promise<vscode.Uri | undefi
 
     return result;
 
+}
+
+function chooseJSONFile(webview: vscode.Webview) {
+    const options: vscode.OpenDialogOptions = {
+        canSelectMany: false,
+        openLabel: 'Open JSON',
+        filters: {
+            'JSON Files': ['json']
+        }
+    };
+
+    vscode.window.showOpenDialog(options).then(fileUri => {
+        if (fileUri && fileUri[0]) {
+            const jsonContent = fs.readFileSync(fileUri[0].fsPath, 'utf8');
+            const entities = JSON.parse(jsonContent);
+            webview.postMessage({
+                command: 'loadEntities',
+                entities: entities
+            });
+        }
+    });
 }
