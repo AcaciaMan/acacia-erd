@@ -222,8 +222,8 @@ function loadSVGFile(webview: vscode.Webview) {
             const svgContent = fs.readFileSync(fileUri[0].fsPath, 'utf8');
 
             const svgWithoutDimensions = svgContent.replace(
-                /<svg[^>]*xml/,
-                '<svg xml'
+                /<svg[^>]*?xml/,
+                '<svg id="erd-svg" xml'
             );
             webview.postMessage({
                 command: 'loadSVGContent',

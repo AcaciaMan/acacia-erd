@@ -42,7 +42,8 @@
     <script src="/resources/usage_erd.js"></script>
     <script>
         document.getElementById('create-svg-button').addEventListener('click', () => {
-            const svgContent = document.getElementById('erd-svg').outerHTML;
+            const svgElement = document.getElementById('erd-svg');
+            const svgContent = svgElement.outerHTML;
             vscode.postMessage({
                 command: 'createSVG',
                 svgContent: svgContent
