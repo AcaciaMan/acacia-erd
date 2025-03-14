@@ -28,7 +28,8 @@
     </style>
 </head>
 <body>
-    <button id="create-svg-button">Create SVG from ERD</button>
+    <button id="save-svg-button">Save</button>
+    <button id="create-svg-button">Save as</button>
     <button id="load-svg-button">Load ERD from SVG</button>
     <svg id="erd-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
         <!-- Grouping the rect and text elements together -->
@@ -46,6 +47,15 @@
             const svgContent = svgElement.outerHTML;
             vscode.postMessage({
                 command: 'createSVG',
+                svgContent: svgContent
+            });
+        });
+
+        document.getElementById('save-svg-button').addEventListener('click', () => {
+            const svgElement = document.getElementById('erd-svg');
+            const svgContent = svgElement.outerHTML;
+            vscode.postMessage({
+                command: 'saveSVG',
                 svgContent: svgContent
             });
         });

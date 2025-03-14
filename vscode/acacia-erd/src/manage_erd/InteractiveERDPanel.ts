@@ -6,6 +6,7 @@ export class InteractiveERDPanel {
     public static currentPanel: InteractiveERDPanel | undefined;
     private readonly _panel: vscode.WebviewPanel;
     private readonly _extensionPath: string;
+    private _place: vscode.Uri | undefined;
 
     public static createOrShow(extensionPath: string) {
         const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
@@ -36,7 +37,7 @@ export class InteractiveERDPanel {
 
         this._panel.onDidDispose(() => this.dispose(), null, []);
 
-        this._panel.webview.onDidReceiveMessage(message => {
+        this._panel.webview.onDidReceiveMessage(async message => {
             switch (message.command) {
                 case 'entityClicked':
                     vscode.window.showInformationMessage(`Entity clicked: ${message.entity.name}`);
@@ -57,10 +58,14 @@ export class InteractiveERDPanel {
                     this.saveUsage(message.usage);
                     break;
                 case 'createSVG':
-                    saveSVGFile(message.svgContent);
+                    this._place = await saveSVGFile(message.svgContent, undefined);
                     break;    
+                case 'saveSVG':
+                    console.log('saveSVG', this._place?.fsPath);
+                        this._place = await saveSVGFile(message.svgContent, this._place);
+                        break;     
                 case 'loadSVG':
-                    loadSVGFile(panel.webview);
+                    this._place = await loadSVGFile(panel.webview);
                     break;    
             }
         });
@@ -187,48 +192,59 @@ export class InteractiveERDPanel {
     
 }
 
-function saveSVGFile(svgContent: string) {
-    const options: vscode.SaveDialogOptions = {
-        saveLabel: 'Save SVG',
-        filters: {
-            'SVG Files': ['svg']
-        }
-    };
+async function saveSVGFile(svgContent: string, place: vscode.Uri | undefined): Promise<vscode.Uri | undefined> {
 
-    vscode.window.showSaveDialog(options).then(fileUri => {
-        if (fileUri) {
-            const svgWithDimensions = svgContent.replace(
-                '<svg ',
-                '<svg width="1000" height="1000" style="background-color: white;" '
-            );
+    let result: vscode.Uri | undefined = undefined;
+    if (place !== undefined) {
+        result = place;
+    } else {
+        const options: vscode.SaveDialogOptions = {
+            saveLabel: 'Save SVG',
+            filters: {
+                'SVG Files': ['svg']
+            }
+        };
 
-            fs.writeFileSync(fileUri.fsPath, svgWithDimensions);
-            vscode.window.showInformationMessage('SVG file saved successfully');
-        }
-    });
+        result = await vscode.window.showSaveDialog(options);
+    }
+
+  if (place !== undefined) {
+    const svgWithDimensions = svgContent.replace(
+      '<svg ',
+      '<svg width="1000" height="1000" style="background-color: white;" '
+    );
+
+    fs.writeFileSync(place.fsPath, svgWithDimensions);
+    vscode.window.showInformationMessage('SVG file saved successfully');   
+    result = place;
+  }
+    return result;
 }
 
-function loadSVGFile(webview: vscode.Webview) {
-    const options: vscode.OpenDialogOptions = {
+async function loadSVGFile(webview: vscode.Webview): Promise<vscode.Uri | undefined> {
+    let result: vscode.Uri | undefined = undefined;
+    const fileUri = await vscode.window.showOpenDialog({
         canSelectMany: false,
         openLabel: 'Open SVG',
         filters: {
             'SVG Files': ['svg']
         }
-    };
-
-    vscode.window.showOpenDialog(options).then(fileUri => {
-        if (fileUri && fileUri[0]) {
-            const svgContent = fs.readFileSync(fileUri[0].fsPath, 'utf8');
-
-            const svgWithoutDimensions = svgContent.replace(
-                /<svg[^>]*?xml/,
-                '<svg id="erd-svg" xml'
-            );
-            webview.postMessage({
-                command: 'loadSVGContent',
-                svgContent: svgWithoutDimensions
-            });
-        }
     });
+
+    if (fileUri && fileUri[0]) {
+        result = fileUri[0];
+        const svgContent = fs.readFileSync(fileUri[0].fsPath, 'utf8');
+
+        const svgWithoutDimensions = svgContent.replace(
+            /<svg[^>]*?xml/,
+            '<svg id="erd-svg" xml'
+        );
+        webview.postMessage({
+            command: 'loadSVGContent',
+            svgContent: svgWithoutDimensions
+        });
+    }
+
+    return result;
+
 }

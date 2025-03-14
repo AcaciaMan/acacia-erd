@@ -1,6 +1,6 @@
 <svg width="1000" height="1000" style="background-color: white;" id="erd-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
         <!-- Grouping the rect and text elements together -->
-        <g class="entity" id="entity1" data-entity="{&quot;id&quot;: &quot;entity1&quot;,  &quot;name&quot;: &quot;Entity 1&quot;, &quot;description&quot;: &quot;Description of Entity 1&quot;}" transform="translate(238, 112)">
+        <g class="entity" id="entity1" data-entity="{&quot;id&quot;: &quot;entity1&quot;,  &quot;name&quot;: &quot;Entity 1&quot;, &quot;description&quot;: &quot;Description of Entity 1&quot;}" transform="translate(456, 314)">
             <rect width="100" height="50" fill="lightblue"></rect>
             <text x="25" y="25" font-family="Arial" font-size="14">Entity 1</text>
         </g>
