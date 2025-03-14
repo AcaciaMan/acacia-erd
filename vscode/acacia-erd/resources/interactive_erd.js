@@ -83,19 +83,41 @@ function updateEntity(entity) {
         const text = entityGroup.querySelector('text');
         text.textContent = entity.name;
 
-        // Measure the width of the text
-        const svg = document.getElementById('erd-svg');
-        const tempText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        tempText.setAttribute('font-family', 'Arial');
-        tempText.setAttribute('font-size', '14');
-        tempText.textContent = entity.name;
-        svg.appendChild(tempText);
-        const textWidth = tempText.getBBox().width;
-        svg.removeChild(tempText);
 
-        // Update the width of the rectangle
+
+
+        // Remove existing tspan elements
+        while (text.firstChild) {
+            text.removeChild(text.firstChild);
+        }
+
+        // Add the entity name as the first tspan
+        const nameTspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+        nameTspan.setAttribute('x', '20');
+        nameTspan.setAttribute('font-size', '14');
+        nameTspan.textContent = entity.name;
+        text.appendChild(nameTspan);
+
+        // Add columns as tspan elements
+        if (entity.columns) {
+            entity.columns.forEach(column => {
+            const columnTspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+            columnTspan.setAttribute('x', '5');
+            columnTspan.setAttribute('font-size', '12');
+            columnTspan.setAttribute('dy', '1.2em'); // Line height
+            columnTspan.textContent = column;
+            text.appendChild(columnTspan);
+            });
+        }
+
+
+        // update rectangle width and height
+        const bbox = text.getBBox();
         const rect = entityGroup.querySelector('rect');
-        rect.setAttribute('width', textWidth + 40); // Add some padding
+        rect.setAttribute('width', bbox.width + 40);
+        rect.setAttribute('height', bbox.height + 20);
+
+        
 
         console.log('Entity updated:', entity);
         console.log('text content:', text.textContent);
