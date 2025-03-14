@@ -1,39 +1,44 @@
-svg.addEventListener('mousedown', (event) => {
-    if (event.target.closest('.usage')) {
-        isDragging = true;
-        currentUsage = event.target.closest('.usage');
-        const transform = currentUsage.getAttribute('transform');
-        const translate = transform.match(/translate\(([^,]+),([^)]+)\)/);
-        startX = event.clientX - parseFloat(translate[1]);
-        startY = event.clientY - parseFloat(translate[2]);
-    }
-});
+function attachSVGUsageEventListeners() {
 
-svg.addEventListener('mousemove', (event) => {
-    if (isDragging && currentUsage) {
-        const x = event.clientX - startX;
-        const y = event.clientY - startY;
-        currentUsage.setAttribute('transform', `translate(${x}, ${y})`);
-    }
-});
+    svg = document.getElementById('erd-svg');
 
-svg.addEventListener('mouseup', () => {
-    isDragging = false;
-    currentUsage = null;
-});
+    svg.addEventListener('mousedown', (event) => {
+        if (event.target.closest('.usage')) {
+            isDragging = true;
+            currentUsage = event.target.closest('.usage');
+            const transform = currentUsage.getAttribute('transform');
+            const translate = transform.match(/translate\(([^,]+),([^)]+)\)/);
+            startX = event.clientX - parseFloat(translate[1]);
+            startY = event.clientY - parseFloat(translate[2]);
+        }
+    });
 
-svg.addEventListener('mouseleave', () => {
-    isDragging = false;
-    currentUsage = null;
-});
+    svg.addEventListener('mousemove', (event) => {
+        if (isDragging && currentUsage) {
+            const x = event.clientX - startX;
+            const y = event.clientY - startY;
+            currentUsage.setAttribute('transform', `translate(${x}, ${y})`);
+        }
+    });
 
-// Add new entity or usage on right-click
-svg.addEventListener('contextmenu', (event) => {
-    event.preventDefault();
-    const x = event.clientX - svg.getBoundingClientRect().left;
-    const y = event.clientY - svg.getBoundingClientRect().top;
-    showContextMenu(x, y);
-});
+    svg.addEventListener('mouseup', () => {
+        isDragging = false;
+        currentUsage = null;
+    });
+
+    svg.addEventListener('mouseleave', () => {
+        isDragging = false;
+        currentUsage = null;
+    });
+
+    // Add new entity or usage on right-click
+    svg.addEventListener('contextmenu', (event) => {
+        event.preventDefault();
+        const x = event.clientX - svg.getBoundingClientRect().left;
+        const y = event.clientY - svg.getBoundingClientRect().top;
+        showContextMenu(x, y);
+    });
+}
 
 function showContextMenu(x, y) {
     const menu = document.createElement('div');
@@ -123,29 +128,32 @@ function addNewUsage(x, y) {
 
     svg.appendChild(newUsage);
 
+    attachUsageEventListeners();
 
+
+}
+
+function attachUsageEventListeners() {
     document.querySelectorAll('.usage').forEach(entityElement => {
         entityElement.addEventListener('click', (event) => {
             const entityData = JSON.parse(entityElement.getAttribute('data-usage'));
-    
+
             vscode.postMessage({
                 command: 'usageClicked',
                 usage: entityData
             });
         });
-    
+
         entityElement.addEventListener('dblclick', (event) => {
             const entityData = JSON.parse(entityElement.getAttribute('data-usage'));
-    
+
             vscode.postMessage({
                 command: 'openUsageDetails',
                 usage: entityData
             });
         });
     });
-
 }
-
 // Handle messages from the extension
 window.addEventListener('message', event => {
     const message = event.data;

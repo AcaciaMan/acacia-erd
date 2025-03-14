@@ -63,6 +63,8 @@
                     document.getElementById('erd-svg').outerHTML = message.svgContent;
                     attachSVGEntityEventListeners();
                     attachEntityEventListeners();
+                    attachSVGUsageEventListeners();
+                    attachUsageEventListeners();
                     break;
             }
         });
@@ -70,6 +72,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             attachSVGEntityEventListeners();
             attachEntityEventListeners();
+            attachSVGUsageEventListeners();
+            attachUsageEventListeners();            
         });
 
     </script>   
