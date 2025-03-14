@@ -1,0 +1,4 @@
+[
+{"id": "entity1", "name": "Entity 1", "columns": ["Column1", "Column 2"]},
+{"id": "entity2", "name": "Entity 2", "columns": ["Column1", "Column 2"]}
+]
