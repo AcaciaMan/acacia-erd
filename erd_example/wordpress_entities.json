@@ -1,0 +1,16 @@
+[
+{"id": "posts", "name": "posts", "columns": ["ID", "post_title", "post_name", "post_status", "post_category", "post_author", "post_date", "post_date_gmt", "post_content", "post_excerpt", "post_modified", "post_modified_gmt", "guid", "comment_count", "to_ping", "pinged", "post_content_filtered", "comment_status", "post_type"]},
+{"id": "categories", "name": "categories", "columns": ["cat_ID", "cat_name", "category_nicename", "category_description", "category_parent"]},
+{"id": "options", "name": "options", "columns": ["option_id", "option_name", "option_value"]},
+{"id": "post2cat", "name": "post2cat", "columns": ["post_id", "category_id"]},
+{"id": "terms", "name": "terms", "columns": ["term_id", "name", "slug", "term_group"]},
+{"id": "term_taxonomy", "name": "term_taxonomy", "columns": ["term_id", "taxonomy", "description", "parent", "count"]},
+{"id": "term_relationships", "name": "term_relationships", "columns": ["term_taxonomy_id", "object_id"]},
+{"id": "comments", "name": "comments", "columns": ["comment_ID", "comment_post_ID", "comment_author", "comment_author_email", "comment_author_url", "comment_date", "comment_date_gmt", "comment_content", "comment_type", "comment_approved"]},
+{"id": "postmeta", "name": "postmeta", "columns": ["post_id", "meta_key", "meta_value"]},
+{"id": "usermeta", "name": "usermeta", "columns": ["user_id", "meta_key"]},
+{"id": "links", "name": "links", "columns": ["link_id", "link_name", "link_description", "link_category", "link_visible"]},
+{"id": "users", "name": "users", "columns": ["ID", "user_nickname", "user_nicename", "user_firstname", "user_lastname", "user_level", "user_icq", "user_aim", "user_msn", "user_yim", "user_description"]},
+{"id": "site", "name": "site", "columns": ["domain", "path"]},
+{"id": "sitemeta", "name": "sitemeta", "columns": ["meta_key"]}
+]
