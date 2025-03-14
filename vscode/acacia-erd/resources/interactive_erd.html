@@ -61,9 +61,17 @@
             switch (message.command) {
                 case 'loadSVGContent':
                     document.getElementById('erd-svg').outerHTML = message.svgContent;
+                    attachSVGEntityEventListeners();
+                    attachEntityEventListeners();
                     break;
             }
         });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            attachSVGEntityEventListeners();
+            attachEntityEventListeners();
+        });
+
     </script>   
 </body>
 </html>

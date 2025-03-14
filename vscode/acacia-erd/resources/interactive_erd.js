@@ -1,59 +1,66 @@
 const vscode = acquireVsCodeApi();
 
-document.querySelectorAll('.entity').forEach(entityElement => {
-    entityElement.addEventListener('click', (event) => {
-        const entityData = JSON.parse(entityElement.getAttribute('data-entity'));
+function attachEntityEventListeners() {
+    document.querySelectorAll('.entity').forEach(entityElement => {
+        entityElement.addEventListener('click', (event) => {
+            const entityData = JSON.parse(entityElement.getAttribute('data-entity'));
 
-        vscode.postMessage({
-            command: 'entityClicked',
-            entity: entityData
+            vscode.postMessage({
+                command: 'entityClicked',
+                entity: entityData
+            });
+        });
+
+        entityElement.addEventListener('dblclick', (event) => {
+            const entityData = JSON.parse(entityElement.getAttribute('data-entity'));
+
+            vscode.postMessage({
+                command: 'openEntityDetails',
+                entity: entityData
+            });
         });
     });
-
-    entityElement.addEventListener('dblclick', (event) => {
-        const entityData = JSON.parse(entityElement.getAttribute('data-entity'));
-
-        vscode.postMessage({
-            command: 'openEntityDetails',
-            entity: entityData
-        });
-    });
-});
+}
 
 // Dragging functionality
-const svg = document.getElementById('erd-svg');
+let svg = document.getElementById('erd-svg');
 let isDragging = false;
 let startX, startY;
 let currentEntity = null;
 
-svg.addEventListener('mousedown', (event) => {
-    if (event.target.closest('.entity')) {
-        isDragging = true;
-        currentEntity = event.target.closest('.entity');
-        const transform = currentEntity.getAttribute('transform');
-        const translate = transform.match(/translate\(([^,]+),([^)]+)\)/);
-        startX = event.clientX - parseFloat(translate[1]);
-        startY = event.clientY - parseFloat(translate[2]);
-    }
-});
+function attachSVGEntityEventListeners() {
 
-svg.addEventListener('mousemove', (event) => {
-    if (isDragging && currentEntity) {
-        const x = event.clientX - startX;
-        const y = event.clientY - startY;
-        currentEntity.setAttribute('transform', `translate(${x}, ${y})`);
-    }
-});
+    svg = document.getElementById('erd-svg');
 
-svg.addEventListener('mouseup', () => {
-    isDragging = false;
-    currentEntity = null;
-});
+    svg.addEventListener('mousedown', (event) => {
+        if (event.target.closest('.entity')) {
+            isDragging = true;
+            currentEntity = event.target.closest('.entity');
+            const transform = currentEntity.getAttribute('transform');
+            const translate = transform.match(/translate\(([^,]+),([^)]+)\)/);
+            startX = event.clientX - parseFloat(translate[1]);
+            startY = event.clientY - parseFloat(translate[2]);
+        }
+    });
 
-svg.addEventListener('mouseleave', () => {
-    isDragging = false;
-    currentEntity = null;
-});
+    svg.addEventListener('mousemove', (event) => {
+        if (isDragging && currentEntity) {
+            const x = event.clientX - startX;
+            const y = event.clientY - startY;
+            currentEntity.setAttribute('transform', `translate(${x}, ${y})`);
+        }
+    });
+
+    svg.addEventListener('mouseup', () => {
+        isDragging = false;
+        currentEntity = null;
+    });
+
+    svg.addEventListener('mouseleave', () => {
+        isDragging = false;
+        currentEntity = null;
+    });
+}
 
 // Handle messages from the extension
 window.addEventListener('message', event => {

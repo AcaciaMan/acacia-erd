@@ -98,25 +98,7 @@ function addNewEntity(x, y) {
     newEntity.appendChild(text);
     svg.appendChild(newEntity);
 
-    document.querySelectorAll('.entity').forEach(entityElement => {
-        entityElement.addEventListener('click', (event) => {
-            const entityData = JSON.parse(entityElement.getAttribute('data-entity'));
-    
-            vscode.postMessage({
-                command: 'entityClicked',
-                entity: entityData
-            });
-        });
-    
-        entityElement.addEventListener('dblclick', (event) => {
-            const entityData = JSON.parse(entityElement.getAttribute('data-entity'));
-    
-            vscode.postMessage({
-                command: 'openEntityDetails',
-                entity: entityData
-            });
-        });
-    });
+    attachEntityEventListeners();
 
 }
 
