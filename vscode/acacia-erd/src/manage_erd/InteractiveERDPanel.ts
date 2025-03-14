@@ -217,7 +217,7 @@ async function saveSVGFile(svgContent: string, place: vscode.Uri | undefined): P
             }
         };
 
-        result = await vscode.window.showSaveDialog(options);
+        place = await vscode.window.showSaveDialog(options);
     }
 
   if (place !== undefined) {
