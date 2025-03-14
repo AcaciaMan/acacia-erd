@@ -101,7 +101,7 @@ export class InteractiveERDPanel {
         this._panel.webview.html = htmlContent;
     }
 
-    private async openEntityDetails(entity: { id: string, name: string }) {
+    private async openEntityDetails(entity: { id: string, name: string, description?: string, columns?: string[] }) {
         const panel = vscode.window.createWebviewPanel(
             'editEntity',
             `Edit ${entity.name}`,
@@ -120,8 +120,8 @@ export class InteractiveERDPanel {
         const entityDetails = {
             id: entity.id,
             name: entity.name,
-            description: "Description of " + entity.name,
-            columns: ["Column1", "Column2", "Column3"]
+            description: entity.description || "Description of " + entity.name,
+            columns: entity.columns || ["Column1", "Column2", "Column3"]
         };
 
         panel.webview.onDidReceiveMessage(message => {
@@ -134,6 +134,7 @@ export class InteractiveERDPanel {
 
         panel.webview.postMessage(entityDetails);
     }
+
 
     private saveEntity(entity: { id: string, name: string, description: string, columns: string[] }) {
         vscode.window.showInformationMessage(`Entity saved: ${entity.name}`);
