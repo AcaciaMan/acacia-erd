@@ -31,6 +31,7 @@
     <button id="save-svg-button">Save</button>
     <button id="create-svg-button">Save as</button>
     <button id="load-svg-button">Load ERD from SVG</button>
+    <button id="generate-erd-button">Generate ERD from Entities List</button>
     <svg id="erd-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
         <!-- Grouping the rect and text elements together -->
         <g class="entity" id="entity1" data-entity='{"id": "entity1",  "name": "Entity 1", "description": "Description of Entity 1"}' transform="translate(50, 50)">
@@ -41,6 +42,7 @@
 
     <script src="/resources/interactive_erd.js"></script>
     <script src="/resources/usage_erd.js"></script>
+    <script src="/resources/generate_erd.js"></script>
     <script>
         document.getElementById('create-svg-button').addEventListener('click', () => {
             const svgElement = document.getElementById('erd-svg');
@@ -85,6 +87,22 @@
             attachSVGUsageEventListeners();
             attachUsageEventListeners();            
         });
+
+
+        document.getElementById('generate-erd-button').addEventListener('click', () => {
+            const entities = [
+                { id: 'entity1', name: 'Entity 1', columns: ['id', 'name', 'description']  },
+                { id: 'entity2', name: 'Entity 2', columns: ['id', 'name', 'description']  }
+                // Add more entities as needed
+            ];
+            applyForceLayout(entities, 800, 600);
+            const svgContent = generateSVG(entities);
+            document.getElementById('erd-svg').outerHTML = svgContent;
+            attachSVGEntityEventListeners();
+            attachEntityEventListeners();
+            attachSVGUsageEventListeners();
+            attachUsageEventListeners();
+        });        
 
     </script>   
 </body>

@@ -90,12 +90,20 @@ export class InteractiveERDPanel {
         );
         const usageScriptUri = this._panel.webview.asWebviewUri(usageScriptPathOnDisk);
 
+        const generateScriptPathOnDisk = vscode.Uri.file(
+            path.join(this._extensionPath, 'resources', 'generate_erd.js')
+        );
+        const generateScriptUri = this._panel.webview.asWebviewUri(generateScriptPathOnDisk);
+
         htmlContent = htmlContent.replace(
             '<script src="/resources/interactive_erd.js"></script>',
             `<script src="${scriptUri}"></script>`
         ).replace(
             '<script src="/resources/usage_erd.js"></script>',
             `<script src="${usageScriptUri}"></script>`
+        ).replace(
+            '<script src="/resources/generate_erd.js"></script>',
+            `<script src="${generateScriptUri}"></script>`
         );
 
         this._panel.webview.html = htmlContent;
