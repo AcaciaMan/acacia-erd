@@ -187,8 +187,18 @@ function generateSVG(entities) {
         // Remove from DOM after measuring
         document.body.removeChild(tempsvg);
 
+        const deleteButton = document.createElementNS(svgNamespace, 'text');
+        deleteButton.setAttribute('x', textBBox.width + 30);
+        deleteButton.setAttribute('y', '10');
+        deleteButton.setAttribute('font-family', 'Arial');
+        deleteButton.setAttribute('font-size', '12');
+        deleteButton.setAttribute('fill', 'red');
+        deleteButton.setAttribute('class', 'delete-button');
+        deleteButton.textContent = 'X';
+
         group.appendChild(rect);
         group.appendChild(text);
+        group.appendChild(deleteButton);
         svg.appendChild(group);
     });
 

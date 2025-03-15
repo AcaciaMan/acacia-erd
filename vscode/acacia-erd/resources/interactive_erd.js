@@ -20,6 +20,19 @@ function attachEntityEventListeners() {
             });
         });
     });
+
+    document.querySelectorAll('.delete-button').forEach(deleteButton => {
+        deleteButton.addEventListener('click', (event) => {
+            const entityElement = event.target.closest('.entity');
+            const entityId = entityElement.getAttribute('id');
+            vscode.postMessage({
+                command: 'deleteEntity',
+                entityId: entityId
+            });
+            entityElement.remove();
+        });
+    });
+
 }
 
 // Dragging functionality
@@ -117,7 +130,21 @@ function updateEntity(entity) {
         rect.setAttribute('width', bbox.width + 40);
         rect.setAttribute('height', bbox.height + 20);
 
-        
+        // Add delete button
+        let deleteButton = entityGroup.querySelector('.delete-button');
+        if (!deleteButton) {
+            deleteButton = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            deleteButton.setAttribute('x', bbox.width + 30);
+            deleteButton.setAttribute('y', '10');
+            deleteButton.setAttribute('font-family', 'Arial');
+            deleteButton.setAttribute('font-size', '12');
+            deleteButton.setAttribute('fill', 'red');
+            deleteButton.setAttribute('class', 'delete-button');
+            deleteButton.textContent = 'X';
+            entityGroup.appendChild(deleteButton);
+        } else {
+            deleteButton.setAttribute('x', bbox.width + 30);
+        }       
 
         console.log('Entity updated:', entity);
         console.log('text content:', text.textContent);

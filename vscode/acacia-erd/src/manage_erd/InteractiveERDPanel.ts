@@ -69,7 +69,10 @@ export class InteractiveERDPanel {
                     break;    
                 case 'chooseJSON':
                     chooseJSONFile(panel.webview);
-                    break;    
+                    break; 
+                case 'deleteEntity':
+                    deleteEntity(message.entityId);
+                    break;       
             }
         });
     }
@@ -280,4 +283,9 @@ function chooseJSONFile(webview: vscode.Webview) {
             });
         }
     });
+}
+
+function deleteEntity(entityId: string) {
+    // Implement any additional logic needed for deleting the entity
+    vscode.window.showInformationMessage(`Entity ${entityId} deleted`);
 }
