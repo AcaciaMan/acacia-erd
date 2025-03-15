@@ -14,47 +14,14 @@ function applyForceLayout(entities, width, height) {
 
     // assign each entity to a column
     entities.forEach((entity, index) => {
-        // assign the entity to a column randomly
-        entity.column = Math.floor(Math.random() * 5);
-        // calculate in how many columns the entity spans
-        entity.dcolumns = [entity.column];
-        let entityWidth = entity.width;
-        let entityColumn = entity.column;
-        while (entityWidth > columnWidth) {
-            entityWidth -= columnWidth;
-            entityColumn++;
-            entity.dcolumns.push(entityColumn);
-        }
-    
-
-        // center the entity in the columns
-        let entityColumns = entity.dcolumns.length;
-        let entityWidthTotal = entityColumns * columnWidth;
-        let entityWidthOffset = (entityWidthTotal - entity.width) / 2;
-        entity.x = entity.column * columnWidth + entityWidthOffset;
+        assignColumn(entity, columnWidth, Math.floor(Math.random() * 5));
     });
 
     entities.forEach((entity, index) => {
-        // calculate the y position
-        // put entity in random y position and check if it overlaps with other entities, repeat 100 times max to avoid infinite loop in case of overlap
-        let overlap = true;
-        let iteration = 0;
-        while (overlap && iteration < 100) {
-            entity.y = Math.random() * height;
-            overlap = false;
-            entities.forEach(other => {
-                if (entity !== other) {
-                    if (entity.dcolumns.some(column => other.dcolumns.includes(column))) {
-                        if (entity.y < other.y + other.height && entity.y + entity.height > other.y) {
-                            overlap = true;
-                        }
-                    }
-                }
-            });
-            iteration++;
-        } 
-
-
+        while (calculateYPosition(entity, entities, height)) {
+            assignColumn(entity, columnWidth, entity.column+1);
+        }
+ 
     });
 
 
@@ -115,6 +82,50 @@ function applyForceLayout(entities, width, height) {
         });
     }
         */
+}
+
+function assignColumn(entity, columnWidth, column) {
+    entity.column = column;
+    // calculate in how many columns the entity spans
+    entity.dcolumns = [entity.column];
+    let entityWidth = entity.width;
+    let entityColumn = entity.column;
+    while (entityWidth > columnWidth) {
+        entityWidth -= columnWidth;
+        entityColumn++;
+        entity.dcolumns.push(entityColumn);
+    }
+
+
+    // center the entity in the columns
+    let entityColumns = entity.dcolumns.length;
+    let entityWidthTotal = entityColumns * columnWidth;
+    let entityWidthOffset = (entityWidthTotal - entity.width) / 2;
+    entity.x = entity.column * columnWidth + entityWidthOffset;
+
+}
+
+function calculateYPosition(entity, entities, height) {
+       // calculate the y position
+        // put entity in random y position and check if it overlaps with other entities, repeat 100 times max to avoid infinite loop in case of overlap
+        let overlap = true;
+        let iteration = 0;
+        while (overlap && iteration < 100) {
+            entity.y = Math.random() * height;
+            overlap = false;
+            entities.forEach(other => {
+                if (entity !== other) {
+                    if (entity.dcolumns.some(column => other.dcolumns.includes(column))) {
+                        if (entity.y < other.y + other.height && entity.y + entity.height > other.y) {
+                            overlap = true;
+                        }
+                    }
+                }
+            });
+            iteration++;
+        } 
+
+        return overlap;
 }
 
 function generateSVG(entities) {
