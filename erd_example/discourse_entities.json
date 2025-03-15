@@ -1,0 +1,23 @@
+[
+{"id": "user_auth_tokens", "name": "user_auth_tokens", "columns": ["user_id"]},
+{"id": "invited_users", "name": "invited_users", "columns": ["user_id", "redeemed_at"]},
+{"id": "users", "name": "users ", "columns": ["id"]},
+{"id": "user_api_keys", "name": "user_api_keys ", "columns": ["user_id"]},
+{"id": "post_timings", "name": "post_timings ", "columns": ["topic_id", "post_number", "user_id"]},
+{"id": "posts", "name": "posts", "columns": ["topic_id", "post_number", "like_count", "deleted_at"]},
+{"id": "site_settings", "name": "site_settings", "columns": ["name", "value"]},
+{"id": "reviewables", "name": "reviewables", "columns": ["id", "type", "score", "created_at"]},
+{"id": "reviewable_scores", "name": "reviewable_scores", "columns": ["reviewable_id", "score"]},
+{"id": "uploads", "name": "uploads", "columns": ["url"]},
+{"id": "optimized_images", "name": "optimized_images", "columns": ["url"]},
+{"id": "post_custom_fields", "name": "post_custom_fields", "columns": ["post_id", "name"]},
+{"id": "polls", "name": "polls", "columns": ["id", "post_id", "name", "created_at"]},
+{"id": "poll_options", "name": "poll_options", "columns": ["id", "poll_id", "position"]},
+{"id": "poll_votes", "name": "poll_votes", "columns": ["poll_option_id", "user_id", "created_at"]},
+{"id": "likes", "name": "likes", "columns": ["post_id", "user_id", "created_at"]},
+{"id": "topics", "name": "topics", "columns": ["id", "like_count", "archetype", "deleted_at"]},
+{"id": "user_chat_channel_memberships", "name": "user_chat_channel_memberships", "columns": ["chat_channel_id"]},
+{"id": "chat_channels", "name": "chat_channels", "columns": ["id"]},
+{"id": "chat_messages", "name": "chat_messages", "columns": ["id", "chat_channel_id", "thread_id", "user_id"]},
+{"id": "chat_threads", "name": "chat_threads", "columns": ["id"]}
+]

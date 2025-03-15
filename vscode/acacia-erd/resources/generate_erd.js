@@ -14,6 +14,7 @@ function applyForceLayout(entities, width, height) {
         entity.y = Math.random() * height;
     });
 
+    /*
     for (let iteration = 0; iteration < maxIterations; iteration++) {
         entities.forEach(entity => {
             entity.vx = entity.vx || 0;
@@ -66,6 +67,7 @@ function applyForceLayout(entities, width, height) {
             entity.y = Math.max(0, Math.min(height - entityHeight, entity.y));
         });
     }
+        */
 }
 
 function generateSVG(entities) {
