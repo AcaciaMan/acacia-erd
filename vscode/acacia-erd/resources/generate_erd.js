@@ -1,17 +1,11 @@
 function applyForceLayout(entities, width, height) {
-    const repulsionForce = 1000;
-    const attractionForce = 0.1;
-    const maxIterations = 1000;
-    const damping = 0.9;
-
-    // Define the width and height of the entity rectangles
-    const entityWidth = 100;
-    const entityHeight = 50;
 
     // Randomly position entities
     entities.forEach(entity => {
         entity.x = Math.random() * width;
         entity.y = Math.random() * height;
+        setWidthAndHeight(entity);
+
     });
 
     /*
@@ -135,4 +129,16 @@ function generateSVG(entities) {
     });
 
     return svg.outerHTML;
+}
+
+function setWidthAndHeight(entity) {
+
+    // Calculate the width and height of the entity based on the name and columns
+    const text = entity.name + (entity.columns ? '\n' + entity.columns.join('\n') : '');
+    const lines = text.split('\n');
+    const longestLine = lines.reduce((a, b) => a.length > b.length ? a : b);
+    const longestLineWidth = longestLine.length * 8; // Assuming 8 pixels per character
+    const lineHeight = 20;
+    entity.width = longestLineWidth + 40;
+    entity.height = (lines.length + 1) * lineHeight;
 }
