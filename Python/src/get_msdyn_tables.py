@@ -1,5 +1,6 @@
 import os
-
+import get_tables_file_info as info
+import json
 
 def find_table_files(directory):
     table_files = []
@@ -15,3 +16,11 @@ if __name__ == "__main__":
     #for file in table_files:
     #    print(file)
     print(len(table_files))
+    tables_info = []
+    for file in table_files:
+        tables_info.append(info.parse_tables_file(file))
+
+    # write the tables_info to a file
+    with open("msdyn_entities.json", "w") as file:
+        json.dump(tables_info, file, indent=4)
+

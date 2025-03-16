@@ -1,2 +1,4 @@
 /vscode/acacia-erd/node_modules
 /vscode/acacia-erd/dist
+Python/msdyn_entities.json
+*.pyc
