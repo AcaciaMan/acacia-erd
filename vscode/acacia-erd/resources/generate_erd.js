@@ -7,6 +7,8 @@ function applyForceLayout(entities, width, height) {
         entity.x = Math.random() * width;
         entity.y = height;
         setWidthAndHeight(entity);
+        entity.linkedEntities = [];
+        entity.importance = 0;
 
     });
 
@@ -23,6 +25,9 @@ function applyForceLayout(entities, width, height) {
                 other.columns.forEach(column => {
                     if (compareNamesWithLevenshtein(entity.name, column)<0.5) {
                         entity.importance += 1;
+                        if(!bLinkColumns) {
+                            entity.linkedEntities.push(other);
+                        }
                         bLinkColumns = true;
                     }
                 });
@@ -30,6 +35,7 @@ function applyForceLayout(entities, width, height) {
             if (!bLinkColumns) {
                 if (compareNamesWithLevenshtein(entity.name, other.name)<0.5 && entity.name.length<other.name.length) {
                     entity.importance += 1;
+                    entity.linkedEntities.push(other);
                 }
             }
         });
@@ -38,25 +44,15 @@ function applyForceLayout(entities, width, height) {
     // calculate the second_importance of the entity based on entity name and columns
     entities.forEach(entity => {
         entity.second_importance = entity.importance;
-        // if entity name is in other entity columns, increase importance
-        entities.forEach(other => {
-            bLinkColumns = false;
-            if (entity !== other && other.columns) {
-                
-                other.columns.forEach(column => {
-                    if (compareNamesWithLevenshtein(entity.name, column)<0.5) {
-                        entity.second_importance += other.importance;
-                        bLinkColumns = true;
-                    }
-                });
-            }
-            if (!bLinkColumns) {
-                if (compareNamesWithLevenshtein(entity.name, other.name)<0.5 && entity.name.length<other.name.length) {
-                    entity.second_importance += other.importance;
-                }
-            }
+        entity.linkedEntities.forEach(other => {
+            entity.second_importance += other.importance;
         });
+
+        // remove linked entities
+        entity.linkedEntities = [];
     });
+
+
 
     // sort entities by second_importance descending
     entities.sort((a, b) => b.second_importance - a.second_importance );
@@ -66,8 +62,6 @@ function applyForceLayout(entities, width, height) {
 
     // generate only first 30 entities
     entities = entities.slice(0, 30);
-
-    console.log(entities);
 
     // assign each entity to a column
     entities.forEach((entity, index) => {
