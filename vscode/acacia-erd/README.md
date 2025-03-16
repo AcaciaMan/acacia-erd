@@ -10,3 +10,7 @@ Visual Studio Code extension for Entity Relationship Diagram
 ## Discourse ERD
 
 ![Screenshot Discourse](https://github.com/user-attachments/assets/ec06bd8c-47fa-4375-a0b9-4c67351dcc1d)
+
+## Redmine ERD
+
+![Screenshot Redmine](https://github.com/user-attachments/assets/47b84e7a-323d-470c-8509-918468181418)
