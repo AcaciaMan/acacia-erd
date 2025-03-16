@@ -14,3 +14,24 @@ Visual Studio Code extension for Entity Relationship Diagram
 ## Redmine ERD
 
 ![Screenshot Redmine](https://github.com/user-attachments/assets/47b84e7a-323d-470c-8509-918468181418)
+
+## Oracle Select
+
+```sql
+SELECT JSON_ARRAYAGG(
+    JSON_OBJECT(
+        'id' VALUE LOWER(table_name),
+        'name' VALUE LOWER(table_name),
+        'columns' VALUE (
+            SELECT JSON_ARRAYAGG(LOWER(column_name) ORDER BY column_id)
+            FROM all_tab_columns t1
+            WHERE t1.owner = t.owner AND t1.table_name = t.table_name)
+        )
+    ) AS entities
+FROM
+    all_tables t
+WHERE
+    owner = 'YOUR_SCHEMA_NAME'
+ORDER BY
+    table_name;
+```    
