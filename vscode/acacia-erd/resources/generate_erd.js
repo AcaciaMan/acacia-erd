@@ -3,11 +3,43 @@ function applyForceLayout(entities, width, height) {
     // Randomly position entities
     entities.forEach(entity => {
         entity.x = Math.random() * width;
-        entity.y = Math.random() * height;
+        entity.y = height;
         setWidthAndHeight(entity);
 
     });
 
+    // calculate the importance of the entity based on entity name and columns
+    entities.forEach(entity => {
+        entity.importance = 0;
+        // if entity name is in other entity columns, increase importance
+        entities.forEach(other => {
+            if (entity !== other) {
+                other.columns.forEach(column => {
+                    if (compareNamesWithLevenshtein(entity.name, column)<0.5) {
+                        entity.importance += 1;
+                    }
+                });
+            }
+        });
+    });
+
+    // calculate the second_importance of the entity based on entity name and columns
+    entities.forEach(entity => {
+        entity.second_importance = entity.importance;
+        // if entity name is in other entity columns, increase importance
+        entities.forEach(other => {
+            if (entity !== other) {
+                other.columns.forEach(column => {
+                    if (compareNamesWithLevenshtein(entity.name, column)<0.5) {
+                        entity.second_importance += other.importance;
+                    }
+                });
+            }
+        });
+    });
+
+    // sort entities by second_importance descending
+    entities.sort((a, b) => b.second_importance - a.second_importance );
 
     // divide width in 5 columns
     let columnWidth = width / 5;
@@ -111,7 +143,20 @@ function calculateYPosition(entity, entities, height) {
         let overlap = true;
         let iteration = 0;
         while (overlap && iteration < 100) {
-            entity.y = Math.random() * height;
+            // the first entities are placed closer to the middle of the screen
+            // if iteration is 0, the entity is placed in the middle of the screen
+            if (iteration === 0) {
+                entity.y = height / 2 - entity.height / 2;
+            } else if (iteration === 1) {
+                entity.y = height / 4 - entity.height / 2;
+            
+        } else if (iteration === 2) {
+                entity.y = height * 3 / 4 - entity.height   / 2;
+        
+    } else {
+                entity.y = Math.random() * height;
+            }
+
             overlap = false;
             entities.forEach(other => {
                 if (entity !== other) {

@@ -101,6 +101,11 @@ export class InteractiveERDPanel {
         );
         const generateScriptUri = this._panel.webview.asWebviewUri(generateScriptPathOnDisk);
 
+        const pluralizeScriptPathOnDisk = vscode.Uri.file(
+            path.join(this._extensionPath, 'resources', 'pluralize.js')
+        );
+        const pluralizeScriptUri = this._panel.webview.asWebviewUri(pluralizeScriptPathOnDisk);
+
         htmlContent = htmlContent.replace(
             '<script src="/resources/interactive_erd.js"></script>',
             `<script src="${scriptUri}"></script>`
@@ -110,6 +115,9 @@ export class InteractiveERDPanel {
         ).replace(
             '<script src="/resources/generate_erd.js"></script>',
             `<script src="${generateScriptUri}"></script>`
+        ).replace(
+            '<script src="/resources/pluralize.js"></script>',
+            `<script src="${pluralizeScriptUri}"></script>`
         );
 
         this._panel.webview.html = htmlContent;
