@@ -18,18 +18,20 @@ Visual Studio Code extension for Entity Relationship Diagram
 ## Oracle Select
 
 ```sql
-SELECT
+SELECT JSON_ARRAYAGG(
     JSON_OBJECT(
         'id' VALUE LOWER(table_name),
         'name' VALUE LOWER(table_name),
-        'columns' VALUE LOWER(LISTAGG(column_name, ',') WITHIN GROUP (ORDER BY column_id))
-    ) AS entity
+        'columns' VALUE (
+            SELECT JSON_ARRAYAGG(LOWER(column_name) ORDER BY column_id)
+            FROM all_tab_columns t1
+            WHERE t1.owner = t.owner AND t1.table_name = t.table_name)
+        )
+    ) AS entities
 FROM
-    all_tab_columns
+    all_tables t
 WHERE
     owner = 'YOUR_SCHEMA_NAME'
-GROUP BY
-    table_name
 ORDER BY
     table_name;
 ```    
