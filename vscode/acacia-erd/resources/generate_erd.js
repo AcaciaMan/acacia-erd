@@ -8,17 +8,25 @@ function applyForceLayout(entities, width, height) {
 
     });
 
+    let bLinkColumns = false;
     // calculate the importance of the entity based on entity name and columns
     entities.forEach(entity => {
         entity.importance = 0;
         // if entity name is in other entity columns, increase importance
         entities.forEach(other => {
+            bLinkColumns = false;
             if (entity !== other) {
                 other.columns.forEach(column => {
                     if (compareNamesWithLevenshtein(entity.name, column)<0.5) {
                         entity.importance += 1;
+                        bLinkColumns = true;
                     }
                 });
+            }
+            if (!bLinkColumns) {
+                if (compareNamesWithLevenshtein(entity.name, other.name)<0.5 && entity.name.length<other.name.length) {
+                    entity.importance += 1;
+                }
             }
         });
     });
@@ -29,11 +37,18 @@ function applyForceLayout(entities, width, height) {
         // if entity name is in other entity columns, increase importance
         entities.forEach(other => {
             if (entity !== other) {
+                bLinkColumns = false;
                 other.columns.forEach(column => {
                     if (compareNamesWithLevenshtein(entity.name, column)<0.5) {
                         entity.second_importance += other.importance;
+                        bLinkColumns = true;
                     }
                 });
+            }
+            if (!bLinkColumns) {
+                if (compareNamesWithLevenshtein(entity.name, other.name)<0.5 && entity.name.length<other.name.length) {
+                    entity.second_importance += other.importance;
+                }
             }
         });
     });
