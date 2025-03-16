@@ -1,5 +1,7 @@
 function applyForceLayout(entities, width, height) {
 
+    console.log('Started force layout');
+
     // Randomly position entities
     entities.forEach(entity => {
         entity.x = Math.random() * width;
@@ -8,6 +10,8 @@ function applyForceLayout(entities, width, height) {
 
     });
 
+
+
     let bLinkColumns = false;
     // calculate the importance of the entity based on entity name and columns
     entities.forEach(entity => {
@@ -15,7 +19,7 @@ function applyForceLayout(entities, width, height) {
         // if entity name is in other entity columns, increase importance
         entities.forEach(other => {
             bLinkColumns = false;
-            if (entity !== other) {
+            if (entity !== other && other.columns) {
                 other.columns.forEach(column => {
                     if (compareNamesWithLevenshtein(entity.name, column)<0.5) {
                         entity.importance += 1;
@@ -36,8 +40,9 @@ function applyForceLayout(entities, width, height) {
         entity.second_importance = entity.importance;
         // if entity name is in other entity columns, increase importance
         entities.forEach(other => {
-            if (entity !== other) {
-                bLinkColumns = false;
+            bLinkColumns = false;
+            if (entity !== other && other.columns) {
+                
                 other.columns.forEach(column => {
                     if (compareNamesWithLevenshtein(entity.name, column)<0.5) {
                         entity.second_importance += other.importance;
@@ -58,6 +63,11 @@ function applyForceLayout(entities, width, height) {
 
     // divide width in 5 columns
     let columnWidth = width / 5;
+
+    // generate only first 30 entities
+    entities = entities.slice(0, 10);
+
+    console.log(entities);
 
     // assign each entity to a column
     entities.forEach((entity, index) => {
