@@ -65,7 +65,7 @@ function applyForceLayout(entities, width, height) {
     let columnWidth = width / 5;
 
     // generate only first 30 entities
-    entities = entities.slice(0, 10);
+    entities = entities.slice(0, 30);
 
     console.log(entities);
 
@@ -82,7 +82,7 @@ function applyForceLayout(entities, width, height) {
     });
 
 
-
+    return entities;
 
 
     /*
