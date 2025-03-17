@@ -47,12 +47,14 @@ def calcSecondImportance(entities):
                 for column in other['columns']:
                     if compareNames(entity['name'], column) < 0.5:
                         entity['importance'] += 1
+                        other['importance'] += 1
                         if not bLinkColumns:
                             entity['linkedEntities'].append(other['id'])
                         bLinkColumns = True
             if not bLinkColumns:
                 if compareNames(entity['name'], other['name']) < 0.5 and len(entity['name']) < len(other['name']):
                     entity['importance'] += 1
+                    other['importance'] += 1
                     entity['linkedEntities'].append(other['id'])
 
     entities_ids = {entity['id']: entity for entity in entities}                
@@ -62,6 +64,7 @@ def calcSecondImportance(entities):
         entity['second_importance'] = entity['importance']
         for other in entity['linkedEntities']:
             entity['second_importance'] += entities_ids[other]['importance']
+            entities_ids[other]['second_importance'] += entity['importance']
 
     return entities
 

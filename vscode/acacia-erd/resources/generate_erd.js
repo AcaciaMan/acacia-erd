@@ -25,6 +25,7 @@ function applyForceLayout(entities, width, height) {
                 other.columns.forEach(column => {
                     if (compareNamesWithLevenshtein(entity.name, column)<0.5) {
                         entity.importance += 1;
+                        other.importance += 1;
                         if(!bLinkColumns) {
                             entity.linkedEntities.push(other);
                         }
@@ -35,6 +36,7 @@ function applyForceLayout(entities, width, height) {
             if (!bLinkColumns) {
                 if (compareNamesWithLevenshtein(entity.name, other.name)<0.5 && entity.name.length<other.name.length) {
                     entity.importance += 1;
+                    other.importance += 1;
                     entity.linkedEntities.push(other);
                 }
             }
@@ -46,6 +48,7 @@ function applyForceLayout(entities, width, height) {
         entity.second_importance = entity.importance;
         entity.linkedEntities.forEach(other => {
             entity.second_importance += other.importance;
+            other.second_importance += entity.importance;
         });
 
         // remove linked entities
