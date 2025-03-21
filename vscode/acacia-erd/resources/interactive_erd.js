@@ -127,14 +127,14 @@ function updateEntity(entity) {
         // update rectangle width and height
         const bbox = text.getBBox();
         const rect = entityGroup.querySelector('rect');
-        rect.setAttribute('width', bbox.width + 40);
+        rect.setAttribute('width', bbox.width + 20);
         rect.setAttribute('height', bbox.height + 20);
 
         // Add delete button
         let deleteButton = entityGroup.querySelector('.delete-button');
         if (!deleteButton) {
             deleteButton = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            deleteButton.setAttribute('x', bbox.width + 30);
+            deleteButton.setAttribute('x', bbox.width + 10);
             deleteButton.setAttribute('y', '10');
             deleteButton.setAttribute('font-family', 'Arial');
             deleteButton.setAttribute('font-size', '12');
@@ -143,7 +143,7 @@ function updateEntity(entity) {
             deleteButton.textContent = 'X';
             entityGroup.appendChild(deleteButton);
         } else {
-            deleteButton.setAttribute('x', bbox.width + 30);
+            deleteButton.setAttribute('x', bbox.width + 10);
         }       
 
         console.log('Entity updated:', entity);

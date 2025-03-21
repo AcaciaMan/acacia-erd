@@ -255,14 +255,14 @@ function generateSVG(entities) {
 
         // Update rect height and width based on text content
         const textBBox = text.getBBox();
-        rect.setAttribute('width', textBBox.width + 40);
+        rect.setAttribute('width', textBBox.width + 20);
         rect.setAttribute('height', textBBox.height + 20);
 
         // Remove from DOM after measuring
         document.body.removeChild(tempsvg);
 
         const deleteButton = document.createElementNS(svgNamespace, 'text');
-        deleteButton.setAttribute('x', textBBox.width + 30);
+        deleteButton.setAttribute('x', textBBox.width + 10);
         deleteButton.setAttribute('y', '10');
         deleteButton.setAttribute('font-family', 'Arial');
         deleteButton.setAttribute('font-size', '12');
@@ -287,6 +287,6 @@ function setWidthAndHeight(entity) {
     const longestLine = lines.reduce((a, b) => a.length > b.length ? a : b);
     const longestLineWidth = longestLine.length * 8; // Assuming 8 pixels per character
     const lineHeight = 20;
-    entity.width = longestLineWidth + 44;
+    entity.width = longestLineWidth + 24;
     entity.height = (lines.length + 1) * lineHeight;
 }
