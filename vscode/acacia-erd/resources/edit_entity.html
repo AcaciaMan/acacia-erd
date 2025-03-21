@@ -40,7 +40,10 @@
         <textarea id="entity-description" name="description" rows="4" required></textarea>
 
         <label for="entity-columns">Columns (comma-separated):</label>
-        <input type="text" id="entity-columns" name="columns" required>
+        <input type="text" id="entity-columns" name="columns">
+
+        <label for="entity-linked-entities">Linked Entities (comma-separated):</label>
+        <input type="text" id="entity-linked-entities" name="linkedEntities">
 
         <button type="submit">Save</button>
     </form>
@@ -55,6 +58,7 @@
             document.getElementById('entity-name').value = entity.name;
             document.getElementById('entity-description').value = entity.description;
             document.getElementById('entity-columns').value = entity.columns.join(', ');
+            document.getElementById('entity-linked-entities').value = entity.linkedEntities.join(', ');
         });
 
         // Handle form submission
@@ -64,10 +68,11 @@
             const name = document.getElementById('entity-name').value;
             const description = document.getElementById('entity-description').value;
             const columns = document.getElementById('entity-columns').value.split(',').map(col => col.trim());
+            const linkedEntities = document.getElementById('entity-linked-entities').value.split(',').map(entity => entity.trim());
 
             vscode.postMessage({
                 command: 'saveEntity',
-                entity: { id, name, description, columns }
+                entity: { id, name, description, columns, linkedEntities }
             });
         });
     </script>

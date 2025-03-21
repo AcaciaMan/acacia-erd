@@ -2,6 +2,12 @@ function applyForceLayout(entities, width, height) {
 
     console.log('Started force layout');
 
+    // Create a map of entities by name for quick lookup
+    const entityMap = new Map();
+    entities.forEach(entity => {
+        entityMap.set(entity.name, entity);
+    });
+
     // Randomly position entities
     entities.forEach(entity => {
         entity.x = Math.random() * width;
@@ -27,7 +33,7 @@ function applyForceLayout(entities, width, height) {
                         entity.importance += 1;
                         other.importance += 1;
                         if(!bLinkColumns) {
-                            entity.linkedEntities.push(other);
+                            entity.linkedEntities.push(other.name);
                         }
                         bLinkColumns = true;
                     }
@@ -37,7 +43,7 @@ function applyForceLayout(entities, width, height) {
                 if (compareNamesWithLevenshtein(entity.name, other.name)<0.5 && entity.name.length<other.name.length) {
                     entity.importance += 1;
                     other.importance += 1;
-                    entity.linkedEntities.push(other);
+                    entity.linkedEntities.push(other.name);
                 }
             }
         });
@@ -47,12 +53,9 @@ function applyForceLayout(entities, width, height) {
     entities.forEach(entity => {
         entity.second_importance = entity.importance;
         entity.linkedEntities.forEach(other => {
-            entity.second_importance += other.importance;
-            other.second_importance += entity.importance;
+            entity.second_importance += entityMap.get(other).importance;
+            entityMap.get(other).second_importance += entity.importance;
         });
-
-        // remove linked entities
-        entity.linkedEntities = [];
     });
 
 
@@ -65,6 +68,10 @@ function applyForceLayout(entities, width, height) {
 
     // generate only first 30 entities
     entities = entities.slice(0, 30);
+
+    entities.forEach(entity => {
+        console.log(`Entity: ${entity.name}, Second Importance: ${entity.second_importance}`);
+    });
 
     // assign each entity to a column
     entities.forEach((entity, index) => {
@@ -280,6 +287,6 @@ function setWidthAndHeight(entity) {
     const longestLine = lines.reduce((a, b) => a.length > b.length ? a : b);
     const longestLineWidth = longestLine.length * 8; // Assuming 8 pixels per character
     const lineHeight = 20;
-    entity.width = longestLineWidth + 40;
+    entity.width = longestLineWidth + 44;
     entity.height = (lines.length + 1) * lineHeight;
 }
