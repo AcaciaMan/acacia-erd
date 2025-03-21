@@ -34,9 +34,17 @@
         .delete-button:hover {
             fill: red;
         }
+        #entities-list-path {
+            width: 900px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
+    <button id="entities-list-button">Entities List</button>
+    <!-- add show path to entities list json file -->
+     <input type="text" id="entities-list-path" value="entities.json" readonly/>
+    <br>
     <button id="save-svg-button">Save</button>
     <button id="create-svg-button">Save as</button>
     <button id="load-svg-button">Load ERD from SVG</button>
