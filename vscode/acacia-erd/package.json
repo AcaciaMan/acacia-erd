@@ -41,6 +41,17 @@
           "icon": "resources/erd_icon.svg"
         }
       ]
+    },
+    "configuration": {
+      "type": "object",
+      "title": "Acacia ERD Configuration",
+      "properties": {
+        "acacia-erd.entitiesJsonPath": {
+          "type": "string",
+          "default": "resources/entities.json",
+          "description": "Path to the JSON file containing the entities list."
+        }
+      }
     }
   },
   "scripts": {
