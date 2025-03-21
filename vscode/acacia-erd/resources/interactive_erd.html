@@ -15,6 +15,7 @@
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
+            align-items: center;
         }
         svg {
             border: 1px solid #ccc;
@@ -22,8 +23,16 @@
             height: 100vh; /* Full height of the viewport */
             background-color: antiquewhite;
         }
+        button svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor; /* Use the current text color */
+        }
         .entity, .usage {
             cursor: pointer;
+        }
+        .delete-button:hover {
+            fill: red;
         }
     </style>
 </head>
@@ -40,6 +49,7 @@
         </g>
     </svg>
 
+    <script src="/resources/icons.js"></script>
     <script src="/resources/pluralize.js"></script>
     <script src="/resources/interactive_erd.js"></script>
     <script src="/resources/usage_erd.js"></script>
@@ -105,6 +115,16 @@
                 command: 'chooseJSON'
             });
         });        
+
+        // Replace buttons with icons and add descriptions on hover
+        document.getElementById('save-svg-button').title = 'Save the current ERD';
+        document.getElementById('create-svg-button').title = 'Save the current ERD as a new file';
+        document.getElementById('load-svg-button').title = 'Load an ERD from an SVG file';
+        document.getElementById('generate-erd-button').title = 'Generate an ERD from a list of entities';
+        document.getElementById('save-svg-button').innerHTML = getSaveIcon();
+        document.getElementById('create-svg-button').innerHTML = getSaveAsIcon();
+        document.getElementById('load-svg-button').innerHTML = getLoadIcon();
+        document.getElementById('generate-erd-button').innerHTML = getGenerateIcon();
 
     </script>   
 </body>

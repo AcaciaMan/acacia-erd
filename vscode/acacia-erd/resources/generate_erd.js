@@ -259,7 +259,7 @@ function generateSVG(entities) {
         deleteButton.setAttribute('y', '10');
         deleteButton.setAttribute('font-family', 'Arial');
         deleteButton.setAttribute('font-size', '12');
-        deleteButton.setAttribute('fill', 'red');
+        deleteButton.setAttribute('fill', 'darkblue');
         deleteButton.setAttribute('class', 'delete-button');
         deleteButton.textContent = 'X';
 
