@@ -1,4 +1,5 @@
 {
     "vscode-git-kafka.workspaceUUID": "vunoksry-0x0n-ac4q-bmfz-r00000000000",
-    "vscode-git-kafka.sort": "Clicks (High-Low)"
+    "vscode-git-kafka.sort": "Clicks (High-Low)",
+    "acacia-erd.entitiesJsonPath": "c:\\work\\GitHub\\acacia-erd\\erd_example\\oracle_ad_entities.json"
 }

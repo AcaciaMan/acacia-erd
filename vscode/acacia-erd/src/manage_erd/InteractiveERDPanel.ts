@@ -69,7 +69,10 @@ export class InteractiveERDPanel {
                     break;    
                 case 'chooseJSON':
                     chooseJSONFile(panel.webview);
-                    break; 
+                    break;
+                case 'chooseEntitiesList':
+                    chooseEntitiesList(panel.webview);
+                    break;     
                 case 'deleteEntity':
                     deleteEntity(message.entityId);
                     break;       
@@ -297,6 +300,28 @@ function chooseJSONFile(webview: vscode.Webview) {
             webview.postMessage({
                 command: 'loadEntities',
                 entities: entities
+            });
+        }
+    });
+}
+
+function chooseEntitiesList(webview: vscode.Webview) {
+    const options: vscode.OpenDialogOptions = {
+        canSelectMany: false,
+        openLabel: 'Open JSON',
+        filters: {
+            'JSON Files': ['json']
+        }
+    };
+
+    vscode.window.showOpenDialog(options).then(fileUri => {
+        if (fileUri && fileUri[0]) {
+            // update workspace setting with the path to the entities list
+            vscode.workspace.getConfiguration().update('acacia-erd.entitiesJsonPath', fileUri[0].fsPath, false);
+
+            webview.postMessage({
+                command: 'loadEntitiesList',
+                entitiesListPath: fileUri[0].fsPath
             });
         }
     });
