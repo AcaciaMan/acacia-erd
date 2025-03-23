@@ -2,8 +2,16 @@ const vscode = acquireVsCodeApi();
 
 function attachEntityEventListeners() {
     document.querySelectorAll('.entity').forEach(entityElement => {
-        entityElement.addEventListener('click', (event) => {
 
+        let clickTimeout;
+
+
+        entityElement.addEventListener('click', (event) => {
+            // Clear any existing timeout to prevent single-click logic from executing
+            clearTimeout(clickTimeout);
+
+                        // Set a timeout to execute single-click logic
+                        clickTimeout = setTimeout(() => {
                 // set all other entities to lightblue
                 document.querySelectorAll('.entity').forEach(entity => {
                     if (entity !== entityElement) {
@@ -39,9 +47,12 @@ function attachEntityEventListeners() {
                 command: 'entityClicked',
                 entity: entityData
             });
+        }, 200);
         });
 
         entityElement.addEventListener('dblclick', (event) => {
+                        // Clear the timeout to prevent single-click logic from executing
+                        clearTimeout(clickTimeout);
             const entityData = JSON.parse(entityElement.getAttribute('data-entity'));
 
             vscode.postMessage({
