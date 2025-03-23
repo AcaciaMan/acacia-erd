@@ -3,7 +3,37 @@ const vscode = acquireVsCodeApi();
 function attachEntityEventListeners() {
     document.querySelectorAll('.entity').forEach(entityElement => {
         entityElement.addEventListener('click', (event) => {
+
+                // set all other entities to lightblue
+                document.querySelectorAll('.entity').forEach(entity => {
+                    if (entity !== entityElement) {
+                        entity.querySelector('rect').setAttribute('fill', 'lightblue');
+                    }
+                });
+
             const entityData = JSON.parse(entityElement.getAttribute('data-entity'));
+
+            // Toggle the color of the rectangle on click
+            const rect = entityElement.querySelector('rect');
+            if (rect.getAttribute('fill') !== 'red') {
+                rect.setAttribute('fill', 'red');
+                // set all linked entities to green
+                document.querySelectorAll('.entity').forEach(entity => {
+                    if (entity !== entityElement) {
+                        const eData = JSON.parse(entity.getAttribute('data-entity'));
+                        if (entityData.linkedEntities.includes(eData.name) ) {
+                        entity.querySelector('rect').setAttribute('fill', 'green');
+                        } else if (eData.linkedEntities.includes(entityData.name)) {
+                        entity.querySelector('rect').setAttribute('fill', 'yellow');
+                        }
+                    }
+                });
+
+
+            } else {
+                rect.setAttribute('fill', 'lightblue');
+            }
+
 
             vscode.postMessage({
                 command: 'entityClicked',
