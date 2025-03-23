@@ -35,6 +35,15 @@ export class InteractiveERDPanel {
 
         this._update();
 
+        // Send a message to the interactive ERD webview to load the entities list
+        const entitiesJsonPath = vscode.workspace.getConfiguration().get('acacia-erd.entitiesJsonPath');
+        if (entitiesJsonPath) {
+            this._panel.webview.postMessage({
+                command: 'loadEntitiesList',
+                entitiesListPath: entitiesJsonPath
+            });
+        }
+
         this._panel.onDidDispose(() => this.dispose(), null, []);
 
         this._panel.webview.onDidReceiveMessage(async message => {
@@ -285,24 +294,23 @@ async function loadSVGFile(webview: vscode.Webview): Promise<vscode.Uri | undefi
 }
 
 function chooseJSONFile(webview: vscode.Webview) {
-    const options: vscode.OpenDialogOptions = {
-        canSelectMany: false,
-        openLabel: 'Open JSON',
-        filters: {
-            'JSON Files': ['json']
+    try {
+    const entitiesJsonPath = vscode.workspace.getConfiguration().get('acacia-erd.entitiesJsonPath');
+            if (typeof entitiesJsonPath === 'string') {
+                const jsonContent = fs.readFileSync(entitiesJsonPath, 'utf8');
+                const entities = JSON.parse(jsonContent);
+                webview.postMessage({
+                    command: 'loadEntities',
+                    entities: entities
+                });
+            }
+        } catch (error) {
+                if (error instanceof Error) {
+                    vscode.window.showErrorMessage('Error loading JSON file: ' + error.message);
+                } else {
+                    vscode.window.showErrorMessage('Error loading JSON file');
+                }
         }
-    };
-
-    vscode.window.showOpenDialog(options).then(fileUri => {
-        if (fileUri && fileUri[0]) {
-            const jsonContent = fs.readFileSync(fileUri[0].fsPath, 'utf8');
-            const entities = JSON.parse(jsonContent);
-            webview.postMessage({
-                command: 'loadEntities',
-                entities: entities
-            });
-        }
-    });
 }
 
 function chooseEntitiesList(webview: vscode.Webview) {
