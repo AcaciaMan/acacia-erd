@@ -148,6 +148,8 @@ function updateEntity(entity) {
         // Add the entity name as the first tspan
         const nameTspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
         nameTspan.setAttribute('x', '20');
+        nameTspan.setAttribute('y', '4');
+        nameTspan.setAttribute('dy', '1.2em'); // Line height        
         nameTspan.setAttribute('font-size', '14');
         nameTspan.textContent = entity.name;
         text.appendChild(nameTspan);

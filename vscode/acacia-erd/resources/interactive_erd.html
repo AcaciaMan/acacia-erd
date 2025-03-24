@@ -46,6 +46,7 @@
     <button id="load-svg-button">Load ERD from SVG</button>
     <button id="entities-list-button">Entities List</button>
     <button id="generate-erd-button">Generate ERD from Entities List</button>
+    <button id="apply-erd-button">Apply grid layout</button>
     <br>
     <!-- add show path to entities list json file -->
     <input type="text" id="entities-list-path" value="entities.json" readonly/>
@@ -70,6 +71,7 @@
     <script src="/resources/usage_erd.js"></script>
     <script src="/resources/generate_erd.js"></script>
     <script>
+        let entites = [];
         document.getElementById('create-svg-button').addEventListener('click', () => {
             const svgElement = document.getElementById('erd-svg');
             const svgContent = svgElement.outerHTML;
@@ -105,7 +107,7 @@
                     attachUsageEventListeners();
                     break;
                 case 'loadEntities':
-                    let entities = message.entities;
+                    entities = message.entities;
                     entities = discoverLinkedEntities(entities);
                     entities = applyForceLayout(entities, 800, 600);
                     const svgContent = generateSVG(entities);
@@ -141,17 +143,34 @@
             });
         });
 
+        document.getElementById('apply-erd-button').addEventListener('click', () => {
+                    entities = getERDEntities();
+                    
+                    // delete all entities from document
+                    document.querySelectorAll('.entity').forEach(entity => entity.remove());
+
+                    entities = applyForceLayout(entities, 800, 600);
+                    const svgContent = generateSVG(entities);
+                    document.getElementById('erd-svg').outerHTML = svgContent;
+                    attachSVGEntityEventListeners();
+                    attachEntityEventListeners();
+                    attachSVGUsageEventListeners();
+                    attachUsageEventListeners();
+        });
+
         // Replace buttons with icons and add descriptions on hover
         document.getElementById('save-svg-button').title = 'Save the current ERD';
         document.getElementById('create-svg-button').title = 'Save the current ERD as a new file';
         document.getElementById('load-svg-button').title = 'Load an ERD from an SVG file';
         document.getElementById('entities-list-button').title = 'Load a list of entities from a JSON file';
         document.getElementById('generate-erd-button').title = 'Generate an ERD from a list of entities';
+        document.getElementById('apply-erd-button').title = 'Apply a grid layout to the ERD';
         document.getElementById('save-svg-button').innerHTML = getSaveIcon();
         document.getElementById('create-svg-button').innerHTML = getSaveAsIcon();
         document.getElementById('load-svg-button').innerHTML = getLoadIcon();
         document.getElementById('entities-list-button').innerHTML = getUnorderedListIcon();
         document.getElementById('generate-erd-button').innerHTML = getGenerateIcon();
+        document.getElementById('apply-erd-button').innerHTML = getGridIcon();
 
     </script>   
 </body>

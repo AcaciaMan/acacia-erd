@@ -1,5 +1,16 @@
 let entityMap = new Map();
 
+function getERDEntities() {
+    const entities = [];
+    const entityElements = document.querySelectorAll('.entity');
+    entityElements.forEach(entityElement => {
+        const entity = JSON.parse(entityElement.getAttribute('data-entity'));
+        entities.push(entity);
+    });
+    return entities;
+}
+
+
 function discoverLinkedEntities(entities) {
 
         // Create a map of entities by name for quick lookup
