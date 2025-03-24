@@ -50,6 +50,7 @@
     <br>
     <!-- add show path to entities list json file -->
     <input type="text" id="entities-list-path" value="entities.json" readonly/>
+    <a href="https://github.com/AcaciaMan/acacia-erd/wiki/Create-ER-diagram-help" target="_blank">Help</a>
     <svg id="erd-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
         <!-- Grouping the rect and text elements together -->
         <g class="entity" id="entity1" data-entity='{"id": "entity1",  "name": "Entity 1", "description": "Description of Entity 1"}' transform="translate(50, 50)">
@@ -145,7 +146,7 @@
 
         document.getElementById('apply-erd-button').addEventListener('click', () => {
                     entities = getERDEntities();
-                    
+
                     // delete all entities from document
                     document.querySelectorAll('.entity').forEach(entity => entity.remove());
 

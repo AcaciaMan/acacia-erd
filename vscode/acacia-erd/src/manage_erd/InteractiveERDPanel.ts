@@ -21,7 +21,10 @@ export class InteractiveERDPanel {
                 {
                     enableScripts: true,
                     localResourceRoots: [vscode.Uri.file(path.join(extensionPath, 'resources'))],
-                    retainContextWhenHidden: true
+                    retainContextWhenHidden: true,
+                    enableCommandUris: true,
+                    enableFindWidget: true,
+                    enableForms: true
                 }
             );
 
