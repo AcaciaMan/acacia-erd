@@ -6,7 +6,7 @@
     "type": "git",
     "url": "https://github.com/AcaciaMan/acacia-erd"
   },
-  "version": "1.2.3",
+  "version": "1.2.4",
   "publisher": "manacacia",
   "engines": {
     "vscode": "^1.98.0"
