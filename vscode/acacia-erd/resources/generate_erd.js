@@ -1,9 +1,54 @@
+let entityMap = new Map();
+
+function discoverLinkedEntities(entities) {
+
+        // Create a map of entities by name for quick lookup
+        entities.forEach(entity => {
+            if(entity.linkedEntities === undefined) {
+                entity.linkedEntities = [];
+            }
+            
+            entityMap.set(entity.name, entity);
+        });
+
+        let bLinkColumns = false;
+        entities.forEach(entity => {
+            // if entity name is in other entity columns, link entities
+            entities.forEach(other => {
+                bLinkColumns = false;
+                if (entity !== other && other.columns) {
+                    other.columns.forEach(column => {
+                        if (compareNamesWithLevenshtein(entity.name, column)<0.5) {
+                            if(!bLinkColumns) {
+                                if (!entity.linkedEntities.includes(other.name)) {
+                                entity.linkedEntities.push(other.name);
+                                }
+                            }
+                            bLinkColumns = true;
+                        }
+                    });
+                }
+                if (!bLinkColumns) {
+                    if (compareNamesWithLevenshtein(entity.name, other.name)<0.5 && entity.name.length<other.name.length) {
+                        if (!entity.linkedEntities.includes(other.name)) {
+                        entity.linkedEntities.push(other.name);
+                        }
+                    }
+                }
+            });
+        });
+
+    return entities;
+}
+
+
+
+
 function applyForceLayout(entities, width, height) {
 
     console.log('Started force layout');
 
     // Create a map of entities by name for quick lookup
-    const entityMap = new Map();
     entities.forEach(entity => {
         entityMap.set(entity.name, entity);
     });
@@ -13,45 +58,26 @@ function applyForceLayout(entities, width, height) {
         entity.x = Math.random() * width;
         entity.y = height;
         setWidthAndHeight(entity);
-        entity.linkedEntities = [];
+        if(entity.linkedEntities === undefined) {
+           entity.linkedEntities = [];
+        }
         entity.importance = 0;
+        entity.second_importance = 0;
 
     });
 
-
-
-    let bLinkColumns = false;
-    // calculate the importance of the entity based on entity name and columns
+    // calculate the importance of the entity
     entities.forEach(entity => {
         entity.importance = 0;
-        // if entity name is in other entity columns, increase importance
-        entities.forEach(other => {
-            bLinkColumns = false;
-            if (entity !== other && other.columns) {
-                other.columns.forEach(column => {
-                    if (compareNamesWithLevenshtein(entity.name, column)<0.5) {
-                        entity.importance += 1;
-                        other.importance += 1;
-                        if(!bLinkColumns) {
-                            entity.linkedEntities.push(other.name);
-                        }
-                        bLinkColumns = true;
-                    }
-                });
-            }
-            if (!bLinkColumns) {
-                if (compareNamesWithLevenshtein(entity.name, other.name)<0.5 && entity.name.length<other.name.length) {
-                    entity.importance += 1;
-                    other.importance += 1;
-                    entity.linkedEntities.push(other.name);
-                }
-            }
-        });
+        entity.linkedEntities.forEach(other => {
+                entity.importance += 1;
+                entityMap.get(other).importance += 1;
+            });
     });
 
     // calculate the second_importance of the entity based on entity name and columns
     entities.forEach(entity => {
-        entity.second_importance = entity.importance;
+        entity.second_importance += entity.importance;
         entity.linkedEntities.forEach(other => {
             entity.second_importance += entityMap.get(other).importance;
             entityMap.get(other).second_importance += entity.importance;

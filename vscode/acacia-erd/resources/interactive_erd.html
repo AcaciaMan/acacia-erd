@@ -106,6 +106,7 @@
                     break;
                 case 'loadEntities':
                     let entities = message.entities;
+                    entities = discoverLinkedEntities(entities);
                     entities = applyForceLayout(entities, 800, 600);
                     const svgContent = generateSVG(entities);
                     document.getElementById('erd-svg').outerHTML = svgContent;
