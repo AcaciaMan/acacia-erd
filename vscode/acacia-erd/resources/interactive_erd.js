@@ -74,6 +74,18 @@ function attachEntityEventListeners() {
         });
     });
 
+    document.querySelectorAll('.describe-button').forEach(describeButton => {
+        describeButton.addEventListener('click', (event) => {
+            const entityElement = event.target.closest('.entity');
+            const entityData = JSON.parse(entityElement.getAttribute('data-entity'));
+            vscode.postMessage({
+                command: 'describeEntity',
+                entity: entityData
+            });
+        });
+    }
+    );
+
 }
 
 // Dragging functionality

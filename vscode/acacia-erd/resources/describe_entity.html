@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Describe Entity</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            cursor: pointer;
+        }
+        th.sort-asc::after {
+            content: " ▲";
+        }
+        th.sort-desc::after {
+            content: " ▼";
+        }
+    </style>
+</head>
+<body>
+    <h1 id="entity-name">Entity Name</h1>
+    <table id="entity-table">
+        <thead>
+            <tr>
+                <th data-sort="order">Order</th>
+                <th data-sort="name">Column Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Rows will be populated by JavaScript -->
+        </tbody>
+    </table>
+
+    <script>
+        // Sample data for demonstration purposes
+        const entity = {
+            name: "Sample Entity",
+            columns: [
+                { order: 1, name: "Column 1" },
+                { order: 2, name: "Column 2" },
+                { order: 3, name: "Column 3" }
+            ]
+        };
+
+        // Function to populate the table with entity data
+        function populateTable(entity) {
+            document.getElementById('entity-name').textContent = entity.name;
+            const tbody = document.getElementById('entity-table').querySelector('tbody');
+            tbody.innerHTML = ''; // Clear existing rows
+
+            entity.columns.forEach(column => {
+                const row = document.createElement('tr');
+                const orderCell = document.createElement('td');
+                const nameCell = document.createElement('td');
+
+                orderCell.textContent = column.order;
+                nameCell.textContent = column.name;
+
+                row.appendChild(orderCell);
+                row.appendChild(nameCell);
+                tbody.appendChild(row);
+            });
+        }
+
+        // Function to sort the table
+        function sortTable(column, order) {
+            const tbody = document.getElementById('entity-table').querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            rows.sort((a, b) => {
+                const aValue = a.querySelector(`td:nth-child(${column})`).textContent;
+                const bValue = b.querySelector(`td:nth-child(${column})`).textContent;
+
+                if (order === 'asc') {
+                    return aValue.localeCompare(bValue, undefined, { numeric: true });
+                } else {
+                    return bValue.localeCompare(aValue, undefined, { numeric: true });
+                }
+            });
+
+            tbody.innerHTML = ''; // Clear existing rows
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        // Event listener for sorting
+        document.querySelectorAll('th').forEach(th => {
+            th.addEventListener('click', () => {
+                const column = th.cellIndex + 1;
+                const order = th.classList.contains('sort-asc') ? 'desc' : 'asc';
+
+                document.querySelectorAll('th').forEach(th => th.classList.remove('sort-asc', 'sort-desc'));
+                th.classList.add(order === 'asc' ? 'sort-asc' : 'sort-desc');
+
+                sortTable(column, order);
+            });
+        });
+
+        // Populate the table with sample data on page load
+        populateTable(entity);
+    </script>
+</body>
+</html>

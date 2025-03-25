@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { DescribeEntityPanel } from './DescribeEntity';
 
 export class InteractiveERDPanel {
     public static currentPanel: InteractiveERDPanel | undefined;
@@ -56,6 +57,9 @@ export class InteractiveERDPanel {
                     break;
                 case 'openEntityDetails':
                     this.openEntityDetails(message.entity);
+                    break;
+                case 'describeEntity':
+                    DescribeEntityPanel.createOrShow(this._extensionPath, message.entity);
                     break;
                 case 'saveEntity':
                     this.saveEntity(message.entity);
