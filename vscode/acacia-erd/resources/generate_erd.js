@@ -22,31 +22,26 @@ function discoverLinkedEntities(entities) {
             entityMap.set(entity.name, entity);
         });
 
-        let bLinkColumns = false;
         entities.forEach(entity => {
             // if entity name is in other entity columns, link entities
-            entities.forEach(other => {
-                bLinkColumns = false;
+            for (const other of entities){
+                if (compareNamesWithLevenshtein(entity.name, other.name)<0.5 && entity.name.length<other.name.length) {
+                    if (!entity.linkedEntities.includes(other.name)) {
+                    entity.linkedEntities.push(other.name);
+                    }
+                    continue;
+                }
                 if (entity !== other && other.columns) {
-                    other.columns.forEach(column => {
+                    for (const column of other.columns) {
                         if (compareNamesWithLevenshtein(entity.name, column)<0.5) {
-                            if(!bLinkColumns) {
                                 if (!entity.linkedEntities.includes(other.name)) {
                                 entity.linkedEntities.push(other.name);
                                 }
-                            }
-                            bLinkColumns = true;
-                        }
-                    });
-                }
-                if (!bLinkColumns) {
-                    if (compareNamesWithLevenshtein(entity.name, other.name)<0.5 && entity.name.length<other.name.length) {
-                        if (!entity.linkedEntities.includes(other.name)) {
-                        entity.linkedEntities.push(other.name);
+                            break;
                         }
                     }
                 }
-            });
+            };
         });
 
     return entities;
@@ -275,13 +270,23 @@ function generateSVG(entities) {
 
         // Add columns as tspan elements
         if (entity.columns) {
-            entity.columns.forEach(column => {
+            entity.columns.forEach((column, index )=> {
+                if (index < 8) {
             const columnTspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
             columnTspan.setAttribute('x', '5');
             columnTspan.setAttribute('font-size', '12');
             columnTspan.setAttribute('dy', '1.2em'); // Line height
             columnTspan.textContent = column;
             text.appendChild(columnTspan);
+                }
+                if (index === 8) {
+                    const columnTspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                    columnTspan.setAttribute('x', '5');
+                    columnTspan.setAttribute('font-size', '12');
+                    columnTspan.setAttribute('dy', '1.2em'); // Line height
+                    columnTspan.textContent = '...';
+                    text.appendChild(columnTspan);
+                }
             });
         }
 
@@ -318,12 +323,61 @@ function generateSVG(entities) {
 
 function setWidthAndHeight(entity) {
 
+
     // Calculate the width and height of the entity based on the name and columns
+    /*
     const text = entity.name + (entity.columns ? '\n' + entity.columns.join('\n') : '');
-    const lines = text.split('\n');
+    let lines = text.split('\n').slice(0, 9);
     const longestLine = lines.reduce((a, b) => a.length > b.length ? a : b);
     const longestLineWidth = longestLine.length * 8; // Assuming 8 pixels per character
     const lineHeight = 20;
     entity.width = longestLineWidth + 24;
     entity.height = (lines.length + 1) * lineHeight;
+    */
+
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            // Add the entity name as the first tspan
+            const nameTspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+            nameTspan.setAttribute('x', '20');
+            nameTspan.setAttribute('y', '4');
+            nameTspan.setAttribute('dy', '1.2em'); // Line height
+            nameTspan.setAttribute('font-size', '14');
+            nameTspan.textContent = entity.name;
+            text.appendChild(nameTspan);
+    
+            // Add columns as tspan elements
+            if (entity.columns) {
+                entity.columns.forEach((column, index )=> {
+                    if (index < 8) {
+                const columnTspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                columnTspan.setAttribute('x', '5');
+                columnTspan.setAttribute('font-size', '12');
+                columnTspan.setAttribute('dy', '1.2em'); // Line height
+                columnTspan.textContent = column;
+                text.appendChild(columnTspan);
+                    }
+                    if (index === 8) {
+                        const columnTspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                        columnTspan.setAttribute('x', '5');
+                        columnTspan.setAttribute('font-size', '12');
+                        columnTspan.setAttribute('dy', '1.2em'); // Line height
+                        columnTspan.textContent = '...';
+                        text.appendChild(columnTspan);
+                    }
+                });
+            }
+    
+            // Temporarily attach to the DOM to measure
+            const tempsvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            tempsvg.appendChild(text);
+            document.body.appendChild(tempsvg);
+    
+            // Update rect height and width based on text content
+            const textBBox = text.getBBox();
+            entity.width = textBBox.width + 23;
+            entity.height = textBBox.height + 23;
+    
+            // Remove from DOM after measuring
+            document.body.removeChild(tempsvg);
+
 }
