@@ -121,60 +121,6 @@ function applyForceLayout(entities, width, height) {
     return entities;
 
 
-    /*
-    for (let iteration = 0; iteration < maxIterations; iteration++) {
-        entities.forEach(entity => {
-            entity.vx = entity.vx || 0;
-            entity.vy = entity.vy || 0;
-
-            entities.forEach(other => {
-                if (entity !== other) {
-                    const dx = entity.x - other.x;
-                    const dy = entity.y - other.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    const minDistance = Math.sqrt(entityWidth * entityWidth + entityHeight * entityHeight);
-
-                    if (distance < minDistance) {
-                        const force = repulsionForce / (distance * distance);
-
-                        entity.vx += (dx / distance) * force;
-                        entity.vy += (dy / distance) * force;
-                    }
-                }
-            });
-        });
-
-        entities.forEach(entity => {
-            entities.forEach(other => {
-                if (entity !== other) {
-                    const dx = entity.x - other.x;
-                    const dy = entity.y - other.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    const minDistance = Math.sqrt(entityWidth * entityWidth + entityHeight * entityHeight);
-
-                    if (distance > minDistance) {
-                        const force = attractionForce * (distance - minDistance);
-
-                        entity.vx -= (dx / distance) * force;
-                        entity.vy -= (dy / distance) * force;
-                    }
-                }
-            });
-        });
-
-        entities.forEach(entity => {
-            entity.x += entity.vx;
-            entity.y += entity.vy;
-
-            entity.vx *= damping;
-            entity.vy *= damping;
-
-            // Keep entities within bounds
-            entity.x = Math.max(0, Math.min(width - entityWidth, entity.x));
-            entity.y = Math.max(0, Math.min(height - entityHeight, entity.y));
-        });
-    }
-        */
 }
 
 function assignColumn(entity, columnWidth, column) {
