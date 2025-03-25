@@ -312,9 +312,19 @@ function generateSVG(entities) {
         deleteButton.setAttribute('class', 'delete-button');
         deleteButton.textContent = 'X';
 
+        const describeButton = document.createElementNS(svgNamespace, 'text');
+        describeButton.setAttribute('x', textBBox.width);
+        describeButton.setAttribute('y', '10');
+        describeButton.setAttribute('font-family', 'Arial');
+        describeButton.setAttribute('font-size', '12');
+        describeButton.setAttribute('fill', 'darkblue');
+        describeButton.setAttribute('class', 'describe-button');
+        describeButton.textContent = 'D';
+
         group.appendChild(rect);
         group.appendChild(text);
         group.appendChild(deleteButton);
+        group.appendChild(describeButton);
         svg.appendChild(group);
     });
 
