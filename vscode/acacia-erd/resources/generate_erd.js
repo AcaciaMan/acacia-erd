@@ -50,7 +50,7 @@ function discoverLinkedEntities(entities) {
 
 
 
-function applyForceLayout(entities, width, height) {
+function applyForceLayout(entities, width, height, sliceEntities) {
 
     console.log('Started force layout');
 
@@ -98,8 +98,10 @@ function applyForceLayout(entities, width, height) {
     // divide width in 5 columns
     let columnWidth = width / 5;
 
+    if(sliceEntities) {
     // generate only first 30 entities
-    entities = entities.slice(0, 30);
+        entities = entities.slice(0, 30);
+    }
 
     entities.forEach(entity => {
         console.log(`Entity: ${entity.name}, Second Importance: ${entity.second_importance}`);

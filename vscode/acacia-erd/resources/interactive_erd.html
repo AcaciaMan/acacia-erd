@@ -110,7 +110,7 @@
                 case 'loadEntities':
                     entities = message.entities;
                     entities = discoverLinkedEntities(entities);
-                    entities = applyForceLayout(entities, 800, 600);
+                    entities = applyForceLayout(entities, 800, 600, true);
                     const svgContent = generateSVG(entities);
                     document.getElementById('erd-svg').outerHTML = svgContent;
                     attachSVGEntityEventListeners();
@@ -150,7 +150,7 @@
                     // delete all entities from document
                     document.querySelectorAll('.entity').forEach(entity => entity.remove());
 
-                    entities = applyForceLayout(entities, 800, 600);
+                    entities = applyForceLayout(entities, 800, 600, false);
                     const svgContent = generateSVG(entities);
                     document.getElementById('erd-svg').outerHTML = svgContent;
                     attachSVGEntityEventListeners();
