@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 
+import { InteractiveERDPanel } from './InteractiveERDPanel';
+
 export class EntityTreePanel implements vscode.WebviewViewProvider {
 
     constructor(private readonly context: vscode.ExtensionContext) {}
@@ -39,6 +41,9 @@ export class EntityTreePanel implements vscode.WebviewViewProvider {
                 case 'alert':
                     vscode.window.showErrorMessage(message.text);
                     return;
+                case 'openEntityDetails':
+                    InteractiveERDPanel.currentPanel?.openEntityDetails(message.entity);
+                    return;    
             }
         });
     }

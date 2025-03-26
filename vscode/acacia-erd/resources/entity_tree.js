@@ -1,3 +1,5 @@
+const vscode = acquireVsCodeApi();
+
 document.addEventListener('DOMContentLoaded', () => {
     const entityTree = document.getElementById('entity-tree');
 
@@ -12,6 +14,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 li.draggable = true;
                 li.addEventListener('dragstart', (e) => {
                     e.dataTransfer.setData('application/json', JSON.stringify(entity));
+                });
+                li.addEventListener('dblclick', () => {
+                    vscode.postMessage({
+                        command: 'openEntityDetails',
+                        entity: entity
+                    });
                 });
                 entityTree.appendChild(li);
             });

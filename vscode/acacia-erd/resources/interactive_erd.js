@@ -6,6 +6,11 @@ function attachEntityEventListeners() {
         let clickTimeout;
 
 
+        // Remove existing event listeners to ensure they are added only once
+        entityElement.replaceWith(entityElement.cloneNode(true));
+        entityElement = document.querySelector(`.entity[id="${entityElement.id}"]`);
+
+
         entityElement.addEventListener('click', (event) => {
             // Clear any existing timeout to prevent single-click logic from executing
             clearTimeout(clickTimeout);
@@ -63,6 +68,8 @@ function attachEntityEventListeners() {
     });
 
     document.querySelectorAll('.delete-button').forEach(deleteButton => {
+        deleteButton.removeEventListener('click', (event) => {});
+
         deleteButton.addEventListener('click', (event) => {
             const entityElement = event.target.closest('.entity');
             const entityId = entityElement.getAttribute('id');
@@ -75,6 +82,7 @@ function attachEntityEventListeners() {
     });
 
     document.querySelectorAll('.describe-button').forEach(describeButton => {
+        describeButton.removeEventListener('click', (event) => {});
         describeButton.addEventListener('click', (event) => {
             const entityElement = event.target.closest('.entity');
             const entityData = JSON.parse(entityElement.getAttribute('data-entity'));
