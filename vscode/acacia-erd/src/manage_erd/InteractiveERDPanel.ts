@@ -2,10 +2,11 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { DescribeEntityPanel } from './DescribeEntity';
+import { ERDGenerationPanel } from './ERDGenerationPanel';
 
 export class InteractiveERDPanel {
     public static currentPanel: InteractiveERDPanel | undefined;
-    private readonly _panel: vscode.WebviewPanel;
+    public readonly _panel: vscode.WebviewPanel;
     private readonly _extensionPath: string;
     private _place: vscode.Uri | undefined;
 
@@ -84,7 +85,7 @@ export class InteractiveERDPanel {
                     this._place = await loadSVGFile(panel.webview);
                     break;    
                 case 'chooseJSON':
-                    chooseJSONFile(panel.webview);
+                    ERDGenerationPanel.createOrShow(this._extensionPath);
                     break;
                 case 'chooseEntitiesList':
                     chooseEntitiesList(panel.webview);
@@ -300,7 +301,7 @@ async function loadSVGFile(webview: vscode.Webview): Promise<vscode.Uri | undefi
 
 }
 
-function chooseJSONFile(webview: vscode.Webview) {
+export function chooseJSONFile(webview: vscode.Webview, parameters: { maxEntities: number, discoverLinkedEntities: boolean, entityName: string }) {
     try {
     const entitiesJsonPath = vscode.workspace.getConfiguration().get('acacia-erd.entitiesJsonPath');
             if (typeof entitiesJsonPath === 'string') {
@@ -308,7 +309,8 @@ function chooseJSONFile(webview: vscode.Webview) {
                 const entities = JSON.parse(jsonContent);
                 webview.postMessage({
                     command: 'loadEntities',
-                    entities: entities
+                    entities: entities,
+                    parameters: parameters
                 });
             }
         } catch (error) {

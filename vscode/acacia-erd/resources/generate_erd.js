@@ -50,9 +50,50 @@ function discoverLinkedEntities(entities) {
 
 
 
-function applyForceLayout(entities, width, height, sliceEntities) {
+function applyForceLayout(entities, width, height, sliceEntities, maxEntities, entityName) {
 
     console.log('Started force layout');
+
+    if (entityName) {
+        linkedFromEntities = [];
+        linkedFromEntities.push(entityName);
+
+        entities.forEach(entity => {
+
+            if (entity.name === entityName) {
+                if (entity.linkedEntities) {
+                entity.linkedEntities.forEach(other => {
+                    linkedFromEntities.push(other);
+                });
+              }
+            } else if (entity.linkedEntities && entity.linkedEntities.includes(entityName)) {
+                linkedFromEntities.push(entity.name);
+            }
+        });
+
+        linkedFromEntities2 = [];
+
+        entities.forEach(entity => {
+            if (linkedFromEntities.includes(entity.name)) {
+                if (entity.linkedEntities) {
+                    entity.linkedEntities.forEach(other => {
+                        linkedFromEntities2.push(other);
+                    });
+                  }
+
+            } else if (entity.linkedEntities) {
+                    entity.linkedEntities.forEach(other => {
+                        if (linkedFromEntities.includes(other)) {
+                            linkedFromEntities2.push(entity.name);
+                        }
+                    });
+                }
+            
+        });
+
+        entities = entities.filter(entity => linkedFromEntities2.includes(entity.name) || linkedFromEntities.includes(entity.name));
+
+    }
 
     // Create a map of entities by name for quick lookup
     entities.forEach(entity => {
@@ -104,7 +145,7 @@ function applyForceLayout(entities, width, height, sliceEntities) {
 
     if(sliceEntities) {
     // generate only first 30 entities
-        entities = entities.slice(0, 30);
+        entities = entities.slice(0, maxEntities);
     }
 
     entities.forEach(entity => {
