@@ -39,6 +39,12 @@
           "id": "erdView",
           "name": "Manage ERD",
           "icon": "resources/erd_icon.svg"
+        },
+        {
+          "type": "webview",
+          "id": "openEntityTree",
+          "name": "Entities Tree",
+          "icon": "resources/erd_icon.svg"
         }
       ]
     },
