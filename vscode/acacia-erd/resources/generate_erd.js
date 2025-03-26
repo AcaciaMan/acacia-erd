@@ -76,8 +76,10 @@ function applyForceLayout(entities, width, height, sliceEntities) {
     entities.forEach(entity => {
         entity.importance = 0;
         entity.linkedEntities.forEach(other => {
+            if (entityMap.get(other)) {
                 entity.importance += 1;
                 entityMap.get(other).importance += 1;
+            }
             });
     });
 
@@ -85,8 +87,10 @@ function applyForceLayout(entities, width, height, sliceEntities) {
     entities.forEach(entity => {
         entity.second_importance += entity.importance;
         entity.linkedEntities.forEach(other => {
+            if (entityMap.get(other)) {
             entity.second_importance += entityMap.get(other).importance;
             entityMap.get(other).second_importance += entity.importance;
+            }
         });
     });
 
@@ -190,93 +194,101 @@ function generateSVG(entities) {
     svg.setAttribute('id', 'erd-svg');
 
     entities.forEach(entity => {
-        const group = document.createElementNS(svgNamespace, 'g');
-        group.setAttribute('class', 'entity');
-        group.setAttribute('id', entity.id);
-        group.setAttribute('data-entity', JSON.stringify(entity));
-        group.setAttribute('transform', `translate(${entity.x}, ${entity.y})`);
-
-        const rect = document.createElementNS(svgNamespace, 'rect');
-        rect.setAttribute('x', '0');
-        rect.setAttribute('y', '0');
-        rect.setAttribute('fill', 'lightblue');
-
-        const text = document.createElementNS(svgNamespace, 'text');
-        // Remove existing tspan elements
-        while (text.firstChild) {
-            text.removeChild(text.firstChild);
-        }
-
-        // Add the entity name as the first tspan
-        const nameTspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
-        nameTspan.setAttribute('x', '20');
-        nameTspan.setAttribute('y', '4');
-        nameTspan.setAttribute('dy', '1.2em'); // Line height
-        nameTspan.setAttribute('font-size', '14');
-        nameTspan.textContent = entity.name;
-        text.appendChild(nameTspan);
-
-        // Add columns as tspan elements
-        if (entity.columns) {
-            entity.columns.forEach((column, index )=> {
-                if (index < 8) {
-            const columnTspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
-            columnTspan.setAttribute('x', '5');
-            columnTspan.setAttribute('font-size', '12');
-            columnTspan.setAttribute('dy', '1.2em'); // Line height
-            columnTspan.textContent = column;
-            text.appendChild(columnTspan);
-                }
-                if (index === 8) {
-                    const columnTspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
-                    columnTspan.setAttribute('x', '5');
-                    columnTspan.setAttribute('font-size', '12');
-                    columnTspan.setAttribute('dy', '1.2em'); // Line height
-                    columnTspan.textContent = '...';
-                    text.appendChild(columnTspan);
-                }
-            });
-        }
-
-        // Temporarily attach to the DOM to measure
-        const tempsvg = document.createElementNS(svgNamespace, 'svg');
-        tempsvg.appendChild(text);
-        document.body.appendChild(tempsvg);
-
-        // Update rect height and width based on text content
-        const textBBox = text.getBBox();
-        rect.setAttribute('width', textBBox.width + 20);
-        rect.setAttribute('height', textBBox.height + 20);
-
-        // Remove from DOM after measuring
-        document.body.removeChild(tempsvg);
-
-        const deleteButton = document.createElementNS(svgNamespace, 'text');
-        deleteButton.setAttribute('x', textBBox.width + 10);
-        deleteButton.setAttribute('y', '10');
-        deleteButton.setAttribute('font-family', 'Arial');
-        deleteButton.setAttribute('font-size', '12');
-        deleteButton.setAttribute('fill', 'darkblue');
-        deleteButton.setAttribute('class', 'delete-button');
-        deleteButton.textContent = 'X';
-
-        const describeButton = document.createElementNS(svgNamespace, 'text');
-        describeButton.setAttribute('x', textBBox.width);
-        describeButton.setAttribute('y', '10');
-        describeButton.setAttribute('font-family', 'Arial');
-        describeButton.setAttribute('font-size', '12');
-        describeButton.setAttribute('fill', 'darkblue');
-        describeButton.setAttribute('class', 'describe-button');
-        describeButton.textContent = 'D';
-
-        group.appendChild(rect);
-        group.appendChild(text);
-        group.appendChild(deleteButton);
-        group.appendChild(describeButton);
-        svg.appendChild(group);
+        addEntityToSvg(svg, entity);
     });
 
     return svg.outerHTML;
+}
+
+
+function addEntityToSvg(svg, entity) {
+    const svgNamespace = 'http://www.w3.org/2000/svg';
+    const group = document.createElementNS(svgNamespace, 'g');
+    group.setAttribute('class', 'entity');
+    group.setAttribute('id', entity.id);
+    group.setAttribute('data-entity', JSON.stringify(entity));
+    group.setAttribute('transform', `translate(${entity.x}, ${entity.y})`);
+
+    const rect = document.createElementNS(svgNamespace, 'rect');
+    rect.setAttribute('x', '0');
+    rect.setAttribute('y', '0');
+    rect.setAttribute('fill', 'lightblue');
+
+    const text = document.createElementNS(svgNamespace, 'text');
+    // Remove existing tspan elements
+    while (text.firstChild) {
+        text.removeChild(text.firstChild);
+    }
+
+    // Add the entity name as the first tspan
+    const nameTspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+    nameTspan.setAttribute('x', '20');
+    nameTspan.setAttribute('y', '4');
+    nameTspan.setAttribute('dy', '1.2em'); // Line height
+    nameTspan.setAttribute('font-size', '14');
+    nameTspan.textContent = entity.name;
+    text.appendChild(nameTspan);
+
+    // Add columns as tspan elements
+    if (entity.columns) {
+        entity.columns.forEach((column, index )=> {
+            if (index < 8) {
+        const columnTspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+        columnTspan.setAttribute('x', '5');
+        columnTspan.setAttribute('font-size', '12');
+        columnTspan.setAttribute('dy', '1.2em'); // Line height
+        columnTspan.textContent = column;
+        text.appendChild(columnTspan);
+            }
+            if (index === 8) {
+                const columnTspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                columnTspan.setAttribute('x', '5');
+                columnTspan.setAttribute('font-size', '12');
+                columnTspan.setAttribute('dy', '1.2em'); // Line height
+                columnTspan.textContent = '...';
+                text.appendChild(columnTspan);
+            }
+        });
+    }
+
+    // Temporarily attach to the DOM to measure
+    const tempsvg = document.createElementNS(svgNamespace, 'svg');
+    tempsvg.appendChild(text);
+    document.body.appendChild(tempsvg);
+
+    // Update rect height and width based on text content
+    const textBBox = text.getBBox();
+    rect.setAttribute('width', textBBox.width + 20);
+    rect.setAttribute('height', textBBox.height + 20);
+
+    // Remove from DOM after measuring
+    document.body.removeChild(tempsvg);
+
+    const deleteButton = document.createElementNS(svgNamespace, 'text');
+    deleteButton.setAttribute('x', textBBox.width + 10);
+    deleteButton.setAttribute('y', '10');
+    deleteButton.setAttribute('font-family', 'Arial');
+    deleteButton.setAttribute('font-size', '12');
+    deleteButton.setAttribute('fill', 'darkblue');
+    deleteButton.setAttribute('class', 'delete-button');
+    deleteButton.textContent = 'X';
+
+    const describeButton = document.createElementNS(svgNamespace, 'text');
+    describeButton.setAttribute('x', textBBox.width);
+    describeButton.setAttribute('y', '10');
+    describeButton.setAttribute('font-family', 'Arial');
+    describeButton.setAttribute('font-size', '12');
+    describeButton.setAttribute('fill', 'darkblue');
+    describeButton.setAttribute('class', 'describe-button');
+    describeButton.textContent = 'D';
+
+    group.appendChild(rect);
+    group.appendChild(text);
+    group.appendChild(deleteButton);
+    group.appendChild(describeButton);
+    svg.appendChild(group);
+
+
 }
 
 function setWidthAndHeight(entity) {

@@ -29,9 +29,9 @@ function attachEntityEventListeners() {
                 document.querySelectorAll('.entity').forEach(entity => {
                     if (entity !== entityElement) {
                         const eData = JSON.parse(entity.getAttribute('data-entity'));
-                        if (entityData.linkedEntities.includes(eData.name) ) {
+                        if (entityData.linkedEntities &&  entityData.linkedEntities.includes(eData.name) ) {
                         entity.querySelector('rect').setAttribute('fill', 'green');
-                        } else if (eData.linkedEntities.includes(entityData.name)) {
+                        } else if (eData.linkedEntities && eData.linkedEntities.includes(entityData.name)) {
                         entity.querySelector('rect').setAttribute('fill', 'yellow');
                         }
                     }
@@ -125,6 +125,24 @@ function attachSVGEntityEventListeners() {
     svg.addEventListener('mouseleave', () => {
         isDragging = false;
         currentEntity = null;
+    });
+
+    svg.addEventListener('dragover', (event) => {
+        event.preventDefault();
+    });
+
+    svg.addEventListener('drop', (event) => {
+        event.preventDefault();
+        console.log('Dropped entity:', event.dataTransfer.getData('application/json')); 
+        const entityData = event.dataTransfer.getData('application/json');
+        if (entityData) {
+            const entity = JSON.parse(entityData);
+            entity.x = event.clientX;
+            entity.y = event.clientY;
+            console.log('Dropped entity:', entity);
+            addEntityToSvg(svg, entity);
+            attachEntityEventListeners();
+        }
     });
 }
 
