@@ -157,18 +157,14 @@ function attachSVGEntityEventListeners() {
     svg.addEventListener('mouseup', () => {
         if (isResizing) {
             isResizing = false;
+            const rect = currentEntity.querySelector('rect');
 
             // Update the entity's data
             const entityData = JSON.parse(currentEntity.getAttribute('data-entity'));
             entityData.rectWidth = parseFloat(rect.getAttribute('width'));
             entityData.rectHeight = parseFloat(rect.getAttribute('height'));
             currentEntity.setAttribute('data-entity', JSON.stringify(entityData));
-
-            // Notify the extension about the resize
-            vscode.postMessage({
-                command: 'resizeEntity',
-                entity: entityData
-            });
+            updateEntity(entityData);
         }
 
 
@@ -182,17 +178,14 @@ function attachSVGEntityEventListeners() {
         if (isResizing) {
             isResizing = false;
 
+            const rect = currentEntity.querySelector('rect');
             // Update the entity's data
             const entityData = JSON.parse(currentEntity.getAttribute('data-entity'));
             entityData.rectWidth = parseFloat(rect.getAttribute('width'));
             entityData.rectHeight = parseFloat(rect.getAttribute('height'));
             currentEntity.setAttribute('data-entity', JSON.stringify(entityData));
+            updateEntity(entityData);
 
-            // Notify the extension about the resize
-            vscode.postMessage({
-                command: 'resizeEntity',
-                entity: entityData
-            });
         }
         isDragging = false;
         currentEntity = null;
@@ -246,6 +239,50 @@ function updateEntity(entity) {
             text.removeChild(text.firstChild);
         }
 
+        let columns = [];
+        // if entity has rectWidth and rectHeight, calc how many columns and characters can fit in the rect
+        if (entity.rectWidth && entity.rectHeight) {
+            const maxLines = Math.floor(entity.rectHeight / 20); // 20 is the line height
+            const maxCharsPerName = Math.floor((entity.rectWidth - 40) / 8); // 8 is the average character width
+            const maxCharsPerColumn = Math.floor((entity.rectWidth - 25) / 8); // 8 is the average character width
+            if (maxCharsPerName < entity.name.length) {
+                entity.name = entity.name.substring(0, maxCharsPerName - 1) + '...';
+            }
+
+
+            if (entity.columns) {
+                entity.columns.forEach((column, index) => {
+                    if (index > maxLines) {
+                        return;
+                    }
+                    if (index === maxLines) {
+                        columns.push('...');
+                        return;
+                    }
+
+                    if (maxCharsPerColumn < column.length) {
+                        columns.push(column.substring(0, maxCharsPerColumn - 1) + '...');
+                    } else {
+                        columns.push(column);
+                    }
+                });
+            }
+        } else {
+            if (entity.columns) {
+            // show only 8 columns
+            if (entity.columns.length > 8) {
+            columns = entity.columns.slice(0, 7);
+            columns.push('...');
+            } else {
+            columns = entity.columns;
+            }
+        }
+
+        }
+            entity.columns = columns;
+
+
+
         // Add the entity name as the first tspan
         const nameTspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
         nameTspan.setAttribute('x', '20');
@@ -288,7 +325,38 @@ function updateEntity(entity) {
             entityGroup.appendChild(deleteButton);
         } else {
             deleteButton.setAttribute('x', bbox.width + 10);
-        }       
+        }
+        
+        // Add describe button
+        let describeButton = entityGroup.querySelector('.describe-button');
+        if (!describeButton) {
+            describeButton = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            describeButton.setAttribute('x', bbox.width);
+            describeButton.setAttribute('y', '10');
+            describeButton.setAttribute('font-family', 'Arial');
+            describeButton.setAttribute('font-size', '12');
+            describeButton.setAttribute('fill', 'darkblue');
+            describeButton.setAttribute('class', 'describe-button');
+            describeButton.textContent = 'D';
+            entityGroup.appendChild(describeButton);
+        } else {
+            describeButton.setAttribute('x', bbox.width );
+        }
+
+        // Add resize handle
+        let resizeHandle = entityGroup.querySelector('.resize-handle');
+        if (!resizeHandle) {
+            resizeHandle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            resizeHandle.setAttribute('cx', bbox.width+20); // Bottom-right corner
+            resizeHandle.setAttribute('cy', bbox.height + 20);
+            resizeHandle.setAttribute('r', '5');
+            resizeHandle.setAttribute('fill', 'darkblue');
+            resizeHandle.setAttribute('class', 'resize-handle');
+            entityGroup.appendChild(resizeHandle);
+        } else {
+            resizeHandle.setAttribute('cx', bbox.width+20);
+            resizeHandle.setAttribute('cy', bbox.height+20);
+        }
 
         console.log('Entity updated:', entity);
         console.log('text content:', text.textContent);
