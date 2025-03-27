@@ -169,6 +169,10 @@ function attachSVGEntityEventListeners() {
     svg = document.getElementById('erd-svg');
 
     svg.addEventListener('mousedown', (event) => {
+        if (event.target.closest('.resize-handle')) {
+           return;
+        } 
+
         if (event.target.closest('.entity')) {
             isDragging = true;
             currentEntity = event.target.closest('.entity');
@@ -180,7 +184,7 @@ function attachSVGEntityEventListeners() {
     });
 
     svg.addEventListener('mousemove', (event) => {
-        if (isDragging && currentEntity  && !isResizing) {
+        if (isDragging && currentEntity) {
             const x = event.clientX - startX;
             const y = event.clientY - startY;
             currentEntity.setAttribute('transform', `translate(${x}, ${y})`);
