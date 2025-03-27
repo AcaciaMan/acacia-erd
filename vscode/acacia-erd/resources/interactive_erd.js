@@ -1,5 +1,7 @@
 const vscode = acquireVsCodeApi();
 
+let isResizing = false;
+
 function attachEntityEventListeners() {
     document.querySelectorAll('.entity').forEach(entityElement => {
 
@@ -94,6 +96,66 @@ function attachEntityEventListeners() {
     }
     );
 
+    document.querySelectorAll('.entity').forEach(entityElement => {
+        const rect = entityElement.querySelector('rect');
+        const resizeHandle = entityElement.querySelector('.resize-handle');
+
+        let startX, startY, startWidth, startHeight;
+
+        // Add mousedown event to the resize handle
+        resizeHandle.addEventListener('mousedown', (event) => {
+            event.preventDefault();
+            isResizing = true;
+            startX = event.clientX;
+            startY = event.clientY;
+            startWidth = parseFloat(rect.getAttribute('width'));
+            startHeight = parseFloat(rect.getAttribute('height'));
+        });
+
+        // Add mousemove event to resize the rectangle
+        resizeHandle.addEventListener('mousemove', (event) => {
+            if (isResizing) {
+                const deltaX = event.clientX - startX;
+                const deltaY = event.clientY - startY;
+
+                const newWidth = Math.max(50, startWidth + deltaX); // Minimum width: 50
+                const newHeight = Math.max(30, startHeight + deltaY); // Minimum height: 30
+
+                rect.setAttribute('width', newWidth);
+                rect.setAttribute('height', newHeight);
+
+                // Update the position of the resize handle
+                resizeHandle.setAttribute('cx', newWidth);
+                resizeHandle.setAttribute('cy', newHeight);
+            }
+        });
+
+        // Add mouseup event to stop resizing
+        resizeHandle.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+
+                // Update the entity's data
+                const entityData = JSON.parse(entityElement.getAttribute('data-entity'));
+                entityData.rectWidth = parseFloat(rect.getAttribute('width'));
+                entityData.rectHeight = parseFloat(rect.getAttribute('height'));
+                entityElement.setAttribute('data-entity', JSON.stringify(entityData));
+
+                // Notify the extension about the resize
+                vscode.postMessage({
+                    command: 'resizeEntity',
+                    entity: entityData
+                });
+            }
+        });
+
+        resizeHandle.addEventListener('mouseleave', () => {
+            if (isResizing) {
+                isResizing = false;
+            }
+        });
+    });
+
 }
 
 // Dragging functionality
@@ -118,7 +180,7 @@ function attachSVGEntityEventListeners() {
     });
 
     svg.addEventListener('mousemove', (event) => {
-        if (isDragging && currentEntity) {
+        if (isDragging && currentEntity  && !isResizing) {
             const x = event.clientX - startX;
             const y = event.clientY - startY;
             currentEntity.setAttribute('transform', `translate(${x}, ${y})`);

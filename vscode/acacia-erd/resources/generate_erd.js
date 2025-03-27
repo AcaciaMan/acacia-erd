@@ -323,10 +323,19 @@ function addEntityToSvg(svg, entity) {
     describeButton.setAttribute('class', 'describe-button');
     describeButton.textContent = 'D';
 
+        // Add resize handles
+        const resizeHandle = document.createElementNS(svgNamespace, 'circle');
+        resizeHandle.setAttribute('cx', textBBox.width+20); // Bottom-right corner
+        resizeHandle.setAttribute('cy', textBBox.height + 20);
+        resizeHandle.setAttribute('r', '5');
+        resizeHandle.setAttribute('fill', 'darkblue');
+        resizeHandle.setAttribute('class', 'resize-handle');
+
     group.appendChild(rect);
     group.appendChild(text);
     group.appendChild(deleteButton);
     group.appendChild(describeButton);
+    group.appendChild(resizeHandle);
     svg.appendChild(group);
 
 
