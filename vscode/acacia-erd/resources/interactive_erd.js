@@ -221,6 +221,37 @@ window.addEventListener('message', event => {
     }
 });
 
+function calculateMaxChars(text, maxWidth, fontSize = 14) {
+    // Create a temporary SVG text element for measurement
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const tempText = document.createElementNS(svgNS, 'text');
+    tempText.setAttribute('font-size', fontSize);
+    tempText.setAttribute('font-family', 'Arial');
+    
+    tempText.textContent = 'i';
+// Append the text element to an SVG container in the DOM
+const svg = document.querySelector('svg');
+svg.appendChild(tempText);
+
+    let truncatedText = '';
+    for (let i = 0; i < text.length; i++) {
+        console.log('tempText:', tempText.getComputedTextLength());
+        tempText.textContent = truncatedText + text[i];
+
+        
+        if (tempText.getComputedTextLength() > maxWidth) {
+            truncatedText += '...';
+            break;
+        }
+        truncatedText += text[i];
+    }
+
+    // Remove the temporary text element
+    svg.removeChild(tempText);
+
+    return truncatedText;
+}
+
 function updateEntity(entity) {
     const entityGroup = document.getElementById(entity.id);
     if (entityGroup) {
@@ -243,12 +274,7 @@ function updateEntity(entity) {
         // if entity has rectWidth and rectHeight, calc how many columns and characters can fit in the rect
         if (entity.rectWidth && entity.rectHeight) {
             const maxLines = Math.floor(entity.rectHeight / 20); // 20 is the line height
-            const maxCharsPerName = Math.floor((entity.rectWidth - 40) / 8); // 8 is the average character width
-            const maxCharsPerColumn = Math.floor((entity.rectWidth - 25) / 8); // 8 is the average character width
-            if (maxCharsPerName < entity.name.length) {
-                entity.name = entity.name.substring(0, maxCharsPerName - 1) + '...';
-            }
-
+            entity.name = calculateMaxChars(entity.name, entity.rectWidth - 40); // 40 is the padding
 
             if (entity.columns) {
                 entity.columns.forEach((column, index) => {
@@ -260,11 +286,8 @@ function updateEntity(entity) {
                         return;
                     }
 
-                    if (maxCharsPerColumn < column.length) {
-                        columns.push(column.substring(0, maxCharsPerColumn - 1) + '...');
-                    } else {
-                        columns.push(column);
-                    }
+                    columns.push(calculateMaxChars(column, entity.rectWidth - 25, 12));
+
                 });
             }
         } else {
