@@ -268,6 +268,42 @@ function addEntityToSvg(svg, entity) {
         text.removeChild(text.firstChild);
     }
 
+    let columns = [];
+    // if entity has rectWidth and rectHeight, calc how many columns and characters can fit in the rect
+    if (entity.rectWidth && entity.rectHeight) {
+        const maxLines = Math.floor(entity.rectHeight / 20); // 20 is the line height
+        entity.name = calculateMaxChars(entity.name, entity.rectWidth - 40); // 40 is the padding
+
+        if (entity.columns) {
+            entity.columns.forEach((column, index) => {
+                if (index > maxLines) {
+                    return;
+                }
+                if (index === maxLines) {
+                    columns.push('...');
+                    return;
+                }
+
+                columns.push(calculateMaxChars(column, entity.rectWidth - 25, 12));
+
+            });
+        }
+    } else {
+        if (entity.columns) {
+        // show only 8 columns
+        if (entity.columns.length > 8) {
+        columns = entity.columns.slice(0, 7);
+        columns.push('...');
+        } else {
+        columns = entity.columns;
+        }
+    }
+
+    }
+        entity.columns = columns;
+
+
+
     // Add the entity name as the first tspan
     const nameTspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
     nameTspan.setAttribute('x', '20');
@@ -280,22 +316,12 @@ function addEntityToSvg(svg, entity) {
     // Add columns as tspan elements
     if (entity.columns) {
         entity.columns.forEach((column, index )=> {
-            if (index < 8) {
         const columnTspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
         columnTspan.setAttribute('x', '5');
         columnTspan.setAttribute('font-size', '12');
         columnTspan.setAttribute('dy', '1.2em'); // Line height
         columnTspan.textContent = column;
         text.appendChild(columnTspan);
-            }
-            if (index === 8) {
-                const columnTspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
-                columnTspan.setAttribute('x', '5');
-                columnTspan.setAttribute('font-size', '12');
-                columnTspan.setAttribute('dy', '1.2em'); // Line height
-                columnTspan.textContent = '...';
-                text.appendChild(columnTspan);
-            }
         });
     }
 
@@ -346,7 +372,6 @@ function addEntityToSvg(svg, entity) {
     group.appendChild(describeButton);
     group.appendChild(resizeHandle);
     svg.appendChild(group);
-
 
 }
 
