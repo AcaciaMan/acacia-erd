@@ -3,6 +3,9 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { DescribeEntityPanel } from './DescribeEntity';
 import { ERDGenerationPanel } from './ERDGenerationPanel';
+import { EntityTreePanel } from './EntityTreePanel';
+import { ObjectRegistry } from '../utils/ObjectRegistry';
+
 
 export class InteractiveERDPanel {
     public static currentPanel: InteractiveERDPanel | undefined;
@@ -179,6 +182,7 @@ export class InteractiveERDPanel {
             switch (message.command) {
                 case 'saveEntity':
                     this.saveEntity(message.entity);
+                    panel.dispose();
                     break;
             }
         });
@@ -223,6 +227,7 @@ export class InteractiveERDPanel {
             switch (message.command) {
                 case 'saveUsage':
                     this.saveUsage(message.usage);
+                    panel.dispose();
                     break;
             }
         });
@@ -334,13 +339,25 @@ function chooseEntitiesList(webview: vscode.Webview) {
     vscode.window.showOpenDialog(options).then(fileUri => {
         if (fileUri && fileUri[0]) {
             // update workspace setting with the path to the entities list
-            vscode.workspace.getConfiguration().update('acacia-erd.entitiesJsonPath', fileUri[0].fsPath, false);
+            vscode.workspace.getConfiguration().update('acacia-erd.entitiesJsonPath', fileUri[0].fsPath, false).then(() => {
+
+                // reload the entities list in the EntityTreePanel
+                const entityTreePanel = ObjectRegistry.getInstance().get<EntityTreePanel>('EntityTreePanel');
+                if (entityTreePanel) {
+                    if (entityTreePanel._webviewView) {
+                        entityTreePanel._loadEntities(entityTreePanel._webviewView.webview);
+                    } else {
+                        vscode.window.showErrorMessage('EntityTreePanel webview is not available.');
+                    }
+                }
 
             webview.postMessage({
                 command: 'loadEntitiesList',
                 entitiesListPath: fileUri[0].fsPath
             });
-        }
+        });
+    }
+
     });
 }
 

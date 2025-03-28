@@ -228,17 +228,24 @@ function calculateYPosition(entity, entities, height) {
 }
 
 function generateSVG(entities) {
-    const svgNamespace = 'http://www.w3.org/2000/svg';
-    const svg = document.createElementNS(svgNamespace, 'svg');
-    svg.setAttribute('xmlns', svgNamespace);
-    svg.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
-    svg.setAttribute('id', 'erd-svg');
+
+    // Clear existing entities
+    document.querySelectorAll('.entity').forEach(entityElement => {
+        entityElement.remove();
+    });
+
+    document.querySelectorAll('.usage').forEach(entityElement => {
+        entityElement.remove();
+    });
+
+
+
+    const svg = document.getElementById('erd-svg');
 
     entities.forEach(entity => {
         addEntityToSvg(svg, entity);
     });
 
-    return svg.outerHTML;
 }
 
 
@@ -293,17 +300,19 @@ function addEntityToSvg(svg, entity) {
     }
 
     // Temporarily attach to the DOM to measure
-    const tempsvg = document.createElementNS(svgNamespace, 'svg');
-    tempsvg.appendChild(text);
-    document.body.appendChild(tempsvg);
+
+    svg.appendChild(text);
 
     // Update rect height and width based on text content
     const textBBox = text.getBBox();
+    if (!entity.columns || entity.columns.length === 0) {
+        textBBox.width += 20;
+    }
     rect.setAttribute('width', textBBox.width + 20);
     rect.setAttribute('height', textBBox.height + 20);
 
     // Remove from DOM after measuring
-    document.body.removeChild(tempsvg);
+    svg.removeChild(text);
 
     const deleteButton = document.createElementNS(svgNamespace, 'text');
     deleteButton.setAttribute('x', textBBox.width + 10);
@@ -355,6 +364,12 @@ function setWidthAndHeight(entity) {
     entity.height = (lines.length + 1) * lineHeight;
     */
 
+    if (entity.rectWidth && entity.rectHeight) {
+        entity.width = entity.rectWidth;
+        entity.height = entity.rectHeight;
+        return;
+    }
+
     const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
             // Add the entity name as the first tspan
             const nameTspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
@@ -388,9 +403,8 @@ function setWidthAndHeight(entity) {
             }
     
             // Temporarily attach to the DOM to measure
-            const tempsvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            const tempsvg = document.getElementById('erd-svg');
             tempsvg.appendChild(text);
-            document.body.appendChild(tempsvg);
     
             // Update rect height and width based on text content
             const textBBox = text.getBBox();
@@ -398,6 +412,6 @@ function setWidthAndHeight(entity) {
             entity.height = textBBox.height + 23;
     
             // Remove from DOM after measuring
-            document.body.removeChild(tempsvg);
+            tempsvg.removeChild(text);
 
 }

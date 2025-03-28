@@ -230,12 +230,11 @@ function calculateMaxChars(text, maxWidth, fontSize = 14) {
     
     tempText.textContent = 'i';
 // Append the text element to an SVG container in the DOM
-const svg = document.querySelector('svg');
+const svg = document.getElementById('erd-svg');
 svg.appendChild(tempText);
 
     let truncatedText = '';
     for (let i = 0; i < text.length; i++) {
-        console.log('tempText:', tempText.getComputedTextLength());
         tempText.textContent = truncatedText + text[i];
 
         
@@ -330,6 +329,9 @@ function updateEntity(entity) {
 
         // update rectangle width and height
         const bbox = text.getBBox();
+        if (!entity.columns || entity.columns.length === 0) {
+            bbox.width += 20;
+        }
         const rect = entityGroup.querySelector('rect');
         rect.setAttribute('width', bbox.width + 20);
         rect.setAttribute('height', bbox.height + 20);

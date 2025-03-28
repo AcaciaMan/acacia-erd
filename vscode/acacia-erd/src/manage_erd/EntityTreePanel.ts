@@ -1,14 +1,21 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { ObjectRegistry } from '../utils/ObjectRegistry';
 
 import { InteractiveERDPanel } from './InteractiveERDPanel';
 
 export class EntityTreePanel implements vscode.WebviewViewProvider {
 
-    constructor(private readonly context: vscode.ExtensionContext) {}
+    public _webviewView: vscode.WebviewView | undefined;
+
+    constructor(private readonly context: vscode.ExtensionContext) {
+        ObjectRegistry.getInstance().set('EntityTreePanel', this);
+    }
 
     resolveWebviewView(webviewView: vscode.WebviewView) {
+        this._webviewView = webviewView;
+
         webviewView.webview.options = {
             enableScripts: true,
             localResourceRoots: [vscode.Uri.file(path.join(this.context.extensionPath, 'resources'))]
@@ -68,7 +75,7 @@ export class EntityTreePanel implements vscode.WebviewViewProvider {
         `;
     }
 
-    private _loadEntities(webview: vscode.Webview) {
+    public _loadEntities(webview: vscode.Webview) {
         const config = vscode.workspace.getConfiguration('acacia-erd');
         const entitiesPath = config.get<string>('entitiesJsonPath', 'resources/entities.json');
 

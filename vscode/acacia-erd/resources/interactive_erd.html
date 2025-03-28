@@ -110,13 +110,13 @@
                     break;
                 case 'loadEntities':
                     entities = message.entities;
+
                     let parameters = message.parameters;
                     if (parameters.discoverLinkedEntities) {
                         entities = discoverLinkedEntities(entities);
                     }
                     entities = applyForceLayout(entities, 800, 600, true, parameters.maxEntities, parameters.entityName);
-                    const svgContent = generateSVG(entities);
-                    document.getElementById('erd-svg').outerHTML = svgContent;
+                    generateSVG(entities);
                     attachSVGEntityEventListeners();
                     attachEntityEventListeners();
                     attachSVGUsageEventListeners();
@@ -151,12 +151,8 @@
         document.getElementById('apply-erd-button').addEventListener('click', () => {
                     entities = getERDEntities();
 
-                    // delete all entities from document
-                    document.querySelectorAll('.entity').forEach(entity => entity.remove());
-
                     entities = applyForceLayout(entities, 800, 600, false, 0, undefined);
-                    const svgContent = generateSVG(entities);
-                    document.getElementById('erd-svg').outerHTML = svgContent;
+                    generateSVG(entities);
                     attachSVGEntityEventListeners();
                     attachEntityEventListeners();
                     attachSVGUsageEventListeners();
