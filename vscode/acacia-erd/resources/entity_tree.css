@@ -10,3 +10,20 @@ ul {
 li {
     padding: 5px 0;
 }
+
+#controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+#filter-input {
+    flex: 1;
+    padding: 5px;
+    font-size: 14px;
+}
+
+#sort-select {
+    padding: 5px;
+    font-size: 14px;
+}

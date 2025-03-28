@@ -66,6 +66,13 @@ export class EntityTreePanel implements vscode.WebviewViewProvider {
                 <link href="${styleUri}" rel="stylesheet">
             </head>
             <body>
+                <div id="controls">
+                    <input type="text" id="filter-input" placeholder="Filter entities..." />
+                    <select id="sort-select">
+                        <option value="name-asc">Sort by Name (A-Z)</option>
+                        <option value="name-desc">Sort by Name (Z-A)</option>
+                    </select>
+                </div>
                 <ul id="entity-tree">
                     <!-- Tree will be populated by JavaScript -->
                 </ul>

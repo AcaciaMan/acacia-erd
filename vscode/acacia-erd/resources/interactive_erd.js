@@ -108,6 +108,10 @@ function attachSVGEntityEventListeners() {
 
     svg = document.getElementById('erd-svg');
 
+    // Remove existing event listeners to ensure they are added only once
+    svg.replaceWith(svg.cloneNode(true));
+    svg = document.getElementById('erd-svg');
+
     svg.addEventListener('mousedown', (event) => {
         if (event.target.closest('.resize-handle')) {
            isResizing = true;
