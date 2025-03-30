@@ -3,8 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { DescribeEntityPanel } from './DescribeEntity';
 import { ERDGenerationPanel } from './ERDGenerationPanel';
-import { EntityTreePanel } from './EntityTreePanel';
-import { ObjectRegistry } from '../utils/ObjectRegistry';
+import { EntityManager } from '../utils/EntityManager';
 
 
 export class InteractiveERDPanel {
@@ -12,6 +11,7 @@ export class InteractiveERDPanel {
     public readonly _panel: vscode.WebviewPanel;
     private readonly _extensionPath: string;
     private _place: vscode.Uri | undefined;
+    private mgr: EntityManager = EntityManager.getInstance();
 
     public static createOrShow(extensionPath: string) {
         const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
@@ -44,7 +44,7 @@ export class InteractiveERDPanel {
         this._update();
 
         // Send a message to the interactive ERD webview to load the entities list
-        const entitiesJsonPath = vscode.workspace.getConfiguration().get('acacia-erd.entitiesJsonPath');
+        const entitiesJsonPath = this.mgr.getEntitiesJsonPath();
         if (entitiesJsonPath) {
             this._panel.webview.postMessage({
                 command: 'loadEntitiesList',
@@ -307,24 +307,12 @@ async function loadSVGFile(webview: vscode.Webview): Promise<vscode.Uri | undefi
 }
 
 export function chooseJSONFile(webview: vscode.Webview, parameters: { maxEntities: number, discoverLinkedEntities: boolean, entityName: string }) {
-    try {
-    const entitiesJsonPath = vscode.workspace.getConfiguration().get('acacia-erd.entitiesJsonPath');
-            if (typeof entitiesJsonPath === 'string') {
-                const jsonContent = fs.readFileSync(entitiesJsonPath, 'utf8');
-                const entities = JSON.parse(jsonContent);
+                const entities = EntityManager.getInstance().getEntities();
                 webview.postMessage({
                     command: 'loadEntities',
                     entities: entities,
                     parameters: parameters
                 });
-            }
-        } catch (error) {
-                if (error instanceof Error) {
-                    vscode.window.showErrorMessage('Error loading JSON file: ' + error.message);
-                } else {
-                    vscode.window.showErrorMessage('Error loading JSON file');
-                }
-        }
 }
 
 function chooseEntitiesList(webview: vscode.Webview) {
@@ -338,24 +326,13 @@ function chooseEntitiesList(webview: vscode.Webview) {
 
     vscode.window.showOpenDialog(options).then(fileUri => {
         if (fileUri && fileUri[0]) {
-            // update workspace setting with the path to the entities list
-            vscode.workspace.getConfiguration().update('acacia-erd.entitiesJsonPath', fileUri[0].fsPath, false).then(() => {
-
-                // reload the entities list in the EntityTreePanel
-                const entityTreePanel = ObjectRegistry.getInstance().get<EntityTreePanel>('EntityTreePanel');
-                if (entityTreePanel) {
-                    if (entityTreePanel._webviewView) {
-                        entityTreePanel._loadEntities(entityTreePanel._webviewView.webview);
-                    } else {
-                        vscode.window.showErrorMessage('EntityTreePanel webview is not available.');
-                    }
-                }
+            const mgr = EntityManager.getInstance();
+            mgr.setEntitiesJsonPath(fileUri[0].fsPath);
 
             webview.postMessage({
                 command: 'loadEntitiesList',
                 entitiesListPath: fileUri[0].fsPath
             });
-        });
     }
 
     });

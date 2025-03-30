@@ -17,6 +17,21 @@ export class EntityManager {
         this.loadEntities();
     }
 
+    // Getter for entitiesJsonPath
+    public getEntitiesJsonPath(): string {
+        return this.entitiesJsonPath;
+    }
+
+    // Setter for entitiesJsonPath
+    public setEntitiesJsonPath(newPath: string): void {
+                    // update workspace setting with the path to the entities list
+                    vscode.workspace.getConfiguration().update('acacia-erd.entitiesJsonPath', newPath, false).then(() => {
+        this.entitiesJsonPath = newPath;
+        this.loadEntities(); // Reload entities from the new path
+        this.notifyChange(); // Notify components about the change
+    });
+    }
+
     public static getInstance(): EntityManager {
         if (!EntityManager.instance) {
             EntityManager.instance = new EntityManager();
@@ -25,7 +40,7 @@ export class EntityManager {
     }
 
     // Load entities from the JSON file
-    private loadEntities() {
+    public loadEntities() {
         try {
             const data = fs.readFileSync(this.entitiesJsonPath, 'utf8');
             this.entities = JSON.parse(data);
@@ -67,7 +82,7 @@ export class EntityManager {
 
     // Update an existing entity
     public updateEntity(updatedEntity: any) {
-        const index = this.entities.findIndex(entity => entity.id === updatedEntity.id);
+        const index = this.entities.findIndex(entity => entity.name === updatedEntity.name);
         if (index !== -1) {
             this.entities[index] = updatedEntity;
             this.saveEntities();
@@ -76,14 +91,14 @@ export class EntityManager {
     }
 
     // Delete an entity
-    public deleteEntity(entityId: string) {
-        this.entities = this.entities.filter(entity => entity.id !== entityId);
+    public deleteEntity(entityName: string) {
+        this.entities = this.entities.filter(entity => entity.name !== entityName);
         this.saveEntities();
         this.notifyChange();
     }
 
     // Notify all dependent components about changes
-    private notifyChange() {
+    public notifyChange() {
         const entityTreePanel = ObjectRegistry.getInstance().get<EntityTreePanel>('EntityTreePanel');
         if (entityTreePanel && entityTreePanel._webviewView) {
             entityTreePanel._loadEntities(entityTreePanel._webviewView.webview);

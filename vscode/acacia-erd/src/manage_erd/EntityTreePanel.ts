@@ -4,10 +4,12 @@ import * as fs from 'fs';
 import { ObjectRegistry } from '../utils/ObjectRegistry';
 
 import { InteractiveERDPanel } from './InteractiveERDPanel';
+import { EntityManager } from '../utils/EntityManager';
 
 export class EntityTreePanel implements vscode.WebviewViewProvider {
 
     public _webviewView: vscode.WebviewView | undefined;
+    private mgr: EntityManager = EntityManager.getInstance();
 
     constructor(private readonly context: vscode.ExtensionContext) {
         ObjectRegistry.getInstance().set('EntityTreePanel', this);
@@ -83,18 +85,8 @@ export class EntityTreePanel implements vscode.WebviewViewProvider {
     }
 
     public _loadEntities(webview: vscode.Webview) {
-        const config = vscode.workspace.getConfiguration('acacia-erd');
-        const entitiesPath = config.get<string>('entitiesJsonPath', 'resources/entities.json');
-
-        fs.readFile(entitiesPath, 'utf8', (err, data) => {
-            if (err) {
-                console.error('Error reading entities.json:', err);
-                vscode.window.showErrorMessage('Error reading entities.json' + err);
-                return;
-            }
-            const entities = JSON.parse(data);
+        const entities = this.mgr.getEntities();
             webview.postMessage({ command: 'loadEntities', entities });
-        });
     }
 }
 
