@@ -81,12 +81,38 @@ export class EntityManager {
     }
 
     // Update an existing entity
-    public updateEntity(updatedEntity: any) {
+    public updateEntity(updatedEntity: any, oldEntity: any) {
+        if (oldEntity.name !== updatedEntity.name) {
+            // rename the entity in the list
+            const index = this.entities.findIndex(entity => entity.name === oldEntity.name);
+            if (index !== -1) {
+                this.entities[index].name = updatedEntity.name;
+            } else {
+                this.addEntity(updatedEntity); // If the old entity is not found, add the new one
+                return;
+            }
+        }
+
         const index = this.entities.findIndex(entity => entity.name === updatedEntity.name);
         if (index !== -1) {
-            this.entities[index] = updatedEntity;
-            this.saveEntities();
-            this.notifyChange();
+            // Update the entity in the list with differences between old and new entity
+            let indexEntity = this.entities[index] as any;
+            let updated = false;
+
+            // find added, deleted and changed place in array columns
+            const oldColumns = oldEntity.columns || [];
+            const newColumns = updatedEntity.columns || [];
+            const oldColumnNames = oldColumns.map((col: any) => col);
+            const newColumnNames = newColumns.map((col: any) => col);
+            const addedColumns = newColumnNames.filter((col: any) => !oldColumnNames.includes(col));
+            const deletedColumns = oldColumnNames.filter((col: any) => !newColumnNames.includes(col));
+
+
+            if (updated) {
+               this.entities[index] = indexEntity;
+               this.saveEntities();
+               this.notifyChange();
+            }
         }
     }
 

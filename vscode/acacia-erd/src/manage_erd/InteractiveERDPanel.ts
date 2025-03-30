@@ -66,7 +66,7 @@ export class InteractiveERDPanel {
                     DescribeEntityPanel.createOrShow(this._extensionPath, message.entity);
                     break;
                 case 'saveEntity':
-                    this.saveEntity(message.entity);
+                    this.saveEntity(message.entity, message.oldEntity);
                     break;
                 case 'usageClicked':
                     vscode.window.showInformationMessage(`Usage clicked: ${message.usage.text}`);
@@ -181,7 +181,7 @@ export class InteractiveERDPanel {
         panel.webview.onDidReceiveMessage(message => {
             switch (message.command) {
                 case 'saveEntity':
-                    this.saveEntity(message.entity);
+                    this.saveEntity(message.entity, message.oldEntity);
                     panel.dispose();
                     break;
             }
@@ -191,8 +191,11 @@ export class InteractiveERDPanel {
     }
 
 
-    private saveEntity(entity: { id: string, name: string, description: string, columns: string[] }) {
+    private saveEntity(entity: any, oldEntity: any) {
         vscode.window.showInformationMessage(`Entity saved: ${entity.name}`);
+        // Update the entity in the EntityManager
+        const mgr = EntityManager.getInstance();
+        mgr.updateEntity(entity, oldEntity);
         // Send a message to the interactive ERD webview to update the entity
         if (InteractiveERDPanel.currentPanel) {
             InteractiveERDPanel.currentPanel._panel.webview.postMessage({

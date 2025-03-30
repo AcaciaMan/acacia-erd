@@ -51,9 +51,12 @@
     <script>
         const vscode = acquireVsCodeApi();
 
+        let oldEntity = null;
+
         // Get the entity data from the VSCode extension
         window.addEventListener('message', event => {
             const entity = event.data;
+            oldEntity = entity; // Store the old entity data for comparison
             document.getElementById('entity-id').value = entity.id;
             document.getElementById('entity-name').value = entity.name;
             document.getElementById('entity-description').value = entity.description;
@@ -72,7 +75,8 @@
 
             vscode.postMessage({
                 command: 'saveEntity',
-                entity: { id, name, description, columns, linkedEntities }
+                entity: { id, name, description, columns, linkedEntities },
+                oldEntity: oldEntity // Send the old entity data for comparison
             });
         });
     </script>
