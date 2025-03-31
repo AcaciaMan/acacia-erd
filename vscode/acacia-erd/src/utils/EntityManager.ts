@@ -10,6 +10,7 @@ import { EntityTreePanel } from '../manage_erd/EntityTreePanel';
 export class EntityManager {
     private static instance: EntityManager;
     private entities: any[] = [];
+    private entity: {id: string, name: string, columns?: string[], linkedEntities?: string[]} | undefined = undefined;
     private entitiesJsonPath: string;
 
     private constructor() {
@@ -30,6 +31,16 @@ export class EntityManager {
         this.loadEntities(); // Reload entities from the new path
         this.notifyChange(); // Notify components about the change
     });
+    }
+
+    // Getter for entity
+    public getEntity(): {id: string, name: string, columns?: string[], linkedEntities?: string[]} | undefined {
+        return this.entity;
+    }
+
+    // Setter for entity
+    public setEntity(entity: {id: string, name: string, columns?: string[], linkedEntities?: string[]} | undefined): void {
+        this.entity = entity;
     }
 
     public static getInstance(): EntityManager {
