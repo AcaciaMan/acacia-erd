@@ -5,12 +5,18 @@ import { ObjectRegistry } from './ObjectRegistry';
 import { InteractiveERDPanel } from '../manage_erd/InteractiveERDPanel';
 import { EntityTreePanel } from '../manage_erd/EntityTreePanel';
 
+export type Entity = {
+    id: string;
+    name: string;
+    columns?: string[];
+    linkedEntities?: string[];
+};
 
 
 export class EntityManager {
     private static instance: EntityManager;
     private entities: any[] = [];
-    private entity: {id: string, name: string, columns?: string[], linkedEntities?: string[]} | undefined = undefined;
+    private entity: Entity | undefined = undefined;
     private entitiesJsonPath: string;
 
     private constructor() {
@@ -34,13 +40,22 @@ export class EntityManager {
     }
 
     // Getter for entity
-    public getEntity(): {id: string, name: string, columns?: string[], linkedEntities?: string[]} | undefined {
+    public getEntity(): Entity | undefined {
         return this.entity;
     }
 
     // Setter for entity
-    public setEntity(entity: {id: string, name: string, columns?: string[], linkedEntities?: string[]} | undefined): void {
+    public setEntity(entity: Entity | undefined): void {
         this.entity = entity;
+    }
+
+    public getEntityByName(entityName: string): Entity {
+        const entity = this.entities.find((entity: Entity) => entity.name === entityName);
+        if (entity) {
+            return entity;
+        } else {
+            throw new Error(`Entity with name ${entityName} not found`);
+        }
     }
 
     public static getInstance(): EntityManager {
@@ -86,7 +101,27 @@ export class EntityManager {
 
     // Add a new entity
     public addEntity(entity: any) {
-        this.entities.push(entity);
+        // Check if the entity already exists
+        const existingEntity = this.entities.find(e => e.name === entity.name);
+        if (existingEntity) {
+            vscode.window.showErrorMessage(`Entity with name ${entity.name} already exists.`);
+            return;
+        }
+        // Check if the entity name is empty
+        if (!entity.name) {
+            vscode.window.showErrorMessage('Entity name cannot be empty.');
+            return;
+        }
+
+        // add only elements that are in the type Entity
+        const newEntity: Entity = {
+            id: entity.id,
+            name: entity.name,
+            columns: entity.columns || [], // Initialize columns if not provided
+            linkedEntities: entity.linkedEntities || [] // Initialize linked entities if not provided
+        };
+       
+        this.entities.push(newEntity);
         this.saveEntities();
         this.notifyChange();
     }
@@ -106,24 +141,13 @@ export class EntityManager {
 
         const index = this.entities.findIndex(entity => entity.name === updatedEntity.name);
         if (index !== -1) {
-            // Update the entity in the list with differences between old and new entity
-            let indexEntity = this.entities[index] as any;
-            let updated = false;
-
-            // find added, deleted and changed place in array columns
-            const oldColumns = oldEntity.columns || [];
-            const newColumns = updatedEntity.columns || [];
-            const oldColumnNames = oldColumns.map((col: any) => col);
-            const newColumnNames = newColumns.map((col: any) => col);
-            const addedColumns = newColumnNames.filter((col: any) => !oldColumnNames.includes(col));
-            const deletedColumns = oldColumnNames.filter((col: any) => !newColumnNames.includes(col));
-
-
-            if (updated) {
-               this.entities[index] = indexEntity;
+               // set only elements that are in the type Entity
+               this.entities[index].columns = updatedEntity.columns; // Update columns
+               this.entities[index].linkedEntities = updatedEntity.linkedEntities; // Update linked entities
                this.saveEntities();
                this.notifyChange();
-            }
+        } else {
+            this.addEntity(updatedEntity); // If the entity is not found, add it
         }
     }
 
