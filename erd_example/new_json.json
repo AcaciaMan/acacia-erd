@@ -1,0 +1,53 @@
+[
+  {
+    "id": "entity1743608194810",
+    "name": "Cars",
+    "description": "Cars with driver",
+    "columns": [
+      "Id",
+      "Model",
+      "Id_Driver"
+    ],
+    "linkedEntities": [
+      ""
+    ]
+  },
+  {
+    "id": "entity1743608270374",
+    "name": "Drivers",
+    "description": "Cars drivers",
+    "columns": [
+      "Id",
+      "First_Name",
+      "Last_Name"
+    ],
+    "linkedEntities": [
+      "Cars"
+    ]
+  },
+  {
+    "id": "entity1743609217878",
+    "name": "Tires",
+    "description": "Description of New Entity",
+    "columns": [
+      "Column1",
+      "Column2",
+      "Column3"
+    ],
+    "linkedEntities": [
+      ""
+    ]
+  },
+  {
+    "id": "entity1743609232028",
+    "name": "Services",
+    "description": "Description of New Entity",
+    "columns": [
+      "Id",
+      "Address"
+    ],
+    "linkedEntities": [
+      ""
+    ]
+  }
+]

@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { DescribeEntityPanel } from './DescribeEntity';
 import { ERDGenerationPanel } from './ERDGenerationPanel';
-import { EntityManager } from '../utils/EntityManager';
+import * as em from '../utils/EntityManager';
 
 
 export class InteractiveERDPanel {
@@ -11,7 +11,7 @@ export class InteractiveERDPanel {
     public readonly _panel: vscode.WebviewPanel;
     private readonly _extensionPath: string;
     private _place: vscode.Uri | undefined;
-    private mgr: EntityManager = EntityManager.getInstance();
+    private mgr: em.EntityManager = em.EntityManager.getInstance();
 
     public static createOrShow(extensionPath: string) {
         const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
@@ -154,7 +154,7 @@ export class InteractiveERDPanel {
         this._panel.webview.html = htmlContent;
     }
 
-    public async openEntityDetails(entity: { id: string, name: string, description?: string, columns?: string[], linkedEntities?: string[] }) {
+    public async openEntityDetails(entity: em.Entity) {
         const panel = vscode.window.createWebviewPanel(
             'editEntity',
             `Edit ${entity.name}`,
@@ -170,13 +170,19 @@ export class InteractiveERDPanel {
         let htmlContent = fs.readFileSync(htmlPath, 'utf8');
         panel.webview.html = htmlContent;
 
-        const entityDetails = {
+        let entityDetails: em.Entity = {
             id: entity.id,
             name: entity.name,
             description: entity.description || "Description of " + entity.name,
             columns: entity.columns || ["Column1", "Column2", "Column3"],
             linkedEntities: entity.linkedEntities || []
         };
+
+        try {
+            entityDetails = this.mgr.getEntityByName(entity.name);
+        } catch (error) {
+            // do nothing, use the default entityDetails
+        }
 
         panel.webview.onDidReceiveMessage(message => {
             switch (message.command) {
@@ -194,7 +200,7 @@ export class InteractiveERDPanel {
     private saveEntity(entity: any, oldEntity: any) {
         vscode.window.showInformationMessage(`Entity saved: ${entity.name}`);
         // Update the entity in the EntityManager
-        const mgr = EntityManager.getInstance();
+        const mgr = em.EntityManager.getInstance();
         mgr.updateEntity(entity, oldEntity);
         // Send a message to the interactive ERD webview to update the entity
         if (InteractiveERDPanel.currentPanel) {
@@ -310,7 +316,7 @@ async function loadSVGFile(webview: vscode.Webview): Promise<vscode.Uri | undefi
 }
 
 export function chooseJSONFile(webview: vscode.Webview, parameters: { maxEntities: number, discoverLinkedEntities: boolean, entityName: string }) {
-                const entities = EntityManager.getInstance().getEntities();
+                const entities = em.EntityManager.getInstance().getEntities();
                 webview.postMessage({
                     command: 'loadEntities',
                     entities: entities,
@@ -329,7 +335,7 @@ function chooseEntitiesList(webview: vscode.Webview) {
 
     vscode.window.showOpenDialog(options).then(fileUri => {
         if (fileUri && fileUri[0]) {
-            const mgr = EntityManager.getInstance();
+            const mgr = em.EntityManager.getInstance();
             mgr.setEntitiesJsonPath(fileUri[0].fsPath);
 
             webview.postMessage({

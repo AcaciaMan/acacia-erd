@@ -8,6 +8,7 @@ import { EntityTreePanel } from '../manage_erd/EntityTreePanel';
 export type Entity = {
     id: string;
     name: string;
+    description?: string;
     columns?: string[];
     linkedEntities?: string[];
 };
@@ -73,7 +74,13 @@ export class EntityManager {
         } catch (error) {
             console.error('Error loading entities:', error);
             if (error instanceof Error) {
-                vscode.window.showErrorMessage('Error loading entities: ' + error.message);
+                // check if the error is an empty file error
+                if (error.message.includes('Unexpected end of JSON input')) {
+                    this.entities = []; // Initialize with an empty array if the file is empty
+                } else {
+                    this.entities = []; // Initialize with an empty array if the file is not found or invalid
+                    vscode.window.showErrorMessage('Error loading entities: ' + error.message);
+                }
             } else {
                 vscode.window.showErrorMessage('Error loading entities: Unknown error');
             }
@@ -117,6 +124,7 @@ export class EntityManager {
         const newEntity: Entity = {
             id: entity.id,
             name: entity.name,
+            description: entity.description || '', // Initialize description if not provided
             columns: entity.columns || [], // Initialize columns if not provided
             linkedEntities: entity.linkedEntities || [] // Initialize linked entities if not provided
         };
@@ -142,6 +150,7 @@ export class EntityManager {
         const index = this.entities.findIndex(entity => entity.name === updatedEntity.name);
         if (index !== -1) {
                // set only elements that are in the type Entity
+               this.entities[index].description = updatedEntity.description; // Update description
                this.entities[index].columns = updatedEntity.columns; // Update columns
                this.entities[index].linkedEntities = updatedEntity.linkedEntities; // Update linked entities
                this.saveEntities();

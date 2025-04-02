@@ -221,6 +221,7 @@ window.addEventListener('message', event => {
         case 'updateEntity':
             console.log('Updating entity:', message.entity);
             updateEntity(message.entity);
+            attachEntityEventListeners();
             break;
     }
 });
