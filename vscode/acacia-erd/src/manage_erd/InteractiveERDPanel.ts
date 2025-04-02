@@ -196,6 +196,16 @@ export class InteractiveERDPanel {
         panel.webview.postMessage(entityDetails);
     }
 
+    public deleteEntity(entityName: string) {
+            // Send a message to the interactive ERD webview to update the entity
+            if (InteractiveERDPanel.currentPanel) {
+                InteractiveERDPanel.currentPanel._panel.webview.postMessage({
+                    command: 'deleteEntity',
+                    entityName: entityName
+                });
+            }
+    }
+
 
     private saveEntity(entity: any, oldEntity: any) {
         vscode.window.showInformationMessage(`Entity saved: ${entity.name}`);

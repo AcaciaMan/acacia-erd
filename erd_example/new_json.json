@@ -26,19 +26,6 @@
     ]
   },
   {
-    "id": "entity1743609217878",
-    "name": "Tires",
-    "description": "Description of New Entity",
-    "columns": [
-      "Column1",
-      "Column2",
-      "Column3"
-    ],
-    "linkedEntities": [
-      ""
-    ]
-  },
-  {
     "id": "entity1743609232028",
     "name": "Services",
     "description": "Description of New Entity",

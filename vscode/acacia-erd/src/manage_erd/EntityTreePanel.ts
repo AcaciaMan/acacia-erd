@@ -5,6 +5,7 @@ import { ObjectRegistry } from '../utils/ObjectRegistry';
 
 import { InteractiveERDPanel } from './InteractiveERDPanel';
 import { EntityManager } from '../utils/EntityManager';
+import { DescribeEntityPanel } from './DescribeEntity';
 
 export class EntityTreePanel implements vscode.WebviewViewProvider {
 
@@ -53,6 +54,14 @@ export class EntityTreePanel implements vscode.WebviewViewProvider {
                 case 'openEntityDetails':
                     InteractiveERDPanel.currentPanel?.openEntityDetails(message.entity);
                     return;    
+                case 'describeEntity':
+                    DescribeEntityPanel.createOrShow(this.context.extensionPath, message.entity);
+                    return;
+                case 'deleteEntity':
+                    this.deleteEntity(message.entityName);
+                    // send a message to the InteractiveERDPanel to delete the entity from the graph
+                    InteractiveERDPanel.currentPanel?.deleteEntity(message.entityName);
+                    return;    
             }
         });
     }
@@ -82,6 +91,12 @@ export class EntityTreePanel implements vscode.WebviewViewProvider {
             </body>
             </html>
         `;
+    }
+
+    private deleteEntity(entityName: string) {
+        this.mgr.deleteEntity(entityName);
+    
+        vscode.window.showInformationMessage(`Entity with ID ${entityName} has been deleted.`);
     }
 
     public _loadEntities(webview: vscode.Webview) {

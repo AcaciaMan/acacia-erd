@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const entityTree = document.getElementById('entity-tree');
 
     let entities = [];
+    let contextMenu;
 
     // Handle messages from the extension
     window.addEventListener('message', event => {
@@ -57,7 +58,60 @@ document.addEventListener('DOMContentLoaded', () => {
                     entity: entity
                 });
             });
+                        // Add right-click context menu
+                        li.addEventListener('contextmenu', (event) => {
+                            event.preventDefault();
+                            showContextMenu(event, entity);
+                        });
             entityTree.appendChild(li);
         });
+    }
+
+    function showContextMenu(event, entity) {
+        // Remove existing context menu if present
+        if (contextMenu) {
+            contextMenu.remove();
+        }
+
+        // Create a new context menu
+        contextMenu = document.createElement('div');
+        contextMenu.classList.add('context-menu');
+        contextMenu.style.top = `${event.clientY}px`;
+        contextMenu.style.left = `${event.clientX}px`;
+
+        // Add "Describe" option
+        const describeOption = document.createElement('div');
+        describeOption.textContent = 'Describe';
+        describeOption.addEventListener('click', () => {
+            vscode.postMessage({
+                command: 'describeEntity',
+                entity: entity
+            });
+            contextMenu.remove();
+        });
+        contextMenu.appendChild(describeOption);
+
+        // Add "Delete" option
+        const deleteOption = document.createElement('div');
+        deleteOption.textContent = 'Delete';
+        deleteOption.addEventListener('click', () => {
+            vscode.postMessage({
+                command: 'deleteEntity',
+                entityName: entity.name
+            });
+            contextMenu.remove();
+        });
+        contextMenu.appendChild(deleteOption);
+
+        // Append the context menu to the body
+        document.body.appendChild(contextMenu);
+
+        // Remove the context menu when clicking elsewhere
+        document.addEventListener('click', () => {
+            if (contextMenu) {
+                contextMenu.remove();
+                contextMenu = null;
+            }
+        }, { once: true });
     }
 });

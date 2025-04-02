@@ -223,6 +223,14 @@ window.addEventListener('message', event => {
             updateEntity(message.entity);
             attachEntityEventListeners();
             break;
+        case 'deleteEntity':
+            document.querySelectorAll('.entity').forEach(entityElement => {
+                const entityData = JSON.parse(entityElement.getAttribute('data-entity'));
+                if (entityData.name === message.entityName) {
+                    entityElement.remove();
+                }
+            });
+            break;    
     }
 });
 
