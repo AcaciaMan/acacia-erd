@@ -62,6 +62,9 @@ export class EntityTreePanel implements vscode.WebviewViewProvider {
                     // send a message to the InteractiveERDPanel to delete the entity from the graph
                     InteractiveERDPanel.currentPanel?.deleteEntity(message.entityName);
                     return;    
+                case 'showInfoMessage':
+                    vscode.window.showInformationMessage(message.message);
+                    return;
             }
         });
     }

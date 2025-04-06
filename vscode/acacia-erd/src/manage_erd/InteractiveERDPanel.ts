@@ -30,6 +30,7 @@ export class InteractiveERDPanel {
                     enableCommandUris: true,
                     enableFindWidget: true,
                     enableForms: true
+
                 }
             );
 

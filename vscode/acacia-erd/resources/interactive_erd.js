@@ -195,24 +195,31 @@ function attachSVGEntityEventListeners() {
         currentEntity = null;
     });
 
-    svg.addEventListener('dragover', (event) => {
-        event.preventDefault();
-    });
-
-    svg.addEventListener('drop', (event) => {
-        event.preventDefault();
-        console.log('Dropped entity:', event.dataTransfer.getData('application/json')); 
-        const entityData = event.dataTransfer.getData('application/json');
-        if (entityData) {
-            const entity = JSON.parse(entityData);
-            entity.x = event.clientX;
-            entity.y = event.clientY;
-            console.log('Dropped entity:', entity);
-            addEntityToSvg(svg, entity);
-            attachEntityEventListeners();
-        }
-    });
 }
+
+window.addEventListener('dragover', (event) => {
+    event.preventDefault();
+});
+
+window.addEventListener('drop', (event) => {
+    event.preventDefault();
+    const entityData = event.dataTransfer.getData('application/json');
+    if (entityData) {
+        const entity = JSON.parse(entityData);
+            // Convert client coordinates to SVG coordinates
+            const svgPoint = svg.createSVGPoint();
+            svgPoint.x = event.clientX;
+            svgPoint.y = event.clientY;
+            const transformedPoint = svgPoint.matrixTransform(svg.getScreenCTM().inverse());
+            entity.id = `entity${Date.now()}`;
+            entity.x = transformedPoint.x;
+            entity.y = transformedPoint.y;
+        console.log('Dropped entity:', entity);
+        addEntityToSvg(svg, entity);
+        attachEntityEventListeners();
+    }
+});
+
 
 // Handle messages from the extension
 window.addEventListener('message', event => {

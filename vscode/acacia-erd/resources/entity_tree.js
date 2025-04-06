@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let entities = [];
     let contextMenu;
+    let prevEntityName = undefined;
 
     // Handle messages from the extension
     window.addEventListener('message', event => {
@@ -50,8 +51,18 @@ document.addEventListener('DOMContentLoaded', () => {
             li.textContent = entity.name;
             li.draggable = true;
             li.addEventListener('dragstart', (e) => {
+                console.log('Drag start:', entity.name);
+                if (prevEntityName === entity.name) {
+                //vscode.showinfoMessage('Hold SHIFT, to get the better results while dragging!');
+                vscode.postMessage({
+                    command: 'showInfoMessage',
+                    message: 'Hold SHIFT, to get better results while dragging!'
+                });
+                }
+                prevEntityName = entity.name;
                 e.dataTransfer.setData('application/json', JSON.stringify(entity));
             });
+
             li.addEventListener('dblclick', () => {
                 vscode.postMessage({
                     command: 'openEntityDetails',
@@ -115,3 +126,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }, { once: true });
     }
 });
+
