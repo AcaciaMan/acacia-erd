@@ -5,79 +5,680 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Entity</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--vscode-font-family), -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background-color: var(--vscode-editor-background);
+            color: var(--vscode-editor-foreground);
+            padding: 0;
+            overflow-y: auto;
+            height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--vscode-panel-border);
+        }
+
+        .header-icon {
+            width: 32px;
+            height: 32px;
+            fill: var(--vscode-textLink-foreground);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--vscode-foreground);
+        }
+
+        .header-subtitle {
+            font-size: 13px;
+            color: var(--vscode-descriptionForeground);
+            margin-top: 4px;
+        }
+
+        .form-section {
+            background-color: var(--vscode-editorWidget-background);
+            border: 1px solid var(--vscode-editorWidget-border);
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--vscode-foreground);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-icon {
+            width: 16px;
+            height: 16px;
+            fill: var(--vscode-textLink-foreground);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--vscode-foreground);
+            margin-bottom: 6px;
+        }
+
+        .label-optional {
+            font-weight: 400;
+            color: var(--vscode-descriptionForeground);
+            font-size: 12px;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 8px 12px;
+            font-size: 13px;
+            font-family: var(--vscode-font-family);
+            background-color: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            border: 1px solid var(--vscode-input-border);
+            border-radius: 4px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--vscode-focusBorder);
+            box-shadow: 0 0 0 1px var(--vscode-focusBorder);
+        }
+
+        input[type="text"]:hover,
+        textarea:hover {
+            border-color: var(--vscode-input-border);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+            line-height: 1.5;
+        }
+
+        .input-hint {
+            font-size: 12px;
+            color: var(--vscode-descriptionForeground);
+            margin-top: 4px;
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+        }
+
+        .hint-icon {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
+            margin-top: 2px;
+            fill: var(--vscode-editorInfo-foreground);
+        }
+
+        .character-count {
+            font-size: 11px;
+            color: var(--vscode-descriptionForeground);
+            text-align: right;
+            margin-top: 4px;
+        }
+
+        .tag-input-container {
+            position: relative;
+        }
+
+        .tags-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+            min-height: 28px;
+            padding: 8px;
+            background-color: var(--vscode-input-background);
+            border: 1px solid var(--vscode-input-border);
+            border-radius: 4px;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            background-color: var(--vscode-badge-background);
+            color: var(--vscode-badge-foreground);
+            border-radius: 3px;
+            font-size: 12px;
+            transition: background-color 0.2s ease;
+        }
+
+        .tag:hover {
+            background-color: var(--vscode-list-hoverBackground);
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.2);
+            font-size: 10px;
+            line-height: 1;
+        }
+
+        .tag-remove:hover {
+            background-color: rgba(255, 100, 100, 0.5);
+        }
+
+        .empty-tags {
+            color: var(--vscode-descriptionForeground);
+            font-size: 12px;
+            font-style: italic;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--vscode-panel-border);
+        }
+
+        button {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: var(--vscode-font-family);
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        button svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        .btn-primary {
+            background-color: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--vscode-button-hoverBackground);
+        }
+
+        .btn-primary:active {
+            transform: translateY(1px);
+        }
+
+        .btn-secondary {
+            background-color: var(--vscode-button-secondaryBackground);
+            color: var(--vscode-button-secondaryForeground);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--vscode-button-secondaryHoverBackground);
+        }
+
+        .validation-error {
+            display: none;
+            color: var(--vscode-inputValidation-errorForeground);
+            background-color: var(--vscode-inputValidation-errorBackground);
+            border: 1px solid var(--vscode-inputValidation-errorBorder);
+            border-radius: 4px;
+            padding: 8px 12px;
+            margin-top: 8px;
+            font-size: 12px;
+        }
+
+        .validation-error.show {
+            display: block;
+        }
+
+        input.error,
+        textarea.error {
+            border-color: var(--vscode-inputValidation-errorBorder);
+        }
+
+        .info-banner {
+            background-color: var(--vscode-inputValidation-infoBackground);
+            border-left: 3px solid var(--vscode-textLink-foreground);
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
             padding: 20px;
         }
-        form {
-            display: flex;
-            flex-direction: column;
+
+        .loading.show {
+            display: block;
         }
-        label {
-            margin-top: 10px;
+
+        .spinner {
+            border: 3px solid var(--vscode-input-border);
+            border-top: 3px solid var(--vscode-button-background);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
         }
-        input, textarea {
-            padding: 5px;
-            font-size: 14px;
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-        button {
-            margin-top: 20px;
-            padding: 10px;
-            font-size: 16px;
-            cursor: pointer;
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-section {
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--vscode-editor-background);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--vscode-scrollbarSlider-background);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--vscode-scrollbarSlider-hoverBackground);
         }
     </style>
 </head>
 <body>
-    <h1>Edit Entity</h1>
-    <form id="edit-entity-form">
-        <input type="hidden" id="entity-id" name="id">
-        <label for="entity-name">Name:</label>
-        <input type="text" id="entity-name" name="name" required>
+    <div class="container">
+        <div class="header">
+            <svg class="header-icon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                <path d="M14 2H8L7 1H2L1 2v12l1 1h12l1-1V3l-1-1zM2 13V2h4.5l1 1H14v10H2z"/>
+                <path d="M11 5H5v1h6V5zm0 2H5v1h6V7zm0 2H5v1h6V9z"/>
+            </svg>
+            <div>
+                <h1>Edit Entity</h1>
+                <div class="header-subtitle">Modify entity properties and relationships</div>
+            </div>
+        </div>
 
-        <label for="entity-description">Description:</label>
-        <textarea id="entity-description" name="description" rows="4" required></textarea>
+        <div class="info-banner">
+            💡 <strong>Tip:</strong> Use commas to separate multiple columns or linked entities. Changes will be reflected in your ERD diagram.
+        </div>
 
-        <label for="entity-columns">Columns (comma-separated):</label>
-        <input type="text" id="entity-columns" name="columns">
+        <form id="edit-entity-form">
+            <input type="hidden" id="entity-id" name="id">
 
-        <label for="entity-linked-entities">Linked Entities (comma-separated):</label>
-        <input type="text" id="entity-linked-entities" name="linkedEntities">
+            <!-- Basic Information Section -->
+            <div class="form-section">
+                <div class="section-title">
+                    <svg class="section-icon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M14 2H8L7 1H2L1 2v12l1 1h12l1-1V3l-1-1zM2 13V2h4.5l1 1H14v10H2z"/>
+                    </svg>
+                    Basic Information
+                </div>
 
-        <button type="submit">Save</button>
-    </form>
+                <div class="form-group">
+                    <label for="entity-name">
+                        Entity Name
+                    </label>
+                    <input type="text" id="entity-name" name="name" required placeholder="e.g., User, Product, Order">
+                    <div class="input-hint">
+                        <svg class="hint-icon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm.5 11h-1v-1h1v1zm0-2h-1V5h1v5z"/>
+                        </svg>
+                        <span>A unique identifier for this entity (typically singular, PascalCase)</span>
+                    </div>
+                    <div id="name-error" class="validation-error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="entity-description">
+                        Description
+                    </label>
+                    <textarea id="entity-description" name="description" required placeholder="Describe the purpose and role of this entity in your system..."></textarea>
+                    <div class="character-count">
+                        <span id="desc-count">0</span> characters
+                    </div>
+                    <div id="description-error" class="validation-error"></div>
+                </div>
+            </div>
+
+            <!-- Columns Section -->
+            <div class="form-section">
+                <div class="section-title">
+                    <svg class="section-icon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2 3h12v1H2V3zm0 3h12v1H2V6zm0 3h12v1H2V9zm0 3h12v1H2v-1z"/>
+                    </svg>
+                    Columns <span class="label-optional">(optional)</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="entity-columns">
+                        Column Names
+                    </label>
+                    <input type="text" id="entity-columns" name="columns" placeholder="id, name, email, created_at">
+                    <div class="input-hint">
+                        <svg class="hint-icon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm.5 11h-1v-1h1v1zm0-2h-1V5h1v5z"/>
+                        </svg>
+                        <span>Separate column names with commas</span>
+                    </div>
+                    <div class="tags-display" id="columns-tags">
+                        <span class="empty-tags">No columns added yet</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Relationships Section -->
+            <div class="form-section">
+                <div class="section-title">
+                    <svg class="section-icon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8 2L1 5v5l7 3 7-3V5l-7-3zm0 1.5L13.5 6 8 8.5 2.5 6 8 3.5zM2 7.2L7.5 10v4.3L2 11.8V7.2zm6.5 7.1V10l5.5-2.8v4.6l-5.5 2.5z"/>
+                    </svg>
+                    Relationships <span class="label-optional">(optional)</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="entity-linked-entities">
+                        Linked Entities
+                    </label>
+                    <input type="text" id="entity-linked-entities" name="linkedEntities" placeholder="User, Product, Category">
+                    <div class="input-hint">
+                        <svg class="hint-icon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm.5 11h-1v-1h1v1zm0-2h-1V5h1v5z"/>
+                        </svg>
+                        <span>Entities that this entity references or is related to</span>
+                    </div>
+                    <div class="tags-display" id="linked-entities-tags">
+                        <span class="empty-tags">No linked entities added yet</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="button-group">
+                <button type="button" class="btn-secondary" id="cancel-button">
+                    <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm3.5 10.5L8 8l-3.5 3.5-1-1L7 7 3.5 3.5l1-1L8 6l3.5-3.5 1 1L9 7l3.5 3.5-1 1z"/>
+                    </svg>
+                    Cancel
+                </button>
+                <button type="submit" class="btn-primary">
+                    <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13.5 1h-11l-.5.5v13l.5.5h11l.5-.5v-13l-.5-.5zM3 13V2h10v11H3z"/>
+                        <path d="M9 2H7v4h2V2zm2 0h1v4h-1V2z"/>
+                    </svg>
+                    Save Changes
+                </button>
+            </div>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div>Saving changes...</div>
+        </div>
+    </div>
 
     <script>
         const vscode = acquireVsCodeApi();
-
         let oldEntity = null;
+
+        // Character counter for description
+        const descriptionField = document.getElementById('entity-description');
+        const descCountSpan = document.getElementById('desc-count');
+        
+        descriptionField.addEventListener('input', () => {
+            descCountSpan.textContent = descriptionField.value.length;
+        });
+
+        // Tag display for columns
+        const columnsInput = document.getElementById('entity-columns');
+        const columnsTags = document.getElementById('columns-tags');
+
+        function updateColumnsTags() {
+            const value = columnsInput.value.trim();
+            if (!value) {
+                columnsTags.innerHTML = '<span class="empty-tags">No columns added yet</span>';
+                return;
+            }
+
+            const columns = value.split(',').map(col => col.trim()).filter(col => col);
+            if (columns.length === 0) {
+                columnsTags.innerHTML = '<span class="empty-tags">No columns added yet</span>';
+                return;
+            }
+
+            columnsTags.innerHTML = columns.map((col, index) => `
+                <span class="tag">
+                    ${col}
+                    <span class="tag-remove" data-index="${index}" data-type="column">×</span>
+                </span>
+            `).join('');
+
+            // Add remove handlers
+            columnsTags.querySelectorAll('.tag-remove').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    const columns = columnsInput.value.split(',').map(col => col.trim());
+                    columns.splice(index, 1);
+                    columnsInput.value = columns.join(', ');
+                    updateColumnsTags();
+                });
+            });
+        }
+
+        columnsInput.addEventListener('input', updateColumnsTags);
+        columnsInput.addEventListener('blur', updateColumnsTags);
+
+        // Tag display for linked entities
+        const linkedEntitiesInput = document.getElementById('entity-linked-entities');
+        const linkedEntitiesTags = document.getElementById('linked-entities-tags');
+
+        function updateLinkedEntitiesTags() {
+            const value = linkedEntitiesInput.value.trim();
+            if (!value) {
+                linkedEntitiesTags.innerHTML = '<span class="empty-tags">No linked entities added yet</span>';
+                return;
+            }
+
+            const entities = value.split(',').map(e => e.trim()).filter(e => e);
+            if (entities.length === 0) {
+                linkedEntitiesTags.innerHTML = '<span class="empty-tags">No linked entities added yet</span>';
+                return;
+            }
+
+            linkedEntitiesTags.innerHTML = entities.map((entity, index) => `
+                <span class="tag">
+                    ${entity}
+                    <span class="tag-remove" data-index="${index}" data-type="entity">×</span>
+                </span>
+            `).join('');
+
+            // Add remove handlers
+            linkedEntitiesTags.querySelectorAll('.tag-remove').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    const entities = linkedEntitiesInput.value.split(',').map(e => e.trim());
+                    entities.splice(index, 1);
+                    linkedEntitiesInput.value = entities.join(', ');
+                    updateLinkedEntitiesTags();
+                });
+            });
+        }
+
+        linkedEntitiesInput.addEventListener('input', updateLinkedEntitiesTags);
+        linkedEntitiesInput.addEventListener('blur', updateLinkedEntitiesTags);
 
         // Get the entity data from the VSCode extension
         window.addEventListener('message', event => {
             const entity = event.data;
-            oldEntity = entity; // Store the old entity data for comparison
+            oldEntity = entity;
+            
             document.getElementById('entity-id').value = entity.id;
             document.getElementById('entity-name').value = entity.name;
             document.getElementById('entity-description').value = entity.description;
-            document.getElementById('entity-columns').value = entity.columns.join(', ');
-            document.getElementById('entity-linked-entities').value = entity.linkedEntities.join(', ');
+            descCountSpan.textContent = entity.description.length;
+            
+            document.getElementById('entity-columns').value = (entity.columns || []).join(', ');
+            document.getElementById('entity-linked-entities').value = (entity.linkedEntities || []).join(', ');
+            
+            updateColumnsTags();
+            updateLinkedEntitiesTags();
         });
+
+        // Form validation
+        function validateForm() {
+            let isValid = true;
+            
+            const nameInput = document.getElementById('entity-name');
+            const nameError = document.getElementById('name-error');
+            
+            if (!nameInput.value.trim()) {
+                nameInput.classList.add('error');
+                nameError.textContent = 'Entity name is required';
+                nameError.classList.add('show');
+                isValid = false;
+            } else {
+                nameInput.classList.remove('error');
+                nameError.classList.remove('show');
+            }
+            
+            const descInput = document.getElementById('entity-description');
+            const descError = document.getElementById('description-error');
+            
+            if (!descInput.value.trim()) {
+                descInput.classList.add('error');
+                descError.textContent = 'Description is required';
+                descError.classList.add('show');
+                isValid = false;
+            } else {
+                descInput.classList.remove('error');
+                descError.classList.remove('show');
+            }
+            
+            return isValid;
+        }
 
         // Handle form submission
         document.getElementById('edit-entity-form').addEventListener('submit', event => {
             event.preventDefault();
+            
+            if (!validateForm()) {
+                return;
+            }
+
+            const loading = document.getElementById('loading');
+            loading.classList.add('show');
+            
             const id = document.getElementById('entity-id').value;
-            const name = document.getElementById('entity-name').value;
-            const description = document.getElementById('entity-description').value;
-            const columns = document.getElementById('entity-columns').value.split(',').map(col => col.trim());
-            const linkedEntities = document.getElementById('entity-linked-entities').value.split(',').map(entity => entity.trim());
+            const name = document.getElementById('entity-name').value.trim();
+            const description = document.getElementById('entity-description').value.trim();
+            const columns = document.getElementById('entity-columns').value
+                .split(',')
+                .map(col => col.trim())
+                .filter(col => col);
+            const linkedEntities = document.getElementById('entity-linked-entities').value
+                .split(',')
+                .map(entity => entity.trim())
+                .filter(entity => entity);
 
             vscode.postMessage({
                 command: 'saveEntity',
                 entity: { id, name, description, columns, linkedEntities },
-                oldEntity: oldEntity // Send the old entity data for comparison
+                oldEntity: oldEntity
             });
+
+            setTimeout(() => {
+                loading.classList.remove('show');
+            }, 500);
+        });
+
+        // Cancel button
+        document.getElementById('cancel-button').addEventListener('click', () => {
+            vscode.postMessage({
+                command: 'cancel'
+            });
+        });
+
+        // Real-time validation
+        document.getElementById('entity-name').addEventListener('input', () => {
+            const nameInput = document.getElementById('entity-name');
+            const nameError = document.getElementById('name-error');
+            if (nameInput.value.trim()) {
+                nameInput.classList.remove('error');
+                nameError.classList.remove('show');
+            }
+        });
+
+        document.getElementById('entity-description').addEventListener('input', () => {
+            const descInput = document.getElementById('entity-description');
+            const descError = document.getElementById('description-error');
+            if (descInput.value.trim()) {
+                descInput.classList.remove('error');
+                descError.classList.remove('show');
+            }
         });
     </script>
 </body>

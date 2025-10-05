@@ -3,23 +3,216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ERD Creator</title>
+    <title>Manage ERD</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: var(--vscode-font-family);
             margin: 0;
-            padding: 20px;
+            padding: 16px;
+            color: var(--vscode-foreground);
+            background-color: var(--vscode-sideBar-background);
         }
+
+        .section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--vscode-foreground);
+            margin-bottom: 12px;
+            opacity: 0.9;
+        }
+
+        .card {
+            background-color: var(--vscode-input-background);
+            border: 1px solid var(--vscode-input-border);
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .card:hover {
+            border-color: var(--vscode-focusBorder);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .card-icon {
+            width: 20px;
+            height: 20px;
+            opacity: 0.8;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--vscode-foreground);
+        }
+
+        .card-description {
+            font-size: 12px;
+            color: var(--vscode-descriptionForeground);
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
         button {
-            padding: 10px 20px;
-            font-size: 16px;
+            width: 100%;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-family: var(--vscode-font-family);
             cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            background-color: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+            transition: background-color 0.2s ease;
+        }
+
+        button:hover {
+            background-color: var(--vscode-button-hoverBackground);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        button.secondary {
+            background-color: var(--vscode-button-secondaryBackground);
+            color: var(--vscode-button-secondaryForeground);
+        }
+
+        button.secondary:hover {
+            background-color: var(--vscode-button-secondaryHoverBackground);
+        }
+
+        .info-box {
+            background-color: var(--vscode-textBlockQuote-background);
+            border-left: 3px solid var(--vscode-textLink-foreground);
+            padding: 12px;
+            margin-bottom: 16px;
+            border-radius: 4px;
+        }
+
+        .info-box p {
+            margin: 0;
+            font-size: 12px;
+            line-height: 1.5;
+            color: var(--vscode-foreground);
+        }
+
+        .actions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .actions-grid button {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .divider {
+            height: 1px;
+            background-color: var(--vscode-panel-border);
+            margin: 20px 0;
+        }
+
+        .icon-text {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            animation: fadeIn 0.3s ease;
         }
     </style>
 </head>
 <body>
-    <h1>Create a New ERD</h1>
-    <button id="create-erd-button">Create New ERD</button>
+    <div class="section">
+        <div class="section-title">ERD Management</div>
+        
+        <div class="card">
+            <div class="card-header">
+                <svg class="card-icon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                    <path d="M14 2H8L7 1H2L1 2v12l1 1h12l1-1V3l-1-1zM2 13V2h4.5l1 1H14v10H2z"/>
+                    <path d="M11 5H5v1h6V5zm0 2H5v1h6V7zm0 2H5v1h6V9z"/>
+                </svg>
+                <div class="card-title">Create New ERD</div>
+            </div>
+            <div class="card-description">
+                Open an interactive ERD editor to visualize and manage your database entities and relationships with a grid-based layout.
+            </div>
+            <button id="create-erd-button">
+                <span class="icon-text">
+                    <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                        <path d="M8 3.5a.5.5 0 0 1 .5.5v3.5H12a.5.5 0 0 1 0 1H8.5V12a.5.5 0 0 1-1 0V8.5H4a.5.5 0 0 1 0-1h3.5V4a.5.5 0 0 1 .5-.5z"/>
+                    </svg>
+                    <span>Open ERD Editor</span>
+                </span>
+            </button>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <svg class="card-icon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                    <path d="M14.5 2h-13l-.5.5v9l.5.5h13l.5-.5v-9l-.5-.5zM2 11V3h12v8H2z"/>
+                    <path d="M4 5h8v1H4V5zm0 2h8v1H4V7z"/>
+                </svg>
+                <div class="card-title">Generate ERD</div>
+            </div>
+            <div class="card-description">
+                Generate an ERD diagram from your entities configuration. Customize the layout and export options.
+            </div>
+            <button id="generate-erd-button" class="secondary">
+                <span class="icon-text">
+                    <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                        <path d="M13.5 2h-12l-.5.5v11l.5.5h12l.5-.5v-11l-.5-.5zM13 13H2V3h11v10z"/>
+                    </svg>
+                    <span>Generate Diagram</span>
+                </span>
+            </button>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+        <div class="section-title">Quick Actions</div>
+        <div class="actions-grid">
+            <button id="view-entities-button" class="secondary">📋 View Entities</button>
+            <button id="refresh-button" class="secondary">🔄 Refresh</button>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="info-box">
+        <p><strong>💡 Tip:</strong> Use the Entity Tree view to browse and manage your database entities. Click on any entity to see its details and relationships.</p>
+    </div>
 
     <script>
         const vscode = acquireVsCodeApi();
@@ -27,6 +220,24 @@
         document.getElementById('create-erd-button').addEventListener('click', () => {
             vscode.postMessage({
                 command: 'createERD'
+            });
+        });
+
+        document.getElementById('generate-erd-button').addEventListener('click', () => {
+            vscode.postMessage({
+                command: 'generateERD'
+            });
+        });
+
+        document.getElementById('view-entities-button').addEventListener('click', () => {
+            vscode.postMessage({
+                command: 'viewEntities'
+            });
+        });
+
+        document.getElementById('refresh-button').addEventListener('click', () => {
+            vscode.postMessage({
+                command: 'refresh'
             });
         });
     </script>

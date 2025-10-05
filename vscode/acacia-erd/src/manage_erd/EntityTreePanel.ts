@@ -80,16 +80,52 @@ export class EntityTreePanel implements vscode.WebviewViewProvider {
                 <link href="${styleUri}" rel="stylesheet">
             </head>
             <body>
-                <div id="controls">
-                    <input type="text" id="filter-input" placeholder="Filter entities..." />
-                    <select id="sort-select">
-                        <option value="name-asc">Sort by Name (A-Z)</option>
-                        <option value="name-desc">Sort by Name (Z-A)</option>
-                    </select>
+                <div class="header">
+                    <div class="header-title">Entities</div>
+                    <div class="stats-bar">
+                        <div class="stat-item">
+                            <span>Total:</span>
+                            <span class="stat-value" id="total-count">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>Visible:</span>
+                            <span class="stat-value" id="visible-count">0</span>
+                        </div>
+                    </div>
                 </div>
-                <ul id="entity-tree">
-                    <!-- Tree will be populated by JavaScript -->
-                </ul>
+                <div id="controls">
+                    <div class="search-container">
+                        <svg class="search-icon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M11.5 10h-.8l-.3-.3c1-1.1 1.6-2.6 1.6-4.2C12 2.5 9.5 0 6.5 0S1 2.5 1 5.5 3.5 11 6.5 11c1.6 0 3.1-.6 4.2-1.6l.3.3v.8l5 5 1.5-1.5-5-5zm-5 0C4 10 2 8 2 5.5S4 1 6.5 1 11 3 11 5.5 9 10 6.5 10z"/>
+                        </svg>
+                        <input type="text" id="filter-input" placeholder="Search entities..." />
+                    </div>
+                    <div class="controls-row">
+                        <select id="sort-select">
+                            <option value="name-asc">Name (A-Z)</option>
+                            <option value="name-desc">Name (Z-A)</option>
+                            <option value="columns-desc">Most Columns</option>
+                            <option value="relations-desc">Most Relations</option>
+                        </select>
+                        <div class="view-toggle">
+                            <button id="list-view" class="active" title="List view">
+                                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M2 3h12v1H2V3zm0 3h12v1H2V6zm0 3h12v1H2V9zm0 3h12v1H2v-1z"/>
+                                </svg>
+                            </button>
+                            <button id="card-view" title="Card view">
+                                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M1 1h6v6H1V1zm1 1v4h4V2H2zm7-1h6v6H9V1zm1 1v4h4V2h-4zM1 9h6v6H1V9zm1 1v4h4v-4H2zm7-1h6v6H9V9zm1 1v4h4v-4h-4z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="entity-container">
+                    <ul id="entity-tree">
+                        <!-- Tree will be populated by JavaScript -->
+                    </ul>
+                </div>
                 <script nonce="${nonce}" src="${scriptUri}"></script>
             </body>
             </html>

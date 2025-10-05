@@ -5,80 +5,426 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive ERD</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        * {
             margin: 0;
-            padding: 20px;
-            height: 100vh; /* Ensure the body takes up the full height of the viewport */
+            padding: 0;
+            box-sizing: border-box;
         }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
+
+        body {
+            font-family: var(--vscode-font-family), -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background-color: var(--vscode-editor-background);
+            color: var(--vscode-editor-foreground);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Toolbar Styles */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 12px;
+            background-color: var(--vscode-editorGroupHeader-tabsBackground);
+            border-bottom: 1px solid var(--vscode-editorGroup-border);
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 4px;
+            padding-right: 8px;
+            border-right: 1px solid var(--vscode-editorGroup-border);
             align-items: center;
         }
-        svg {
-            border: 1px solid #ccc;
-            width: 100vw; /* Full width of the viewport */
-            height: 100vh; /* Full height of the viewport */
-            background-color: antiquewhite;
+
+        .toolbar-group:last-child {
+            border-right: none;
         }
-        button svg {
-            width: 24px;
-            height: 24px;
-            fill: currentColor; /* Use the current text color */
-        }
-        .entity, .usage {
+
+        .toolbar button {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-family: var(--vscode-font-family);
             cursor: pointer;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            background-color: transparent;
+            color: var(--vscode-button-foreground);
+            transition: all 0.15s ease;
+            white-space: nowrap;
         }
+
+        .toolbar button:hover {
+            background-color: var(--vscode-toolbar-hoverBackground);
+            border-color: var(--vscode-button-border);
+        }
+
+        .toolbar button:active {
+            background-color: var(--vscode-toolbar-activeBackground);
+        }
+
+        .toolbar button.primary {
+            background-color: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+        }
+
+        .toolbar button.primary:hover {
+            background-color: var(--vscode-button-hoverBackground);
+        }
+
+        .toolbar button svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        .toolbar-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--vscode-descriptionForeground);
+            font-weight: 600;
+            margin-right: 4px;
+        }
+
+        /* Info Bar */
+        .info-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background-color: var(--vscode-inputValidation-infoBackground);
+            border-bottom: 1px solid var(--vscode-inputValidation-infoBorder);
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .info-bar input {
+            flex: 1;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-family: var(--vscode-font-family);
+            background-color: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            border: 1px solid var(--vscode-input-border);
+            border-radius: 3px;
+            min-width: 0;
+        }
+
+        .info-bar input:focus {
+            outline: 1px solid var(--vscode-focusBorder);
+            border-color: var(--vscode-focusBorder);
+        }
+
+        .info-bar a {
+            color: var(--vscode-textLink-foreground);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+
+        .info-bar a:hover {
+            color: var(--vscode-textLink-activeForeground);
+            text-decoration: underline;
+        }
+
+        .info-icon {
+            width: 14px;
+            height: 14px;
+            fill: var(--vscode-editorInfo-foreground);
+        }
+
+        /* SVG Canvas Container */
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background-color: var(--vscode-editor-background);
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            background-color: var(--vscode-editor-background);
+        }
+
+        /* Entity Styles (Enhanced via JS) */
+        .entity, .usage {
+            cursor: move;
+            user-select: none;
+        }
+
+        .entity:hover rect {
+            filter: brightness(1.1);
+        }
+
+        .delete-button {
+            cursor: pointer;
+            transition: fill 0.2s ease;
+        }
+
         .delete-button:hover {
-            fill: red;
+            fill: #f48771;
         }
-        #entities-list-path {
-            width: 900px;
-            font-size: 14px;
+
+        .describe-button {
+            cursor: pointer;
+            transition: fill 0.2s ease;
+        }
+
+        .describe-button:hover {
+            fill: var(--vscode-textLink-foreground);
+        }
+
+        .resize-handle {
+            cursor: nwse-resize;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 12px;
+            background-color: var(--vscode-statusBar-background);
+            color: var(--vscode-statusBar-foreground);
+            border-top: 1px solid var(--vscode-statusBar-border);
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-badge {
+            background-color: var(--vscode-badge-background);
+            color: var(--vscode-badge-foreground);
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Legend */
+        .legend {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            background-color: var(--vscode-editorWidget-background);
+            border: 1px solid var(--vscode-editorWidget-border);
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 11px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+        }
+
+        .legend-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--vscode-foreground);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            border: 1px solid var(--vscode-editorWidget-border);
+        }
+
+        /* Tooltips */
+        .tooltip {
+            position: fixed;
+            background-color: var(--vscode-editorHoverWidget-background);
+            border: 1px solid var(--vscode-editorHoverWidget-border);
+            color: var(--vscode-editorHoverWidget-foreground);
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 2000;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            display: none;
+        }
+
+        /* Animations */
+        @keyframes slideDown {
+            from {
+                transform: translateY(-10px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .toolbar, .info-bar {
+            animation: slideDown 0.3s ease;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .toolbar {
+                font-size: 11px;
+            }
+            
+            .toolbar button {
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+
+            .toolbar-label {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
-    <button id="save-svg-button">Save</button>
-    <button id="create-svg-button">Save as</button>
-    <button id="load-svg-button">Load ERD from SVG</button>
-    <button id="entities-list-button">Entities List</button>
-    <button id="generate-erd-button">Generate ERD from Entities List</button>
-    <button id="apply-erd-button">Apply grid layout</button>
-    <button id="toggle-buttons-visibility">Hide Buttons</button>
-    <script>
-        const toggleButton = document.getElementById('toggle-buttons-visibility');
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="toolbar-group">
+            <span class="toolbar-label">File</span>
+            <button id="save-svg-button" class="primary" title="Save the current ERD (Ctrl+S)">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.5 1h-11l-.5.5v13l.5.5h11l.5-.5v-13l-.5-.5zM3 13V2h10v11H3z"/>
+                    <path d="M9 2H7v4h2V2zm2 0h1v4h-1V2z"/>
+                </svg>
+                <span>Save</span>
+            </button>
+            <button id="create-svg-button" title="Save the current ERD as a new file (Ctrl+Shift+S)">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.5 1h-11l-.5.5v13l.5.5h11l.5-.5v-13l-.5-.5zM3 13V2h10v11H3z"/>
+                    <path d="M9 2H7v4h2V2zm2 0h1v4h-1V2z"/>
+                    <path d="M8 9l-1 1v3h2v-3l-1-1z"/>
+                </svg>
+                <span>Save As</span>
+            </button>
+            <button id="load-svg-button" title="Load an ERD from an SVG file">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M14 2H8L7 1H2L1 2v12l1 1h12l1-1V3l-1-1zM2 13V2h4.5l1 1H14v10H2z"/>
+                    <path d="M8 5L6 7h1v4h2V7h1L8 5z"/>
+                </svg>
+                <span>Load</span>
+            </button>
+        </div>
 
-        toggleButton.addEventListener('click', () => {
-            const areButtonsHidden = toggleButton.textContent === 'Show Buttons';
-            const buttons = document.querySelectorAll('.delete-button, .describe-button, .resize-handle');
-            buttons.forEach(button => button.style.display = areButtonsHidden ? 'inline-block' : 'none');
-            toggleButton.textContent = areButtonsHidden ? 'Hide Buttons' : 'Show Buttons';
-        });
-    </script>
-    <br>
-    <!-- add show path to entities list json file -->
-    <input type="text" id="entities-list-path" value="entities.json" readonly/>
-    <a href="https://github.com/AcaciaMan/acacia-erd/wiki/Create-ER-diagram-help" target="_blank">Help</a>
-    <svg id="erd-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-        <!-- Grouping the rect and text elements together -->
-    <!-- 
-        <g class="entity" id="entity1" data-entity='{"id": "entity1",  "name": "Entity 1", "description": "Description of Entity 1"}' transform="translate(50, 50)">
-            <rect width="100" height="50" fill="lightblue" />
-            <text x="25" y="25" font-family="Arial" font-size="14">Entity 1</text>
-            <text x="90" y="10" font-family="Arial" font-size="10" class="delete-button" fill="darkblue">X</text>
-        </g>
-    -->
-        <!-- Draw stripped line 160, 0 to 160, 600 -->
-         <!--
-        <line x1="160" y1="0" x2="160" y2="600" stroke="black" stroke-dasharray="5,5" />
-        <line x1="320" y1="0" x2="320" y2="600" stroke="black" stroke-dasharray="5,5" />
-        <line x1="480" y1="0" x2="480" y2="600" stroke="black" stroke-dasharray="5,5" />
-        <line x1="640" y1="0" x2="640" y2="600" stroke="black" stroke-dasharray="5,5" />
-    -->
-    </svg>
+        <div class="toolbar-group">
+            <span class="toolbar-label">Entities</span>
+            <button id="entities-list-button" title="Load a list of entities from a JSON file">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2 3h12v1H2V3zm0 3h12v1H2V6zm0 3h12v1H2V9zm0 3h12v1H2v-1z"/>
+                </svg>
+                <span>Entities List</span>
+            </button>
+            <button id="generate-erd-button" title="Generate an ERD from a list of entities">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M14 2H8L7 1H2L1 2v12l1 1h12l1-1V3l-1-1zM2 13V2h4.5l1 1H14v10H2z"/>
+                    <path d="M5 5h6v1H5V5zm0 2h6v1H5V7zm0 2h4v1H5V9z"/>
+                </svg>
+                <span>Generate ERD</span>
+            </button>
+        </div>
+
+        <div class="toolbar-group">
+            <span class="toolbar-label">Layout</span>
+            <button id="apply-erd-button" title="Apply a grid layout to the ERD">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M1 1h6v6H1V1zm1 1v4h4V2H2zm7-1h6v6H9V1zm1 1v4h4V2h-4zM1 9h6v6H1V9zm1 1v4h4v-4H2zm7-1h6v6H9V9zm1 1v4h4v-4h-4z"/>
+                </svg>
+                <span>Apply Grid</span>
+            </button>
+        </div>
+
+        <div class="toolbar-group">
+            <span class="toolbar-label">View</span>
+            <button id="toggle-buttons-visibility" title="Toggle visibility of entity controls">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 4c2.2 0 4.2 1.2 6 3.6-1.8 2.4-3.8 3.6-6 3.6s-4.2-1.2-6-3.6C3.8 5.2 5.8 4 8 4zm0-1C5.5 3 3.2 4.5 1 7.6L.5 8l.5.4C3.2 11.5 5.5 13 8 13s4.8-1.5 7-4.6l.5-.4-.5-.4C12.8 4.5 10.5 3 8 3zm0 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/>
+                </svg>
+                <span>Hide Controls</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Info Bar -->
+    <div class="info-bar">
+        <svg class="info-icon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8.5 1h-1l-.5.5v5l.5.5h1l.5-.5v-5L8.5 1zm0 7h-1l-.5.5v5l.5.5h1l.5-.5v-5L8.5 8z"/>
+        </svg>
+        <span>Entities File:</span>
+        <input type="text" id="entities-list-path" value="entities.json" readonly/>
+        <a href="https://github.com/AcaciaMan/acacia-erd/wiki/Create-ER-diagram-help" target="_blank">
+            <svg width="14" height="14" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm.5 11h-1v-1h1v1zm0-2h-1V5h1v5z"/>
+            </svg>
+            <span>Help</span>
+        </a>
+    </div>
+
+    <!-- Canvas Container -->
+    <div class="canvas-container">
+        <svg id="erd-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+            <!-- ERD content will be dynamically generated here -->
+        </svg>
+
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-title">Entity States</div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: lightblue;"></div>
+                <span>Default</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: red;"></div>
+                <span>Selected</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: green;"></div>
+                <span>References Selected</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: yellow;"></div>
+                <span>Referenced By Selected</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="status-item">
+            <span>Entities:</span>
+            <span class="status-badge" id="entity-count">0</span>
+        </div>
+        <div class="status-item">
+            <span>Relationships:</span>
+            <span class="status-badge" id="relationship-count">0</span>
+        </div>
+        <div class="status-item">
+            <span id="status-message">Ready</span>
+        </div>
+    </div>
+
+    <!-- Tooltip -->
+    <div class="tooltip" id="tooltip"></div>
 
     <script src="/resources/icons.js"></script>
     <script src="/resources/pluralize.js"></script>
@@ -86,16 +432,34 @@
     <script src="/resources/usage_erd.js"></script>
     <script src="/resources/generate_erd.js"></script>
     <script>
-        let entites = [];
-        document.getElementById('create-svg-button').addEventListener('click', () => {
-            const svgElement = document.getElementById('erd-svg');
-            const svgContent = svgElement.outerHTML;
-            vscode.postMessage({
-                command: 'createSVG',
-                svgContent: svgContent
-            });
+        let entities = [];
+
+        // Initialize status bar
+        function updateStatusBar() {
+            const entityElements = document.querySelectorAll('.entity');
+            const usageElements = document.querySelectorAll('.usage');
+            document.getElementById('entity-count').textContent = entityElements.length;
+            document.getElementById('relationship-count').textContent = usageElements.length;
+        }
+
+        function setStatusMessage(message) {
+            document.getElementById('status-message').textContent = message;
+            setTimeout(() => {
+                document.getElementById('status-message').textContent = 'Ready';
+            }, 3000);
+        }
+
+        // Toggle buttons visibility
+        const toggleButton = document.getElementById('toggle-buttons-visibility');
+        toggleButton.addEventListener('click', () => {
+            const areButtonsHidden = toggleButton.querySelector('span').textContent === 'Show Controls';
+            const buttons = document.querySelectorAll('.delete-button, .describe-button, .resize-handle');
+            buttons.forEach(button => button.style.display = areButtonsHidden ? 'inline-block' : 'none');
+            toggleButton.querySelector('span').textContent = areButtonsHidden ? 'Hide Controls' : 'Show Controls';
+            setStatusMessage(areButtonsHidden ? 'Controls visible' : 'Controls hidden');
         });
 
+        // Save SVG
         document.getElementById('save-svg-button').addEventListener('click', () => {
             const svgElement = document.getElementById('erd-svg');
             const svgContent = svgElement.outerHTML;
@@ -103,14 +467,58 @@
                 command: 'saveSVG',
                 svgContent: svgContent
             });
+            setStatusMessage('Saving ERD...');
         });
 
+        // Save As SVG
+        document.getElementById('create-svg-button').addEventListener('click', () => {
+            const svgElement = document.getElementById('erd-svg');
+            const svgContent = svgElement.outerHTML;
+            vscode.postMessage({
+                command: 'createSVG',
+                svgContent: svgContent
+            });
+            setStatusMessage('Saving ERD as new file...');
+        });
+
+        // Load SVG
         document.getElementById('load-svg-button').addEventListener('click', () => {
             vscode.postMessage({
                 command: 'loadSVG'
             });
+            setStatusMessage('Loading ERD...');
         });
 
+        // Generate ERD
+        document.getElementById('generate-erd-button').addEventListener('click', () => {
+            vscode.postMessage({
+                command: 'chooseJSON'
+            });
+            setStatusMessage('Opening file selector...');
+        });  
+        
+        // Entities List
+        document.getElementById('entities-list-button').addEventListener('click', () => {
+            vscode.postMessage({
+                command: 'chooseEntitiesList'
+            });
+            setStatusMessage('Opening entities list selector...');
+        });
+
+        // Apply Grid Layout
+        document.getElementById('apply-erd-button').addEventListener('click', () => {
+            entities = getERDEntities();
+            entities = applyForceLayout(entities, 800, 600, false, 0, undefined);
+            generateSVG(entities);
+            attachSVGEntityEventListeners();
+            attachEntityEventListeners();
+            attachSVGUsageEventListeners();
+            attachUsageEventListeners();
+            updateStatusBar();
+            setStatusMessage('Grid layout applied');
+        });
+
+        // Message handler
         window.addEventListener('message', event => {
             const message = event.data;
             switch (message.command) {
@@ -120,6 +528,8 @@
                     attachEntityEventListeners();
                     attachSVGUsageEventListeners();
                     attachUsageEventListeners();
+                    updateStatusBar();
+                    setStatusMessage('ERD loaded successfully');
                     break;
                 case 'loadEntities':
                     entities = message.entities;
@@ -134,57 +544,46 @@
                     attachEntityEventListeners();
                     attachSVGUsageEventListeners();
                     attachUsageEventListeners();
+                    updateStatusBar();
+                    setStatusMessage('Entities loaded and diagram generated');
                     break;   
                 case 'loadEntitiesList':
                     document.getElementById('entities-list-path').value = message.entitiesListPath;
+                    setStatusMessage('Entities list path updated');
                     break; 
             }
         });
 
+        // Initialize on load
         document.addEventListener('DOMContentLoaded', () => {
             attachSVGEntityEventListeners();
             attachEntityEventListeners();
             attachSVGUsageEventListeners();
-            attachUsageEventListeners();            
+            attachUsageEventListeners();
+            updateStatusBar();
         });
 
-
-        document.getElementById('generate-erd-button').addEventListener('click', () => {
-            vscode.postMessage({
-                command: 'chooseJSON'
-            });
-        });  
-        
-        document.getElementById('entities-list-button').addEventListener('click', () => {
-            vscode.postMessage({
-                command: 'chooseEntitiesList'
-            });
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                if (e.shiftKey) {
+                    document.getElementById('create-svg-button').click();
+                } else {
+                    document.getElementById('save-svg-button').click();
+                }
+            }
         });
 
-        document.getElementById('apply-erd-button').addEventListener('click', () => {
-                    entities = getERDEntities();
-
-                    entities = applyForceLayout(entities, 800, 600, false, 0, undefined);
-                    generateSVG(entities);
-                    attachSVGEntityEventListeners();
-                    attachEntityEventListeners();
-                    attachSVGUsageEventListeners();
-                    attachUsageEventListeners();
+        // Update status bar when entities change
+        const observer = new MutationObserver(() => {
+            updateStatusBar();
         });
 
-        // Replace buttons with icons and add descriptions on hover
-        document.getElementById('save-svg-button').title = 'Save the current ERD';
-        document.getElementById('create-svg-button').title = 'Save the current ERD as a new file';
-        document.getElementById('load-svg-button').title = 'Load an ERD from an SVG file';
-        document.getElementById('entities-list-button').title = 'Load a list of entities from a JSON file';
-        document.getElementById('generate-erd-button').title = 'Generate an ERD from a list of entities';
-        document.getElementById('apply-erd-button').title = 'Apply a grid layout to the ERD';
-        document.getElementById('save-svg-button').innerHTML = getSaveIcon();
-        document.getElementById('create-svg-button').innerHTML = getSaveAsIcon();
-        document.getElementById('load-svg-button').innerHTML = getLoadIcon();
-        document.getElementById('entities-list-button').innerHTML = getUnorderedListIcon();
-        document.getElementById('generate-erd-button').innerHTML = getGenerateIcon();
-        document.getElementById('apply-erd-button').innerHTML = getGridIcon();
+        observer.observe(document.getElementById('erd-svg'), {
+            childList: true,
+            subtree: true
+        });
 
     </script>   
 </body>
