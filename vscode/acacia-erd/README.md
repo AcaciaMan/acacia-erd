@@ -7,6 +7,8 @@ A powerful VS Code extension for creating, managing, and visualizing Entity Rela
 [![Version](https://img.shields.io/badge/version-1.3.7-blue.svg)](https://marketplace.visualstudio.com/items?itemName=manacacia.acacia-erd)
 [![VS Code](https://img.shields.io/badge/VS%20Code-1.98.0+-007ACC.svg)](https://code.visualstudio.com/)
 
+<img alt="Screenshot_erd" src="https://github.com/user-attachments/assets/f15c2f45-4a24-454a-b91a-b5bae3ce3dd4" />
+
 ## ✨ Features
 
 ### 🎨 **Interactive ERD Editor**
@@ -39,9 +41,6 @@ A powerful VS Code extension for creating, managing, and visualizing Entity Rela
 - **Status Bar**: Real-time entity and relationship counts
 
 ## 📸 Screenshots
-
-### Interactive ERD Editor
-![Screenshot_erd](https://github.com/user-attachments/assets/d7fe0279-8503-4494-9580-92dbe970bdf4)
 
 ### WordPress Database ERD
 ![Screenshot_wordpress](https://github.com/user-attachments/assets/1d9ade83-b35f-4023-829f-94840ef9dc3c)
