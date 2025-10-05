@@ -2,3 +2,4 @@
 /vscode/acacia-erd/dist
 Python/msdyn_entities.json
 *.pyc
+*.vsix
