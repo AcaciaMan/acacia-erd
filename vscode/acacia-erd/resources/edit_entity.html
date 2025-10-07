@@ -571,17 +571,23 @@
         linkedEntitiesInput.addEventListener('input', updateLinkedEntitiesTags);
         linkedEntitiesInput.addEventListener('blur', updateLinkedEntitiesTags);
 
+        // Signal that the webview is ready to receive data
+        vscode.postMessage({ command: 'webviewReady' });
+
         // Get the entity data from the VSCode extension
         window.addEventListener('message', event => {
             const entity = event.data;
+            console.log('Received entity data:', entity);
             oldEntity = entity;
             
-            document.getElementById('entity-id').value = entity.id;
-            document.getElementById('entity-name').value = entity.name;
-            document.getElementById('entity-description').value = entity.description;
-            descCountSpan.textContent = entity.description.length;
+            document.getElementById('entity-id').value = entity.id || '';
+            document.getElementById('entity-name').value = entity.name || '';
+            document.getElementById('entity-description').value = entity.description || '';
+            descCountSpan.textContent = (entity.description || '').length;
             
+            console.log('Entity columns:', entity.columns);
             document.getElementById('entity-columns').value = (entity.columns || []).join(', ');
+            console.log('Entity linked entities:', entity.linkedEntities);
             document.getElementById('entity-linked-entities').value = (entity.linkedEntities || []).join(', ');
             
             updateColumnsTags();

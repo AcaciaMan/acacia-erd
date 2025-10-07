@@ -12,37 +12,69 @@ function getERDEntities() {
 
 
 function discoverLinkedEntities(entities) {
+    console.log(`Starting entity relationship discovery for ${entities.length} entities`);
+    
+    // Initialize linkedEntities and build entity map
+    entities.forEach(entity => {
+        if (!entity.linkedEntities) {
+            entity.linkedEntities = [];
+        }
+        entityMap.set(entity.name, entity);
+    });
 
-        // Create a map of entities by name for quick lookup
-        entities.forEach(entity => {
-            if(entity.linkedEntities === undefined) {
-                entity.linkedEntities = [];
+    // Use Set for faster duplicate checking
+    const entityLinksSet = new Map();
+    entities.forEach(entity => {
+        entityLinksSet.set(entity.name, new Set(entity.linkedEntities));
+    });
+
+    // Discover relationships
+    entities.forEach(entity => {
+        const entityLinks = entityLinksSet.get(entity.name);
+        
+        for (const other of entities) {
+            // Skip self-comparison
+            if (entity === other) {
+                continue;
             }
             
-            entityMap.set(entity.name, entity);
-        });
+            // Check if entity name is similar to other entity name (potential naming pattern)
+            // E.g., "user" might be related to "user_profile"
+            if (entity.name.length < other.name.length) {
+                const nameSimilarity = compareNamesWithLevenshtein(entity.name, other.name);
+                if (nameSimilarity < 0.5) {
+                    entityLinks.add(other.name);
+                    continue; // Move to next entity after finding name similarity
+                }
+            }
+            
+            // Check if entity name appears in other entity's columns (foreign key detection)
+            if (other.columns && other.columns.length > 0) {
+                // Use some() for early exit when match is found
+                const hasMatch = other.columns.some(column => {
+                    // Try exact singular/plural matching first (faster)
+                    if (compareNames(entity.name, column)) {
+                        return true;
+                    }
+                    // Fall back to fuzzy matching with Levenshtein distance
+                    return compareNamesWithLevenshtein(entity.name, column) < 0.5;
+                });
+                
+                if (hasMatch) {
+                    entityLinks.add(other.name);
+                }
+            }
+        }
+    });
 
-        entities.forEach(entity => {
-            // if entity name is in other entity columns, link entities
-            for (const other of entities){
-                if (compareNamesWithLevenshtein(entity.name, other.name)<0.5 && entity.name.length<other.name.length) {
-                    if (!entity.linkedEntities.includes(other.name)) {
-                    entity.linkedEntities.push(other.name);
-                    }
-                    continue;
-                }
-                if (entity !== other && other.columns) {
-                    for (const column of other.columns) {
-                        if (compareNamesWithLevenshtein(entity.name, column)<0.5) {
-                                if (!entity.linkedEntities.includes(other.name)) {
-                                entity.linkedEntities.push(other.name);
-                                }
-                            break;
-                        }
-                    }
-                }
-            };
-        });
+    // Convert Sets back to arrays
+    entities.forEach(entity => {
+        entity.linkedEntities = Array.from(entityLinksSet.get(entity.name));
+    });
+
+    // Log statistics
+    const totalLinks = entities.reduce((sum, entity) => sum + entity.linkedEntities.length, 0);
+    console.log(`Discovered ${totalLinks} relationships across ${entities.length} entities`);
 
     return entities;
 }

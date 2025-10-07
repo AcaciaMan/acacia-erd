@@ -171,30 +171,37 @@ export class InteractiveERDPanel {
         let htmlContent = fs.readFileSync(htmlPath, 'utf8');
         panel.webview.html = htmlContent;
 
-        let entityDetails: em.Entity = {
-            id: entity.id,
-            name: entity.name,
-            description: entity.description || "Description of " + entity.name,
-            columns: entity.columns || ["Column1", "Column2", "Column3"],
-            linkedEntities: entity.linkedEntities || []
-        };
+        let entityDetails: em.Entity;
 
         try {
+            // Try to get the full entity details from the manager
             entityDetails = this.mgr.getEntityByName(entity.name);
+            console.log('Entity loaded from manager:', entityDetails);
         } catch (error) {
-            // do nothing, use the default entityDetails
+            // If not found in manager, use the entity passed in or create default
+            console.log('Entity not found in manager, using passed entity or default');
+            entityDetails = {
+                id: entity.id,
+                name: entity.name,
+                description: entity.description || "Description of " + entity.name,
+                columns: entity.columns || ["Column1", "Column2", "Column3"],
+                linkedEntities: entity.linkedEntities || []
+            };
         }
 
         panel.webview.onDidReceiveMessage(message => {
             switch (message.command) {
+                case 'webviewReady':
+                    // Webview is ready, now send the entity data
+                    console.log('Sending entity data to webview:', entityDetails);
+                    panel.webview.postMessage(entityDetails);
+                    break;
                 case 'saveEntity':
                     this.saveEntity(message.entity, message.oldEntity);
                     panel.dispose();
                     break;
             }
         });
-
-        panel.webview.postMessage(entityDetails);
     }
 
     public deleteEntity(entityName: string) {
