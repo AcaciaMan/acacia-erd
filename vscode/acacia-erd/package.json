@@ -6,13 +6,15 @@
     "type": "git",
     "url": "https://github.com/AcaciaMan/acacia-erd"
   },
-  "version": "2.2.0",
+  "version": "2.2.1",
   "publisher": "manacacia",
+  "icon": "icon.png",
   "engines": {
     "vscode": "^1.98.0"
   },
   "categories": [
-    "Other"
+    "Visualization",
+    "Data Science"
   ],
   "keywords": [
     "erd",

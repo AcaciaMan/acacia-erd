@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG to PNG Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        canvas { border: 1px solid #ddd; margin: 20px 0; }
+        button {
+            background: #4A90E2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover { background: #357ABD; }
+        .preview { text-align: center; }
+        #svgPreview { max-width: 256px; margin: 20px auto; display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Convert icon.svg to icon.png</h1>
+        <p>This page will convert your SVG icon to a 256x256 PNG file.</p>
+        
+        <div class="preview">
+            <h3>Preview:</h3>
+            <img id="svgPreview" src="icon.svg" alt="Icon Preview">
+        </div>
+        
+        <canvas id="canvas" width="256" height="256" style="display:none;"></canvas>
+        
+        <button onclick="convertAndDownload()">Download as icon.png</button>
+        
+        <div id="status" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        async function convertAndDownload() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = 'Converting...';
+            
+            try {
+                // Load the SVG
+                const response = await fetch('icon.svg');
+                const svgText = await response.text();
+                
+                // Create an image from SVG
+                const img = new Image();
+                const svgBlob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+                const url = URL.createObjectURL(svgBlob);
+                
+                img.onload = function() {
+                    // Draw to canvas
+                    const canvas = document.getElementById('canvas');
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, 256, 256);
+                    ctx.drawImage(img, 0, 0, 256, 256);
+                    
+                    // Convert to PNG and download
+                    canvas.toBlob(function(blob) {
+                        const link = document.createElement('a');
+                        link.download = 'icon.png';
+                        link.href = URL.createObjectURL(blob);
+                        link.click();
+                        
+                        statusDiv.innerHTML = '<span style="color: green;">✓ Download started! Save as icon.png in your extension root folder.</span>';
+                        URL.revokeObjectURL(url);
+                    }, 'image/png');
+                };
+                
+                img.onerror = function() {
+                    statusDiv.innerHTML = '<span style="color: red;">Error loading SVG. Please check the file path.</span>';
+                };
+                
+                img.src = url;
+                
+            } catch (error) {
+                statusDiv.innerHTML = '<span style="color: red;">Error: ' + error.message + '</span>';
+            }
+        }
+    </script>
+</body>
+</html>

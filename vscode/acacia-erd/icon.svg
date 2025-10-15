@@ -1,0 +1,47 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4A90E2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2E5C8A;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="entityGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#E8F4FD;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="256" height="256" rx="32" fill="url(#bgGradient)"/>
+  
+  <!-- Entity Box 1 (Top) -->
+  <rect x="78" y="35" width="100" height="50" rx="4" fill="url(#entityGradient)" stroke="#2E5C8A" stroke-width="2.5"/>
+  <line x1="78" y1="52" x2="178" y2="52" stroke="#2E5C8A" stroke-width="2"/>
+  <text x="128" y="48" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#2E5C8A" text-anchor="middle">Entity</text>
+  <circle cx="98" cy="70" r="2.5" fill="#4A90E2"/>
+  <circle cx="128" cy="70" r="2.5" fill="#4A90E2"/>
+  <circle cx="158" cy="70" r="2.5" fill="#4A90E2"/>
+  
+  <!-- Entity Box 2 (Bottom Left) -->
+  <rect x="25" y="155" width="90" height="50" rx="4" fill="url(#entityGradient)" stroke="#2E5C8A" stroke-width="2.5"/>
+  <line x1="25" y1="172" x2="115" y2="172" stroke="#2E5C8A" stroke-width="2"/>
+  <text x="70" y="168" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#2E5C8A" text-anchor="middle">Table A</text>
+  <circle cx="42" cy="188" r="2.5" fill="#4A90E2"/>
+  <circle cx="70" cy="188" r="2.5" fill="#4A90E2"/>
+  <circle cx="98" cy="188" r="2.5" fill="#4A90E2"/>
+  
+  <!-- Entity Box 3 (Bottom Right) -->
+  <rect x="141" y="155" width="90" height="50" rx="4" fill="url(#entityGradient)" stroke="#2E5C8A" stroke-width="2.5"/>
+  <line x1="141" y1="172" x2="231" y2="172" stroke="#2E5C8A" stroke-width="2"/>
+  <text x="186" y="168" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#2E5C8A" text-anchor="middle">Table B</text>
+  <circle cx="158" cy="188" r="2.5" fill="#4A90E2"/>
+  <circle cx="186" cy="188" r="2.5" fill="#4A90E2"/>
+  <circle cx="214" cy="188" r="2.5" fill="#4A90E2"/>
+  
+  <!-- Grid pattern overlay (subtle) -->
+  <defs>
+    <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#FFFFFF" stroke-width="0.5" opacity="0.1"/>
+    </pattern>
+  </defs>
+  <rect width="256" height="256" fill="url(#grid)"/>
+</svg>
