@@ -296,22 +296,6 @@ WHERE table_schema = 'your_database';
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## 🆚 Why Choose Acacia ERD?
-
-| Feature | Acacia ERD | dbdiagram.io | DrawSQL | Lucidchart |
-|---------|------------|--------------|---------|------------|
-| **Price** | ✅ Free | Paid plans | Paid plans | Subscription |
-| **Offline** | ✅ Yes | ❌ No | ❌ No | ❌ No |
-| **VS Code Integration** | ✅ Native | ❌ No | ❌ No | ❌ No |
-| **Interactive HTML Export** | ✅ Yes | ❌ No | Limited | Limited |
-| **No Account Required** | ✅ Yes | ❌ No | ❌ No | ❌ No |
-| **Shareable Diagrams** | ✅ HTML file | Cloud link | Cloud link | Cloud link |
-| **Open Source** | ✅ Yes | ❌ No | ❌ No | ❌ No |
-| **Grid Layout** | ✅ Yes | Manual | Manual | Manual |
-| **Database Import** | ✅ Oracle+ | Various | Various | Various |
-
-**The Acacia ERD Advantage:** Create, edit, and share interactive database diagrams entirely free, offline, and without any account requirements!
-
 ## 📝 License
 
 This extension is licensed under the [MIT License](LICENSE).
