@@ -25,7 +25,7 @@ Try it now: Open an ERD and click the green "Export HTML" button! 🚀
 
 ---
 
-<img alt="Screenshot_erd" src="https://github.com/user-attachments/assets/f15c2f45-4a24-454a-b91a-b5bae3ce3dd4" />
+<img alt="Screenshot_erd" src="https://github.com/user-attachments/assets/f607db8d-67d2-46ab-adf6-4d656ca5a61f" />
 
 ## ✨ Features
 
@@ -47,6 +47,8 @@ Export your ERDs as **standalone interactive HTML files** that work in any brows
 - Host on GitHub Pages or internal documentation sites
 
 [Learn more about Interactive HTML Export →](docs/INTERACTIVE_HTML_EXPORT.md)
+
+<img alt="Screenshot_erd_html" src="https://github.com/user-attachments/assets/38852015-5e82-4138-89d4-b26863a15a4a" />
 
 ---
 
