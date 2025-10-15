@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ERD_TITLE}}</title>
+    <style>
+        :root {
+            /* Light theme (default) */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f3f3f3;
+            --bg-tertiary: #e8e8e8;
+            --text-primary: #1e1e1e;
+            --text-secondary: #616161;
+            --border-color: #d4d4d4;
+            --button-bg: #007acc;
+            --button-hover: #005a9e;
+            --button-text: #ffffff;
+            --entity-default: #add8e6;
+            --entity-selected: #ff6b6b;
+            --entity-references: #90ee90;
+            --entity-referenced: #ffeb3b;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-theme {
+            --bg-primary: #1e1e1e;
+            --bg-secondary: #252526;
+            --bg-tertiary: #2d2d30;
+            --text-primary: #d4d4d4;
+            --text-secondary: #8c8c8c;
+            --border-color: #3e3e42;
+            --button-bg: #0e639c;
+            --button-hover: #1177bb;
+            --shadow: rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 6px;
+            padding-right: 12px;
+            border-right: 1px solid var(--border-color);
+            align-items: center;
+        }
+
+        .toolbar-group:last-child {
+            border-right: none;
+        }
+
+        .toolbar button {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            background-color: transparent;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .toolbar button:hover {
+            background-color: var(--bg-tertiary);
+            border-color: var(--border-color);
+        }
+
+        .toolbar button.primary {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+        }
+
+        .toolbar button.primary:hover {
+            background-color: var(--button-hover);
+        }
+
+        .toolbar button svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background-color: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-container input {
+            flex: 1;
+            padding: 6px 12px;
+            font-size: 13px;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .search-container input:focus {
+            border-color: var(--button-bg);
+        }
+
+        /* Canvas Container */
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background-color: var(--bg-primary);
+        }
+
+        #erd-svg {
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-primary);
+            cursor: grab;
+        }
+
+        #erd-svg.grabbing {
+            cursor: grabbing;
+        }
+
+        /* Entity Styles */
+        .entity {
+            cursor: move;
+            user-select: none;
+            transition: filter 0.2s ease;
+        }
+
+        .entity:hover rect {
+            filter: brightness(1.1);
+        }
+
+        .entity rect {
+            transition: fill 0.3s ease;
+        }
+
+        .entity text {
+            pointer-events: none;
+        }
+
+        /* Legend */
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 12px;
+            box-shadow: 0 4px 12px var(--shadow);
+            z-index: 1000;
+        }
+
+        .legend-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Status Bar */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 16px;
+            background-color: var(--bg-secondary);
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-color);
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-badge {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Info Panel */
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 16px;
+            max-width: 300px;
+            box-shadow: 0 4px 12px var(--shadow);
+            z-index: 1000;
+            display: none;
+        }
+
+        .info-panel.visible {
+            display: block;
+        }
+
+        .info-panel h3 {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .info-panel p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .toolbar {
+                font-size: 11px;
+            }
+            
+            .toolbar button {
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+
+            .legend {
+                bottom: 10px;
+                right: 10px;
+                font-size: 10px;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        body {
+            animation: fadeIn 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="toolbar-group">
+            <button id="theme-toggle" title="Toggle dark/light theme">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 12.93A5.93 5.93 0 1 1 8 2.07v11.86z"/>
+                </svg>
+                <span>Theme</span>
+            </button>
+        </div>
+
+        <div class="toolbar-group">
+            <button id="zoom-in" title="Zoom in">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 1v6h6v2H8v6H6V9H0V7h6V1h2z"/>
+                </svg>
+                <span>Zoom In</span>
+            </button>
+            <button id="zoom-out" title="Zoom out">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M14 7H2v2h12V7z"/>
+                </svg>
+                <span>Zoom Out</span>
+            </button>
+            <button id="reset-view" title="Reset zoom and position">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 1.5A6.5 6.5 0 0 0 1.5 8H0a8 8 0 1 1 1.8 5l1.1-1.1A6.5 6.5 0 1 0 8 1.5z"/>
+                    <path d="M0 8l3-3v6L0 8z"/>
+                </svg>
+                <span>Reset</span>
+            </button>
+        </div>
+
+        <div class="toolbar-group">
+            <button id="fit-to-screen" title="Fit all entities to screen">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M1 1h6v2H3v4H1V1zm9 0h6v6h-2V3h-4V1zM1 10h2v4h4v2H1v-6zm14 0h-2v4h-4v2h6v-6z"/>
+                </svg>
+                <span>Fit to Screen</span>
+            </button>
+        </div>
+
+        <div class="toolbar-group">
+            <button id="export-svg" class="primary" title="Export as SVG">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 9L6 7h1V1h2v6h1L8 9zM1 14h14v-7h-2v5H3V7H1v7z"/>
+                </svg>
+                <span>Export SVG</span>
+            </button>
+        </div>
+
+        <div class="toolbar-group">
+            <button id="toggle-legend" title="Toggle legend visibility">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 4c2.2 0 4.2 1.2 6 3.6-1.8 2.4-3.8 3.6-6 3.6s-4.2-1.2-6-3.6C3.8 5.2 5.8 4 8 4zm0-1C5.5 3 3.2 4.5 1 7.6L.5 8l.5.4C3.2 11.5 5.5 13 8 13s4.8-1.5 7-4.6l.5-.4-.5-.4C12.8 4.5 10.5 3 8 3zm0 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/>
+                </svg>
+                <span>Toggle Legend</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-container">
+        <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+            <path d="M10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0zM7 9.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zm4.5 2l3 3-1 1-3-3v-.5l-.25-.25A5.5 5.5 0 1 1 11.5 9l.25.25h.5z"/>
+        </svg>
+        <input type="text" id="search-input" placeholder="Search entities... (e.g., 'User', 'Order')" />
+        <button id="clear-search" title="Clear search">
+            <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                <path d="M8 1a7 7 0 1 1 0 14A7 7 0 0 1 8 1zm3.5 4.5L9 8l2.5 2.5-1 1L8 9l-2.5 2.5-1-1L7 8 4.5 5.5l1-1L8 7l2.5-2.5 1 1z"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Canvas Container -->
+    <div class="canvas-container">
+        <svg id="erd-svg" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <!-- Arrow marker for relationships -->
+                <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <polygon points="0 0, 10 3, 0 6" fill="#666" />
+                </marker>
+            </defs>
+            <g id="svg-content" transform="translate(0, 0) scale(1)">
+                {{ERD_CONTENT}}
+            </g>
+        </svg>
+
+        <!-- Info Panel -->
+        <div class="info-panel" id="info-panel">
+            <h3 id="info-title">Entity Name</h3>
+            <p id="info-description"></p>
+            <p id="info-columns"></p>
+            <button onclick="document.getElementById('info-panel').classList.remove('visible')" style="margin-top: 8px;">Close</button>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend" id="legend">
+            <div class="legend-title">Entity States</div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: lightblue;"></div>
+                <span>Default</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #ff6b6b;"></div>
+                <span>Selected</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #90ee90;"></div>
+                <span>References Selected</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #ffeb3b;"></div>
+                <span>Referenced By Selected</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="status-item">
+            <span>Entities:</span>
+            <span class="status-badge" id="entity-count">0</span>
+        </div>
+        <div class="status-item">
+            <span>Relationships:</span>
+            <span class="status-badge" id="relationship-count">0</span>
+        </div>
+        <div class="status-item">
+            <span>Zoom:</span>
+            <span id="zoom-level">100%</span>
+        </div>
+        <div class="status-item">
+            <span id="status-message">Interactive ERD - Click entities to see relationships</span>
+        </div>
+    </div>
+
+    <script>
+        // ERD Data (will be injected during export)
+        const erdData = {{ERD_DATA}};
+
+        // State management
+        let scale = 1;
+        let translateX = 0;
+        let translateY = 0;
+        let isPanning = false;
+        let startPanX, startPanY;
+        let isDarkTheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeTheme();
+            setupEventListeners();
+            attachEntityEventListeners();
+            updateStatusBar();
+            fitToScreen();
+        });
+
+        function initializeTheme() {
+            if (isDarkTheme) {
+                document.body.classList.add('dark-theme');
+            }
+        }
+
+        function setupEventListeners() {
+            // Theme toggle
+            document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+
+            // Zoom controls
+            document.getElementById('zoom-in').addEventListener('click', () => zoom(1.2));
+            document.getElementById('zoom-out').addEventListener('click', () => zoom(0.8));
+            document.getElementById('reset-view').addEventListener('click', resetView);
+            document.getElementById('fit-to-screen').addEventListener('click', fitToScreen);
+
+            // Export
+            document.getElementById('export-svg').addEventListener('click', exportSVG);
+
+            // Legend toggle
+            document.getElementById('toggle-legend').addEventListener('click', toggleLegend);
+
+            // Search
+            document.getElementById('search-input').addEventListener('input', handleSearch);
+            document.getElementById('clear-search').addEventListener('click', clearSearch);
+
+            // Panning
+            const svg = document.getElementById('erd-svg');
+            svg.addEventListener('mousedown', startPan);
+            svg.addEventListener('mousemove', pan);
+            svg.addEventListener('mouseup', endPan);
+            svg.addEventListener('mouseleave', endPan);
+
+            // Zoom with mouse wheel
+            svg.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+                zoom(zoomFactor);
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', handleKeyboard);
+        }
+
+        function toggleTheme() {
+            isDarkTheme = !isDarkTheme;
+            document.body.classList.toggle('dark-theme');
+        }
+
+        function zoom(factor) {
+            scale *= factor;
+            scale = Math.max(0.1, Math.min(5, scale)); // Clamp between 0.1 and 5
+            updateTransform();
+            updateZoomLevel();
+        }
+
+        function resetView() {
+            scale = 1;
+            translateX = 0;
+            translateY = 0;
+            updateTransform();
+            updateZoomLevel();
+        }
+
+        function fitToScreen() {
+            const svg = document.getElementById('erd-svg');
+            const content = document.getElementById('svg-content');
+            
+            try {
+                const bbox = content.getBBox();
+                const containerWidth = svg.clientWidth;
+                const containerHeight = svg.clientHeight;
+                
+                if (bbox.width === 0 || bbox.height === 0) {
+                    resetView();
+                    return;
+                }
+                
+                const scaleX = (containerWidth * 0.9) / bbox.width;
+                const scaleY = (containerHeight * 0.9) / bbox.height;
+                scale = Math.min(scaleX, scaleY, 1);
+                
+                translateX = (containerWidth - bbox.width * scale) / 2 - bbox.x * scale;
+                translateY = (containerHeight - bbox.height * scale) / 2 - bbox.y * scale;
+                
+                updateTransform();
+                updateZoomLevel();
+            } catch (e) {
+                console.log('Could not fit to screen:', e);
+                resetView();
+            }
+        }
+
+        function updateTransform() {
+            const content = document.getElementById('svg-content');
+            content.setAttribute('transform', `translate(${translateX}, ${translateY}) scale(${scale})`);
+        }
+
+        function updateZoomLevel() {
+            document.getElementById('zoom-level').textContent = `${Math.round(scale * 100)}%`;
+        }
+
+        function startPan(e) {
+            if (e.target.closest('.entity')) return; // Don't pan when clicking entities
+            isPanning = true;
+            document.getElementById('erd-svg').classList.add('grabbing');
+            startPanX = e.clientX - translateX;
+            startPanY = e.clientY - translateY;
+        }
+
+        function pan(e) {
+            if (!isPanning) return;
+            translateX = e.clientX - startPanX;
+            translateY = e.clientY - startPanY;
+            updateTransform();
+        }
+
+        function endPan() {
+            isPanning = false;
+            document.getElementById('erd-svg').classList.remove('grabbing');
+        }
+
+        function exportSVG() {
+            const svg = document.getElementById('erd-svg');
+            const serializer = new XMLSerializer();
+            let svgString = serializer.serializeToString(svg);
+            
+            // Add XML declaration and make it standalone
+            svgString = '<?xml version="1.0" encoding="UTF-8"?>\n' + svgString;
+            
+            const blob = new Blob([svgString], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = '{{ERD_FILENAME}}.svg';
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function toggleLegend() {
+            const legend = document.getElementById('legend');
+            legend.style.display = legend.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function handleSearch(e) {
+            const query = e.target.value.toLowerCase().trim();
+            const entities = document.querySelectorAll('.entity');
+            
+            entities.forEach(entity => {
+                const entityData = JSON.parse(entity.getAttribute('data-entity') || '{}');
+                const entityName = entityData.name || '';
+                const matches = entityName.toLowerCase().includes(query);
+                
+                // Highlight matching entities
+                if (query === '') {
+                    entity.style.opacity = '1';
+                    const rect = entity.querySelector('rect');
+                    if (rect && rect.getAttribute('fill') !== 'red') {
+                        rect.setAttribute('fill', 'lightblue');
+                    }
+                } else {
+                    entity.style.opacity = matches ? '1' : '0.3';
+                    if (matches) {
+                        const rect = entity.querySelector('rect');
+                        if (rect && rect.getAttribute('fill') !== 'red') {
+                            rect.setAttribute('fill', '#ffd700'); // Gold for search results
+                        }
+                    }
+                }
+            });
+        }
+
+        function clearSearch() {
+            document.getElementById('search-input').value = '';
+            handleSearch({ target: { value: '' } });
+        }
+
+        function attachEntityEventListeners() {
+            const entities = document.querySelectorAll('.entity');
+            
+            entities.forEach(entity => {
+                let clickTimeout;
+                
+                // Single click - highlight relationships
+                entity.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('delete-button') || 
+                        e.target.classList.contains('describe-button')) {
+                        return;
+                    }
+                    
+                    clearTimeout(clickTimeout);
+                    clickTimeout = setTimeout(() => {
+                        highlightRelationships(entity);
+                    }, 200);
+                });
+                
+                // Double click - show info
+                entity.addEventListener('dblclick', (e) => {
+                    clearTimeout(clickTimeout);
+                    showEntityInfo(entity);
+                });
+            });
+        }
+
+        function highlightRelationships(selectedEntity) {
+            const entityData = JSON.parse(selectedEntity.getAttribute('data-entity') || '{}');
+            const allEntities = document.querySelectorAll('.entity');
+            
+            // Reset all entities
+            allEntities.forEach(entity => {
+                const rect = entity.querySelector('rect');
+                if (rect) {
+                    rect.setAttribute('fill', 'lightblue');
+                }
+            });
+            
+            // Highlight selected entity
+            const selectedRect = selectedEntity.querySelector('rect');
+            if (selectedRect) {
+                selectedRect.setAttribute('fill', '#ff6b6b');
+            }
+            
+            // Highlight related entities
+            if (entityData.linkedEntities) {
+                allEntities.forEach(entity => {
+                    const otherData = JSON.parse(entity.getAttribute('data-entity') || '{}');
+                    
+                    // Entities that selected entity references (green)
+                    if (entityData.linkedEntities.includes(otherData.name)) {
+                        const rect = entity.querySelector('rect');
+                        if (rect) {
+                            rect.setAttribute('fill', '#90ee90');
+                        }
+                    }
+                    
+                    // Entities that reference selected entity (yellow)
+                    if (otherData.linkedEntities && otherData.linkedEntities.includes(entityData.name)) {
+                        const rect = entity.querySelector('rect');
+                        if (rect) {
+                            rect.setAttribute('fill', '#ffeb3b');
+                        }
+                    }
+                });
+            }
+        }
+
+        function showEntityInfo(entity) {
+            const entityData = JSON.parse(entity.getAttribute('data-entity') || '{}');
+            const infoPanel = document.getElementById('info-panel');
+            
+            document.getElementById('info-title').textContent = entityData.name || 'Unknown Entity';
+            document.getElementById('info-description').textContent = entityData.description || 'No description available';
+            
+            if (entityData.columns && entityData.columns.length > 0) {
+                document.getElementById('info-columns').textContent = 
+                    `Columns (${entityData.columns.length}): ${entityData.columns.join(', ')}`;
+            } else {
+                document.getElementById('info-columns').textContent = 'No columns defined';
+            }
+            
+            infoPanel.classList.add('visible');
+        }
+
+        function updateStatusBar() {
+            const entities = document.querySelectorAll('.entity');
+            const usages = document.querySelectorAll('.usage');
+            
+            document.getElementById('entity-count').textContent = entities.length;
+            document.getElementById('relationship-count').textContent = usages.length;
+        }
+
+        function handleKeyboard(e) {
+            // + or = to zoom in
+            if (e.key === '+' || e.key === '=') {
+                zoom(1.2);
+            }
+            // - to zoom out
+            else if (e.key === '-') {
+                zoom(0.8);
+            }
+            // 0 to reset
+            else if (e.key === '0') {
+                resetView();
+            }
+            // F to fit to screen
+            else if (e.key === 'f' || e.key === 'F') {
+                fitToScreen();
+            }
+            // T to toggle theme
+            else if (e.key === 't' || e.key === 'T') {
+                toggleTheme();
+            }
+            // Escape to clear search
+            else if (e.key === 'Escape') {
+                clearSearch();
+            }
+            // / to focus search
+            else if (e.key === '/') {
+                e.preventDefault();
+                document.getElementById('search-input').focus();
+            }
+        }
+
+        // Expose global functions for button handlers
+        window.toggleTheme = toggleTheme;
+        window.zoom = zoom;
+        window.resetView = resetView;
+        window.fitToScreen = fitToScreen;
+        window.exportSVG = exportSVG;
+        window.toggleLegend = toggleLegend;
+    </script>
+</body>
+</html>

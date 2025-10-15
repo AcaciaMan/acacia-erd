@@ -3,6 +3,8 @@
 import * as vscode from 'vscode';
 import { ERDViewProvider } from './manage_erd/ERDViewProvider';
 import { EntityTreePanel } from './manage_erd/EntityTreePanel';
+import { InteractiveERDPanel } from './manage_erd/InteractiveERDPanel';
+import { HtmlExporter } from './utils/HtmlExporter';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -29,6 +31,17 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.registerWebviewViewProvider('openEntityTree', new EntityTreePanel(context))
 	);
 
+	// Register command to export interactive HTML
+	const exportHtmlCommand = vscode.commands.registerCommand('acacia-erd.exportInteractiveHtml', async () => {
+		// Get current ERD panel if open
+		if (InteractiveERDPanel.currentPanel) {
+			vscode.window.showInformationMessage('Please use the "Export HTML" button in the ERD panel.');
+		} else {
+			vscode.window.showWarningMessage('Please open an ERD diagram first before exporting.');
+		}
+	});
+
+	context.subscriptions.push(exportHtmlCommand);
 	context.subscriptions.push(disposable);
 }
 

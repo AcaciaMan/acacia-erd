@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import { DescribeEntityPanel } from './DescribeEntity';
 import { ERDGenerationPanel } from './ERDGenerationPanel';
 import * as em from '../utils/EntityManager';
+import { HtmlExporter } from '../utils/HtmlExporter';
 
 
 export class InteractiveERDPanel {
@@ -84,7 +85,10 @@ export class InteractiveERDPanel {
                 case 'saveSVG':
                     console.log('saveSVG', this._place?.fsPath);
                         this._place = await saveSVGFile(message.svgContent, this._place);
-                        break;     
+                        break;
+                case 'exportInteractiveHtml':
+                    await this.exportToInteractiveHtml(message.svgContent, message.title);
+                    break;     
                 case 'loadSVG':
                     this._place = await loadSVGFile(panel.webview);
                     break;    
@@ -270,6 +274,16 @@ export class InteractiveERDPanel {
                 command: 'updateUsage',
                 usage: usage
             });
+        }
+    }
+
+    private async exportToInteractiveHtml(svgContent: string, title?: string) {
+        try {
+            const exportData = HtmlExporter.createExportData(svgContent, title);
+            await HtmlExporter.exportToHtml(this._extensionPath, exportData);
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            vscode.window.showErrorMessage(`Failed to export HTML: ${errorMessage}`);
         }
     }
 

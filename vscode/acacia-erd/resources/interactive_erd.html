@@ -328,6 +328,17 @@
         </div>
 
         <div class="toolbar-group">
+            <span class="toolbar-label">Export</span>
+            <button id="export-html-button" class="primary" title="Export as interactive HTML">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M14 2H8L7 1H2L1 2v12l1 1h12l1-1V3l-1-1zM2 13V2h4.5l1 1H14v10H2z"/>
+                    <path d="M4 4h8v1H4V4zm0 2h8v1H4V6zm0 2h5v1H4V8z"/>
+                </svg>
+                <span>Export HTML</span>
+            </button>
+        </div>
+
+        <div class="toolbar-group">
             <span class="toolbar-label">Entities</span>
             <button id="entities-list-button" title="Load a list of entities from a JSON file">
                 <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
@@ -487,6 +498,20 @@
                 command: 'loadSVG'
             });
             setStatusMessage('Loading ERD...');
+        });
+
+        // Export HTML
+        document.getElementById('export-html-button').addEventListener('click', () => {
+            const svgElement = document.getElementById('erd-svg');
+            const svgContent = svgElement.outerHTML;
+            const entityCount = document.querySelectorAll('.entity').length;
+            const title = `ERD with ${entityCount} Entities`;
+            vscode.postMessage({
+                command: 'exportInteractiveHtml',
+                svgContent: svgContent,
+                title: title
+            });
+            setStatusMessage('Exporting as interactive HTML...');
         });
 
         // Generate ERD
