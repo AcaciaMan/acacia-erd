@@ -1,11 +1,17 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import * as fs from 'fs';
 import { ObjectRegistry } from '../utils/ObjectRegistry';
 
 import { InteractiveERDPanel } from './InteractiveERDPanel';
-import { EntityManager } from '../utils/EntityManager';
+import { EntityManager, Entity } from '../utils/EntityManager';
 import { DescribeEntityPanel } from './DescribeEntity';
+
+type EntityTreeMessage =
+    | { command: 'alert'; text: string }
+    | { command: 'openEntityDetails'; entity: Entity }
+    | { command: 'describeEntity'; entity: Entity }
+    | { command: 'deleteEntity'; entityName: string }
+    | { command: 'showInfoMessage'; message: string };
 
 export class EntityTreePanel implements vscode.WebviewViewProvider {
 
@@ -14,6 +20,13 @@ export class EntityTreePanel implements vscode.WebviewViewProvider {
 
     constructor(private readonly context: vscode.ExtensionContext) {
         ObjectRegistry.getInstance().set('EntityTreePanel', this);
+
+        // Subscribe to entity changes
+        this.mgr.onDidChangeEntities((entities) => {
+            if (this._webviewView) {
+                this._webviewView.webview.postMessage({ command: 'loadEntities', entities });
+            }
+        });
     }
 
     resolveWebviewView(webviewView: vscode.WebviewView) {
@@ -46,7 +59,7 @@ export class EntityTreePanel implements vscode.WebviewViewProvider {
             }
         });
 
-        webviewView.webview.onDidReceiveMessage(async message => {
+        webviewView.webview.onDidReceiveMessage(async (message: EntityTreeMessage) => {
             switch (message.command) {
                 case 'alert':
                     vscode.window.showErrorMessage(message.text);

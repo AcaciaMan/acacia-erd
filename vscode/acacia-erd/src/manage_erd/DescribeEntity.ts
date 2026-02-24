@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import { Entity } from '../utils/EntityManager';
 
 export class DescribeEntityPanel {
     public static currentPanel: DescribeEntityPanel | undefined;
@@ -7,7 +8,7 @@ export class DescribeEntityPanel {
     private readonly _extensionPath: string;
     private _disposables: vscode.Disposable[] = [];
 
-    public static createOrShow(extensionPath: string, entity: any) {
+    public static createOrShow(extensionPath: string, entity: Entity) {
         const column = vscode.ViewColumn.Two;
 
         if (DescribeEntityPanel.currentPanel) {
@@ -28,7 +29,7 @@ export class DescribeEntityPanel {
         }
     }
 
-    private constructor(panel: vscode.WebviewPanel, extensionPath: string, entity: any) {
+    private constructor(panel: vscode.WebviewPanel, extensionPath: string, entity: Entity) {
         this._panel = panel;
         this._extensionPath = extensionPath;
 
@@ -37,7 +38,7 @@ export class DescribeEntityPanel {
         this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
 
         this._panel.onDidChangeViewState(
-            e => {
+            _e => {
                 if (this._panel.visible) {
                     this._update(entity);
                 }
@@ -72,13 +73,13 @@ export class DescribeEntityPanel {
         }
     }
 
-    private _update(entity: any) {
+    private _update(entity: Entity) {
         const webview = this._panel.webview;
 
         this._panel.webview.html = this._getHtmlForWebview(webview, entity);
     }
 
-    private _getHtmlForWebview(webview: vscode.Webview, entity: any) {
+    private _getHtmlForWebview(webview: vscode.Webview, entity: Entity) {
         const scriptPathOnDisk = vscode.Uri.file(
             path.join(this._extensionPath, 'resources', 'describe_entity.js')
         );
@@ -177,7 +178,7 @@ export class DescribeEntityPanel {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        ${columns.map((column: any, index: number) => `
+                                        ${columns.map((column: string, index: number) => `
                                             <tr>
                                                 <td><span class="column-order">${index + 1}</span></td>
                                                 <td><span class="column-name">${column}</span></td>

@@ -204,14 +204,28 @@
         <div class="section-title">Quick Actions</div>
         <div class="actions-grid">
             <button id="view-entities-button" class="secondary">📋 View Entities</button>
+            <button id="view-source-folders-button" class="secondary">📁 Source Folders</button>
+            <button id="view-db-connections-button" class="secondary">🗄️ DB Connections</button>
             <button id="refresh-button" class="secondary">🔄 Refresh</button>
         </div>
     </div>
 
     <div class="divider"></div>
 
+    <div class="section">
+        <div class="section-title">Project Status</div>
+        <div class="info-box" id="status-box">
+            <p><strong>📊 Entities:</strong> <span id="entity-count">–</span></p>
+            <p><strong>📁 Source Folders:</strong> <span id="source-folder-count">–</span></p>
+            <p><strong>🗄️ DB Connections:</strong> <span id="db-connection-count">–</span></p>
+            <p><strong>📄 Entities File:</strong> <span id="entities-file-path">–</span></p>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
     <div class="info-box">
-        <p><strong>💡 Tip:</strong> Use the Entity Tree view to browse and manage your database entities. Click on any entity to see its details and relationships.</p>
+        <p><strong>💡 Tip:</strong> Use Source Folders to register project directories and DB Connections to bookmark your database references. Both are accessible from Quick Actions or the sidebar views below.</p>
     </div>
 
     <script>
@@ -235,11 +249,36 @@
             });
         });
 
+        document.getElementById('view-source-folders-button').addEventListener('click', () => {
+            vscode.postMessage({
+                command: 'viewSourceFolders'
+            });
+        });
+
+        document.getElementById('view-db-connections-button').addEventListener('click', () => {
+            vscode.postMessage({
+                command: 'viewDbConnections'
+            });
+        });
+
         document.getElementById('refresh-button').addEventListener('click', () => {
             vscode.postMessage({
                 command: 'refresh'
             });
         });
+
+        window.addEventListener('message', event => {
+            const message = event.data;
+            if (message.command === 'updateStatus') {
+                document.getElementById('entity-count').textContent = message.entityCount ?? '–';
+                document.getElementById('source-folder-count').textContent = message.sourceFolderCount ?? '–';
+                document.getElementById('db-connection-count').textContent = message.dbConnectionCount ?? '–';
+                document.getElementById('entities-file-path').textContent = message.entitiesFilePath ?? '–';
+            }
+        });
+
+        // Request initial status
+        vscode.postMessage({ command: 'requestStatus' });
     </script>
 </body>
 </html>

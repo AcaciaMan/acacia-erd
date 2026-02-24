@@ -1,0 +1,19 @@
+{
+  "logPatterns": {
+    "error": {
+      "regexp": "ERROR",
+      "regexpoptions": "ig",
+      "bSearch": true
+    },
+    "warn": {
+      "regexp": "WARN",
+      "regexpoptions": "ig",
+      "bSearch": true
+    },
+    "info": {
+      "regexp": "INFO",
+      "regexpoptions": "ig",
+      "bSearch": true
+    }
+  }
+}

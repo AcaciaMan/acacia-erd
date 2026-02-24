@@ -1,9 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { ObjectRegistry } from './ObjectRegistry';
-import { InteractiveERDPanel } from '../manage_erd/InteractiveERDPanel';
-import { EntityTreePanel } from '../manage_erd/EntityTreePanel';
 
 export type Entity = {
     id: string;
@@ -16,13 +13,115 @@ export type Entity = {
 
 export class EntityManager {
     private static instance: EntityManager;
-    private entities: any[] = [];
+    private entities: Entity[] = [];
     private entity: Entity | undefined = undefined;
     private entitiesJsonPath: string;
+    private _watcher: vscode.FileSystemWatcher | undefined;
+    private _configListener: vscode.Disposable | undefined;
+    private _reloadTimeout: NodeJS.Timeout | undefined;
+    private readonly _onDidChangeEntities = new vscode.EventEmitter<Entity[]>();
+    public readonly onDidChangeEntities: vscode.Event<Entity[]> = this._onDidChangeEntities.event;
+    private readonly _onDidChangeEntitiesPath = new vscode.EventEmitter<string>();
+    public readonly onDidChangeEntitiesPath: vscode.Event<string> = this._onDidChangeEntitiesPath.event;
 
     private constructor() {
-        this.entitiesJsonPath = vscode.workspace.getConfiguration('acacia-erd').get<string>('entitiesJsonPath', 'resources/entities.json')!;
+        const configuredPath = vscode.workspace.getConfiguration('acacia-erd')
+            .get<string>('entitiesJsonPath', 'resources/entities.json')!;
+        this.entitiesJsonPath = this.resolveEntitiesPath(configuredPath);
         this.loadEntities();
+        this.setupFileWatcher();
+        this.setupConfigListener();
+    }
+
+    private setupFileWatcher(): void {
+        // Dispose existing watcher if any
+        this._watcher?.dispose();
+
+        // Create a watcher for the specific entities file
+        const filePattern = new vscode.RelativePattern(
+            path.dirname(this.entitiesJsonPath),
+            path.basename(this.entitiesJsonPath)
+        );
+        this._watcher = vscode.workspace.createFileSystemWatcher(filePattern);
+
+        this._watcher.onDidChange(() => {
+            console.log('Entities file changed externally, reloading...');
+            this.debouncedReload();
+        });
+
+        this._watcher.onDidCreate(() => {
+            console.log('Entities file created, loading...');
+            this.debouncedReload();
+        });
+
+        this._watcher.onDidDelete(() => {
+            console.log('Entities file deleted, clearing entities...');
+            this.entities = [];
+            this.notifyChange();
+        });
+    }
+
+    private setupConfigListener(): void {
+        this._configListener = vscode.workspace.onDidChangeConfiguration(e => {
+            if (e.affectsConfiguration('acacia-erd.entitiesJsonPath')) {
+                const newConfiguredPath = vscode.workspace.getConfiguration('acacia-erd')
+                    .get<string>('entitiesJsonPath', 'resources/entities.json')!;
+                const newResolvedPath = this.resolveEntitiesPath(newConfiguredPath);
+                if (newResolvedPath !== this.entitiesJsonPath) {
+                    this.entitiesJsonPath = newResolvedPath;
+                    this.loadEntities();
+                    this.setupFileWatcher(); // Re-create watcher for new path
+                    this.notifyChange();
+                }
+            }
+        });
+    }
+
+    private debouncedReload(): void {
+        if (this._reloadTimeout) {
+            clearTimeout(this._reloadTimeout);
+        }
+        this._reloadTimeout = setTimeout(() => {
+            this.loadEntities();
+            this.notifyChange();
+            this._reloadTimeout = undefined;
+        }, 300);
+    }
+
+    public dispose(): void {
+        this._watcher?.dispose();
+        this._configListener?.dispose();
+        this._onDidChangeEntities.dispose();
+        this._onDidChangeEntitiesPath.dispose();
+        if (this._reloadTimeout) {
+            clearTimeout(this._reloadTimeout);
+        }
+    }
+
+    private resolveEntitiesPath(configuredPath: string): string {
+        // If the path is already absolute, use it directly
+        if (path.isAbsolute(configuredPath)) {
+            return configuredPath;
+        }
+        // Resolve relative to the first workspace folder
+        const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        if (workspaceFolder) {
+            return path.resolve(workspaceFolder, configuredPath);
+        }
+        // Fallback: resolve relative to CWD (legacy behavior)
+        return path.resolve(configuredPath);
+    }
+
+    private toWorkspaceRelativePath(absolutePath: string): string {
+        const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        if (workspaceFolder && path.isAbsolute(absolutePath)) {
+            const relative = path.relative(workspaceFolder, absolutePath);
+            // Only use relative if the path is inside the workspace (no ".." prefix)
+            if (!relative.startsWith('..') && !path.isAbsolute(relative)) {
+                return relative;
+            }
+        }
+        return absolutePath;
     }
 
     // Getter for entitiesJsonPath
@@ -32,12 +131,17 @@ export class EntityManager {
 
     // Setter for entitiesJsonPath
     public setEntitiesJsonPath(newPath: string): void {
-                    // update workspace setting with the path to the entities list
-                    vscode.workspace.getConfiguration().update('acacia-erd.entitiesJsonPath', newPath, false).then(() => {
-        this.entitiesJsonPath = newPath;
-        this.loadEntities(); // Reload entities from the new path
-        this.notifyChange(); // Notify components about the change
-    });
+        // Store workspace-relative path in settings when possible
+        const settingsPath = this.toWorkspaceRelativePath(newPath);
+        vscode.workspace.getConfiguration().update(
+            'acacia-erd.entitiesJsonPath', settingsPath, false
+        ).then(() => {
+            this.entitiesJsonPath = this.resolveEntitiesPath(settingsPath);
+            this.loadEntities();
+            this.setupFileWatcher(); // Re-create watcher for new path
+            this._onDidChangeEntitiesPath.fire(this.entitiesJsonPath);
+            this.notifyChange();
+        });
     }
 
     // Getter for entity
@@ -70,7 +174,13 @@ export class EntityManager {
     public loadEntities() {
         try {
             const data = fs.readFileSync(this.entitiesJsonPath, 'utf8');
-            this.entities = JSON.parse(data);
+            const parsed: unknown = JSON.parse(data);
+            if (Array.isArray(parsed)) {
+                this.entities = parsed as Entity[];
+            } else {
+                this.entities = [];
+                vscode.window.showErrorMessage('Error loading entities: expected an array');
+            }
         } catch (error) {
             console.error('Error loading entities:', error);
             if (error instanceof Error) {
@@ -102,12 +212,12 @@ export class EntityManager {
     }
 
     // Get all entities
-    public getEntities(): any[] {
+    public getEntities(): Entity[] {
         return this.entities;
     }
 
     // Add a new entity
-    public addEntity(entity: any) {
+    public addEntity(entity: Entity) {
         // Check if the entity already exists
         const existingEntity = this.entities.find(e => e.name === entity.name);
         if (existingEntity) {
@@ -135,7 +245,7 @@ export class EntityManager {
     }
 
     // Update an existing entity
-    public updateEntity(updatedEntity: any, oldEntity: any) {
+    public updateEntity(updatedEntity: Entity, oldEntity: Entity) {
         if (oldEntity.name !== updatedEntity.name) {
             // rename the entity in the list
             const index = this.entities.findIndex(entity => entity.name === oldEntity.name);
@@ -169,17 +279,6 @@ export class EntityManager {
 
     // Notify all dependent components about changes
     public notifyChange() {
-        const entityTreePanel = ObjectRegistry.getInstance().get<EntityTreePanel>('EntityTreePanel');
-        if (entityTreePanel && entityTreePanel._webviewView) {
-            entityTreePanel._loadEntities(entityTreePanel._webviewView.webview);
-        }
-
-        const interactiveERDPanel = ObjectRegistry.getInstance().get<InteractiveERDPanel>('InteractiveERDPanel');
-        if (interactiveERDPanel) {
-            interactiveERDPanel._panel.webview.postMessage({
-                command: 'updateEntities',
-                entities: this.entities
-            });
-        }
+        this._onDidChangeEntities.fire(this.entities);
     }
 }

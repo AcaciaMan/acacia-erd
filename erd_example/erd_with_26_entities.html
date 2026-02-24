@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERD with 26 Entities</title>
+    <style>
+        :root {
+            /* Light theme (default) */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f3f3f3;
+            --bg-tertiary: #e8e8e8;
+            --text-primary: #1e1e1e;
+            --text-secondary: #616161;
+            --border-color: #d4d4d4;
+            --button-bg: #007acc;
+            --button-hover: #005a9e;
+            --button-text: #ffffff;
+            --entity-default: #add8e6;
+            --entity-selected: #ff6b6b;
+            --entity-references: #90ee90;
+            --entity-referenced: #ffeb3b;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-theme {
+            --bg-primary: #1e1e1e;
+            --bg-secondary: #252526;
+            --bg-tertiary: #2d2d30;
+            --text-primary: #d4d4d4;
+            --text-secondary: #8c8c8c;
+            --border-color: #3e3e42;
+            --button-bg: #0e639c;
+            --button-hover: #1177bb;
+            --shadow: rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-group {
+            display: flex;
+            gap: 6px;
+            padding-right: 12px;
+            border-right: 1px solid var(--border-color);
+            align-items: center;
+        }
+
+        .toolbar-group:last-child {
+            border-right: none;
+        }
+
+        .toolbar button {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            background-color: transparent;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .toolbar button:hover {
+            background-color: var(--bg-tertiary);
+            border-color: var(--border-color);
+        }
+
+        .toolbar button.primary {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+        }
+
+        .toolbar button.primary:hover {
+            background-color: var(--button-hover);
+        }
+
+        .toolbar button svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background-color: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-container input {
+            flex: 1;
+            padding: 6px 12px;
+            font-size: 13px;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .search-container input:focus {
+            border-color: var(--button-bg);
+        }
+
+        /* Canvas Container */
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background-color: var(--bg-primary);
+        }
+
+        #erd-svg {
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-primary);
+            cursor: grab;
+        }
+
+        #erd-svg.grabbing {
+            cursor: grabbing;
+        }
+
+        /* Entity Styles */
+        .entity {
+            cursor: move;
+            user-select: none;
+            transition: filter 0.2s ease;
+        }
+
+        .entity:hover rect {
+            filter: brightness(1.1);
+        }
+
+        .entity rect {
+            transition: fill 0.3s ease;
+        }
+
+        .entity text {
+            pointer-events: none;
+        }
+
+        /* Legend */
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 12px;
+            box-shadow: 0 4px 12px var(--shadow);
+            z-index: 1000;
+        }
+
+        .legend-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Status Bar */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 16px;
+            background-color: var(--bg-secondary);
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-color);
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-badge {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Info Panel */
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 16px;
+            max-width: 300px;
+            box-shadow: 0 4px 12px var(--shadow);
+            z-index: 1000;
+            display: none;
+        }
+
+        .info-panel.visible {
+            display: block;
+        }
+
+        .info-panel h3 {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .info-panel p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .toolbar {
+                font-size: 11px;
+            }
+            
+            .toolbar button {
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+
+            .legend {
+                bottom: 10px;
+                right: 10px;
+                font-size: 10px;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        body {
+            animation: fadeIn 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="toolbar-group">
+            <button id="theme-toggle" title="Toggle dark/light theme">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 12.93A5.93 5.93 0 1 1 8 2.07v11.86z"/>
+                </svg>
+                <span>Theme</span>
+            </button>
+        </div>
+
+        <div class="toolbar-group">
+            <button id="zoom-in" title="Zoom in">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 1v6h6v2H8v6H6V9H0V7h6V1h2z"/>
+                </svg>
+                <span>Zoom In</span>
+            </button>
+            <button id="zoom-out" title="Zoom out">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M14 7H2v2h12V7z"/>
+                </svg>
+                <span>Zoom Out</span>
+            </button>
+            <button id="reset-view" title="Reset zoom and position">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 1.5A6.5 6.5 0 0 0 1.5 8H0a8 8 0 1 1 1.8 5l1.1-1.1A6.5 6.5 0 1 0 8 1.5z"/>
+                    <path d="M0 8l3-3v6L0 8z"/>
+                </svg>
+                <span>Reset</span>
+            </button>
+        </div>
+
+        <div class="toolbar-group">
+            <button id="fit-to-screen" title="Fit all entities to screen">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M1 1h6v2H3v4H1V1zm9 0h6v6h-2V3h-4V1zM1 10h2v4h4v2H1v-6zm14 0h-2v4h-4v2h6v-6z"/>
+                </svg>
+                <span>Fit to Screen</span>
+            </button>
+        </div>
+
+        <div class="toolbar-group">
+            <button id="export-svg" class="primary" title="Export as SVG">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 9L6 7h1V1h2v6h1L8 9zM1 14h14v-7h-2v5H3V7H1v7z"/>
+                </svg>
+                <span>Export SVG</span>
+            </button>
+        </div>
+
+        <div class="toolbar-group">
+            <button id="toggle-legend" title="Toggle legend visibility">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 4c2.2 0 4.2 1.2 6 3.6-1.8 2.4-3.8 3.6-6 3.6s-4.2-1.2-6-3.6C3.8 5.2 5.8 4 8 4zm0-1C5.5 3 3.2 4.5 1 7.6L.5 8l.5.4C3.2 11.5 5.5 13 8 13s4.8-1.5 7-4.6l.5-.4-.5-.4C12.8 4.5 10.5 3 8 3zm0 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/>
+                </svg>
+                <span>Toggle Legend</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-container">
+        <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+            <path d="M10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0zM7 9.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zm4.5 2l3 3-1 1-3-3v-.5l-.25-.25A5.5 5.5 0 1 1 11.5 9l.25.25h.5z"/>
+        </svg>
+        <input type="text" id="search-input" placeholder="Search entities... (e.g., 'User', 'Order')" />
+        <button id="clear-search" title="Clear search">
+            <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+                <path d="M8 1a7 7 0 1 1 0 14A7 7 0 0 1 8 1zm3.5 4.5L9 8l2.5 2.5-1 1L8 9l-2.5 2.5-1-1L7 8 4.5 5.5l1-1L8 7l2.5-2.5 1 1z"/>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Canvas Container -->
+    <div class="canvas-container">
+        <svg id="erd-svg" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <!-- Arrow marker for relationships -->
+                <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                    <polygon points="0 0, 10 3, 0 6" fill="#666" />
+                </marker>
+            </defs>
+            <g id="svg-content" transform="translate(0, 0) scale(1)">
+                
+        <!-- Grouping the rect and text elements together -->
+        
+        <!-- Draw stripped line 160, 0 to 160, 600 -->
+         <!--
+        <line x1="160" y1="0" x2="160" y2="600" stroke="black" stroke-dasharray="5,5" />
+        <line x1="320" y1="0" x2="320" y2="600" stroke="black" stroke-dasharray="5,5" />
+        <line x1="480" y1="0" x2="480" y2="600" stroke="black" stroke-dasharray="5,5" />
+        <line x1="640" y1="0" x2="640" y2="600" stroke="black" stroke-dasharray="5,5" />
+    -->
+    <g class="entity" id="roles" data-entity="{&quot;id&quot;:&quot;roles&quot;,&quot;name&quot;:&quot;roles&quot;,&quot;columns&quot;:[&quot;id&quot;,&quot;permissions&quot;,&quot;builtin&quot;],&quot;linkedEntities&quot;:[&quot;member_roles&quot;],&quot;x&quot;:677.125,&quot;y&quot;:257.69999504089355,&quot;width&quot;:85.75,&quot;height&quot;:84.60000991821289,&quot;importance&quot;:4,&quot;second_importance&quot;:10,&quot;column&quot;:4,&quot;dcolumns&quot;:[4]}" transform="translate(677.125, 257.69999504089355)"><rect x="0" y="0" fill="lightblue" width="82.75" height="81.60000991821289"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">roles</tspan><tspan x="5" font-size="12" dy="1.2em">id</tspan><tspan x="5" font-size="12" dy="1.2em">permissions</tspan><tspan x="5" font-size="12" dy="1.2em">builtin</tspan></text><text x="72.75" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="62.75" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="82.75" cy="81.60000991821289" r="5" fill="darkblue" class="resize-handle"></circle></g><g class="entity" id="permissions" data-entity="{&quot;id&quot;:&quot;permissions&quot;,&quot;name&quot;:&quot;permissions&quot;,&quot;columns&quot;:[],&quot;linkedEntities&quot;:[&quot;permissions_roles&quot;,&quot;roles&quot;],&quot;x&quot;:31.667186737060547,&quot;y&quot;:279.30000019073486,&quot;width&quot;:96.6656265258789,&quot;height&quot;:41.39999961853027,&quot;importance&quot;:3,&quot;second_importance&quot;:10,&quot;column&quot;:0,&quot;dcolumns&quot;:[0]}" transform="translate(31.667186737060547, 279.30000019073486)"><rect x="0" y="0" fill="lightblue" width="113.6656265258789" height="38.39999961853027"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">permissions</tspan></text><text x="103.6656265258789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="93.6656265258789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="113.6656265258789" cy="38.39999961853027" r="5" fill="darkblue" class="resize-handle"></circle></g><g class="entity" id="versions" data-entity="{&quot;id&quot;:&quot;versions&quot;,&quot;name&quot;:&quot;versions&quot;,&quot;columns&quot;:[],&quot;linkedEntities&quot;:[&quot;permissions&quot;,&quot;roles&quot;],&quot;x&quot;:362.7242183685303,&quot;y&quot;:279.30000019073486,&quot;width&quot;:74.55156326293945,&quot;height&quot;:41.39999961853027,&quot;importance&quot;:2,&quot;second_importance&quot;:9,&quot;column&quot;:2,&quot;dcolumns&quot;:[2]}" transform="translate(362.7242183685303, 279.30000019073486)"><rect x="0" y="0" fill="lightblue" width="91.55155944824219" height="38.39999961853027"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">versions</tspan></text><text x="81.55155944824219" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="71.55155944824219" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="91.55155944824219" cy="38.39999961853027" r="5" fill="darkblue" class="resize-handle"></circle></g><g class="entity" id="permissions_roles" data-entity="{&quot;id&quot;:&quot;permissions_roles&quot;,&quot;name&quot;:&quot;permissions_roles&quot;,&quot;columns&quot;:[],&quot;linkedEntities&quot;:[&quot;roles&quot;],&quot;x&quot;:173.90058517456055,&quot;y&quot;:279.30000019073486,&quot;width&quot;:132.1988296508789,&quot;height&quot;:41.39999961853027,&quot;importance&quot;:1,&quot;second_importance&quot;:8,&quot;column&quot;:1,&quot;dcolumns&quot;:[1]}" transform="translate(173.90058517456055, 279.30000019073486)"><rect x="0" y="0" fill="lightblue" width="149.19882202148438" height="38.39999961853027"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">permissions_roles</tspan></text><text x="139.19882202148438" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="129.19882202148438" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="149.19882202148438" cy="38.39999961853027" r="5" fill="darkblue" class="resize-handle"></circle></g><g class="entity" id="members" data-entity="{&quot;id&quot;:&quot;members&quot;,&quot;name&quot;:&quot;members&quot;,&quot;columns&quot;:[&quot;id&quot;,&quot;user_id&quot;,&quot;project_id&quot;],&quot;linkedEntities&quot;:[&quot;member_roles&quot;],&quot;x&quot;:671.8712882995605,&quot;y&quot;:107.69999504089355,&quot;width&quot;:96.2574234008789,&quot;height&quot;:84.60000991821289,&quot;importance&quot;:3,&quot;second_importance&quot;:7,&quot;column&quot;:4,&quot;dcolumns&quot;:[4]}" transform="translate(671.8712882995605, 107.69999504089355)"><rect x="0" y="0" fill="lightblue" width="93.2574234008789" height="81.60000991821289"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">members</tspan><tspan x="5" font-size="12" dy="1.2em">id</tspan><tspan x="5" font-size="12" dy="1.2em">user_id</tspan><tspan x="5" font-size="12" dy="1.2em">project_id</tspan></text><text x="83.2574234008789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="73.2574234008789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="93.2574234008789" cy="81.60000991821289" r="5" fill="darkblue" class="resize-handle"></circle></g><g class="entity" id="member_roles" data-entity="{&quot;id&quot;:&quot;member_roles&quot;,&quot;name&quot;:&quot;member_roles&quot;,&quot;columns&quot;:[&quot;member_id&quot;,&quot;role_id&quot;],&quot;linkedEntities&quot;:[],&quot;x&quot;:337.07490158081055,&quot;y&quot;:114.9000015258789,&quot;width&quot;:125.8501968383789,&quot;height&quot;:70.19999694824219,&quot;importance&quot;:0,&quot;second_importance&quot;:7,&quot;column&quot;:2,&quot;dcolumns&quot;:[2]}" transform="translate(337.07490158081055, 114.9000015258789)"><rect x="0" y="0" fill="lightblue" width="122.8501968383789" height="67.19999694824219"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">member_roles</tspan><tspan x="5" font-size="12" dy="1.2em">member_id</tspan><tspan x="5" font-size="12" dy="1.2em">role_id</tspan></text><text x="112.8501968383789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="102.8501968383789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="122.8501968383789" cy="67.19999694824219" r="5" fill="darkblue" class="resize-handle"></circle></g><g class="entity" id="issue_categories" data-entity="{&quot;id&quot;:&quot;issue_categories&quot;,&quot;name&quot;:&quot;issue_categories&quot;,&quot;columns&quot;:[],&quot;linkedEntities&quot;:[],&quot;x&quot;:338.29609298706055,&quot;y&quot;:429.30000019073486,&quot;width&quot;:123.4078140258789,&quot;height&quot;:41.39999961853027,&quot;importance&quot;:2,&quot;second_importance&quot;:6,&quot;column&quot;:2,&quot;dcolumns&quot;:[2]}" transform="translate(338.29609298706055, 429.30000019073486)"><rect x="0" y="0" fill="lightblue" width="140.4078140258789" height="38.39999961853027"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">issue_categories</tspan></text><text x="130.4078140258789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="120.4078140258789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="140.4078140258789" cy="38.39999961853027" r="5" fill="darkblue" class="resize-handle"></circle></g><g class="entity" id="issue_histories" data-entity="{&quot;id&quot;:&quot;issue_histories&quot;,&quot;name&quot;:&quot;issue_histories&quot;,&quot;columns&quot;:[],&quot;linkedEntities&quot;:[&quot;issue_categories&quot;],&quot;x&quot;:184.24677658081055,&quot;y&quot;:129.30000019073486,&quot;width&quot;:111.5064468383789,&quot;height&quot;:41.39999961853027,&quot;importance&quot;:2,&quot;second_importance&quot;:6,&quot;column&quot;:1,&quot;dcolumns&quot;:[1]}" transform="translate(184.24677658081055, 129.30000019073486)"><rect x="0" y="0" fill="lightblue" width="128.5064468383789" height="38.39999961853027"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">issue_histories</tspan></text><text x="118.5064468383789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="108.5064468383789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="128.5064468383789" cy="38.39999961853027" r="5" fill="darkblue" class="resize-handle"></circle></g><g class="entity" id="issue_statuses" data-entity="{&quot;id&quot;:&quot;issue_statuses&quot;,&quot;name&quot;:&quot;issue_statuses&quot;,&quot;columns&quot;:[],&quot;linkedEntities&quot;:[&quot;issue_categories&quot;,&quot;issue_histories&quot;],&quot;x&quot;:665.2687492370605,&quot;y&quot;:429.30000019073486,&quot;width&quot;:109.4625015258789,&quot;height&quot;:41.39999961853027,&quot;importance&quot;:2,&quot;second_importance&quot;:6,&quot;column&quot;:4,&quot;dcolumns&quot;:[4]}" transform="translate(665.2687492370605, 429.30000019073486)"><rect x="0" y="0" fill="lightblue" width="126.4625015258789" height="38.39999961853027"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">issue_statuses</tspan></text><text x="116.4625015258789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="106.4625015258789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="126.4625015258789" cy="38.39999961853027" r="5" fill="darkblue" class="resize-handle"></circle></g><g class="entity" id="users" data-entity="{&quot;id&quot;:&quot;users&quot;,&quot;name&quot;:&quot;users&quot;,&quot;columns&quot;:[&quot;id&quot;,&quot;login&quot;,&quot;hashed_password&quot;,&quot;salt&quot;,&quot;auth_source_id&quot;,&quot;type&quot;,&quot;status&quot;],&quot;linkedEntities&quot;:[&quot;members&quot;],&quot;x&quot;:16.296875,&quot;y&quot;:67,&quot;width&quot;:127.40625,&quot;height&quot;:166,&quot;importance&quot;:2,&quot;second_importance&quot;:6,&quot;column&quot;:0,&quot;dcolumns&quot;:[0],&quot;rectWidth&quot;:127.40625,&quot;rectHeight&quot;:166}" transform="translate(16.296875, 67)"><rect x="0" y="0" fill="lightblue" width="113.38750457763672" height="139.20000457763672"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">users</tspan><tspan x="5" font-size="12" dy="1.2em">id</tspan><tspan x="5" font-size="12" dy="1.2em">login</tspan><tspan x="5" font-size="12" dy="1.2em">hashed_password</tspan><tspan x="5" font-size="12" dy="1.2em">salt</tspan><tspan x="5" font-size="12" dy="1.2em">auth_source_id</tspan><tspan x="5" font-size="12" dy="1.2em">type</tspan><tspan x="5" font-size="12" dy="1.2em">status</tspan></text><text x="103.38750457763672" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="93.38750457763672" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="113.38750457763672" cy="139.20000457763672" r="5" fill="darkblue" class="resize-handle"></circle></g><g class="entity" id="projects" data-entity="{&quot;id&quot;:&quot;projects&quot;,&quot;name&quot;:&quot;projects&quot;,&quot;columns&quot;:[&quot;id&quot;,&quot;identifier&quot;,&quot;status&quot;,&quot;is_public&quot;],&quot;linkedEntities&quot;:[&quot;members&quot;,&quot;enabled_modules&quot;],&quot;x&quot;:36.18818283081055,&quot;y&quot;:400.5,&quot;width&quot;:87.6236343383789,&quot;height&quot;:99,&quot;importance&quot;:2,&quot;second_importance&quot;:5,&quot;column&quot;:0,&quot;dcolumns&quot;:[0]}" transform="translate(36.18818283081055, 400.5)"><rect x="0" y="0" fill="lightblue" width="84.6236343383789" height="96"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">projects</tspan><tspan x="5" font-size="12" dy="1.2em">id</tspan><tspan x="5" font-size="12" dy="1.2em">identifier</tspan><tspan x="5" font-size="12" dy="1.2em">status</tspan><tspan x="5" font-size="12" dy="1.2em">is_public</tspan></text><text x="74.6236343383789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="64.6236343383789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="84.6236343383789" cy="96" r="5" fill="darkblue" class="resize-handle"></circle></g><g class="entity" id="auth_sources" data-entity="{&quot;id&quot;:&quot;auth_sources&quot;,&quot;name&quot;:&quot;auth_sources&quot;,&quot;columns&quot;:[&quot;id&quot;,&quot;host&quot;,&quot;port&quot;,&quot;tls&quot;,&quot;account&quot;,&quot;account_password&quot;,&quot;base_dn&quot;,&quot;attr_login&quot;],&quot;linkedEntities&quot;:[&quot;users&quot;],&quot;x&quot;:817.806640625,&quot;y&quot;:215.4000015258789,&quot;width&quot;:124.38671875,&quot;height&quot;:169.1999969482422,&quot;importance&quot;:1,&quot;second_importance&quot;:3,&quot;column&quot;:5,&quot;dcolumns&quot;:[5],&quot;rectWidth&quot;:124.38671875,&quot;rectHeight&quot;:169.1999969482422}" transform="translate(817.806640625, 215.4000015258789)"><rect x="0" y="0" fill="lightblue" width="117.875" height="153.60000610351562"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">auth_sources</tspan><tspan x="5" font-size="12" dy="1.2em">id</tspan><tspan x="5" font-size="12" dy="1.2em">host</tspan><tspan x="5" font-size="12" dy="1.2em">port</tspan><tspan x="5" font-size="12" dy="1.2em">tls</tspan><tspan x="5" font-size="12" dy="1.2em">account</tspan><tspan x="5" font-size="12" dy="1.2em">account_passwor...</tspan><tspan x="5" font-size="12" dy="1.2em">base_dn</tspan><tspan x="5" font-size="12" dy="1.2em">attr_login</tspan></text><text x="107.875" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="97.875" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="117.875" cy="153.60000610351562" r="5" fill="darkblue" class="resize-handle"></circle></g><g class="entity" id="attachments" data-entity="{&quot;id&quot;:&quot;attachments&quot;,&quot;name&quot;:&quot;attachments&quot;,&quot;columns&quot;:[],&quot;linkedEntities&quot;:[],&quot;x&quot;:190.21455001831055,&quot;y&quot;:429.30000019073486,&quot;width&quot;:99.5708999633789,&quot;height&quot;:41.39999961853027,&quot;importance&quot;:1,&quot;second_importance&quot;:2,&quot;column&quot;:1,&quot;dcolumns&quot;:[1]}" transform="translate(190.21455001831055, 429.30000019073486)"><rect x="0" y="0" fill="lightblue" width="116.5708999633789" height="38.39999961853027"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">attachments</tspan></text><text x="106.5708999633789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="96.5708999633789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="116.5708999633789" cy="38.39999961853027" r="5" fill="darkblue" class="resize-handle"></circle></g><g class="entity" id="custom_fields" data-entity="{&quot;id&quot;:&quot;custom_fields&quot;,&quot;name&quot;:&quot;custom_fields&quot;,&quot;columns&quot;:[],&quot;linkedEntities&quot;:[&quot;custom_fields_projects&quot;,&quot;custom_fields_trackers&quot;],&quot;x&quot;:506.36249923706055,&quot;y&quot;:279.30000019073486,&quot;width&quot;:107.2750015258789,&quot;height&quot;:41.39999961853027,&quot;importance&quot;:2,&quot;second_importance&quot;:2,&quot;column&quot;:3,&quot;dcolumns&quot;:[3]}" transform="translate(506.36249923706055, 279.30000019073486)"><rect x="0" y="0" fill="lightblue" width="124.2750015258789" height="38.39999961853027"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">custom_fields</tspan></text><text x="114.2750015258789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="104.2750015258789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="124.2750015258789" cy="38.39999961853027" r="5" fill="darkblue" class="resize-handle"></circle></g><g class="entity" id="custom_fields_projects" data-entity="{&quot;id&quot;:&quot;custom_fields_projects&quot;,&quot;name&quot;:&quot;custom_fields_projects&quot;,&quot;columns&quot;:[],&quot;linkedEntities&quot;:[],&quot;x&quot;:78.87519073486328,&quot;y&quot;:556.7323297212394,&quot;width&quot;:162.24961853027344,&quot;height&quot;:41.39999961853027,&quot;importance&quot;:0,&quot;second_importance&quot;:2,&quot;column&quot;:0,&quot;dcolumns&quot;:[0,1]}" transform="translate(78.87519073486328, 556.7323297212394)"><rect x="0" y="0" fill="lightblue" width="179.24961853027344" height="38.39999961853027"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">custom_fields_projects</tspan></text><text x="169.24961853027344" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="159.24961853027344" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="179.24961853027344" cy="38.39999961853027" r="5" fill="darkblue" class="resize-handle"></circle></g><g class="entity" id="custom_fields_trackers" data-entity="{&quot;id&quot;:&quot;custom_fields_trackers&quot;,&quot;name&quot;:&quot;custom_fields_trackers&quot;,&quot;columns&quot;:[],&quot;linkedEntities&quot;:[],&quot;x&quot;:559.3126907348633,&quot;y&quot;:3.0336328841513716,&quot;width&quot;:161.37461853027344,&quot;height&quot;:41.39999961853027,&quot;importance&quot;:0,&quot;second_importance&quot;:2,&quot;column&quot;:3,&quot;dcolumns&quot;:[3,4]}" transform="translate(559.3126907348633, 3.0336328841513716)"><rect x="0" y="0" fill="lightblue" width="178.37461853027344" height="38.39999961853027"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">custom_fields_trackers</tspan></text><text x="168.37461853027344" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="158.37461853027344" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="178.37461853027344" cy="38.39999961853027" r="5" fill="darkblue" class="resize-handle"></circle></g><g class="entity" id="documents" data-entity="{&quot;id&quot;:&quot;documents&quot;,&quot;name&quot;:&quot;documents&quot;,&quot;columns&quot;:[],&quot;linkedEntities&quot;:[&quot;attachments&quot;],&quot;x&quot;:673.8581047058105,&quot;y&quot;:51.08098459457118,&quot;width&quot;:92.2837905883789,&quot;height&quot;:41.39999961853027,&quot;importance&quot;:1,&quot;second_importance&quot;:2,&quot;column&quot;:4,&quot;dcolumns&quot;:[4]}" transform="translate(673.8581047058105, 51.08098459457118)"><rect x="0" y="0" fill="lightblue" width="109.2837905883789" height="38.39999961853027"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">documents</tspan></text><text x="99.2837905883789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="89.2837905883789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="109.2837905883789" cy="38.39999961853027" r="5" fill="darkblue" class="resize-handle"></circle></g><g class="entity" id="enabled_modules" data-entity="{&quot;id&quot;:&quot;enabled_modules&quot;,&quot;name&quot;:&quot;enabled_modules&quot;,&quot;columns&quot;:[&quot;project_id&quot;,&quot;name&quot;],&quot;linkedEntities&quot;:[],&quot;x&quot;:326.5475616455078,&quot;y&quot;:476.96291867482023,&quot;width&quot;:146.90487670898438,&quot;height&quot;:70.19999694824219,&quot;importance&quot;:0,&quot;second_importance&quot;:2,&quot;column&quot;:2,&quot;dcolumns&quot;:[2]}" transform="translate(326.5475616455078, 476.96291867482023)"><rect x="0" y="0" fill="lightblue" width="143.90487670898438" height="67.19999694824219"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">enabled_modules</tspan><tspan x="5" font-size="12" dy="1.2em">project_id</tspan><tspan x="5" font-size="12" dy="1.2em">name</tspan></text><text x="133.90487670898438" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="123.90487670898438" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="143.90487670898438" cy="67.19999694824219" r="5" fill="darkblue" class="resize-handle"></circle></g><g class="entity" id="custom_values" data-entity="{&quot;id&quot;:&quot;custom_values&quot;,&quot;name&quot;:&quot;custom_values&quot;,&quot;columns&quot;:[],&quot;linkedEntities&quot;:[],&quot;x&quot;:23.494823455810547,&quot;y&quot;:351.39158098755337,&quot;width&quot;:113.0103530883789,&quot;height&quot;:41.39999961853027,&quot;importance&quot;:0,&quot;second_importance&quot;:0,&quot;column&quot;:0,&quot;dcolumns&quot;:[0]}" transform="translate(23.494823455810547, 351.39158098755337)"><rect x="0" y="0" fill="lightblue" width="130.0103530883789" height="38.39999961853027"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">custom_values</tspan></text><text x="120.0103530883789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="110.0103530883789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="130.0103530883789" cy="38.39999961853027" r="5" fill="darkblue" class="resize-handle"></circle></g><g class="entity" id="enumerations" data-entity="{&quot;id&quot;:&quot;enumerations&quot;,&quot;name&quot;:&quot;enumerations&quot;,&quot;columns&quot;:[],&quot;linkedEntities&quot;:[],&quot;x&quot;:25.901073455810547,&quot;y&quot;:499.6444767015297,&quot;width&quot;:108.1978530883789,&quot;height&quot;:41.39999961853027,&quot;importance&quot;:0,&quot;second_importance&quot;:0,&quot;column&quot;:0,&quot;dcolumns&quot;:[0]}" transform="translate(25.901073455810547, 499.6444767015297)"><rect x="0" y="0" fill="lightblue" width="125.1978530883789" height="38.39999961853027"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">enumerations</tspan></text><text x="115.1978530883789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="105.1978530883789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="125.1978530883789" cy="38.39999961853027" r="5" fill="darkblue" class="resize-handle"></circle></g><g class="entity" id="issues" data-entity="{&quot;id&quot;:&quot;issues&quot;,&quot;name&quot;:&quot;issues&quot;,&quot;columns&quot;:[],&quot;linkedEntities&quot;:[],&quot;x&quot;:690.0421867370605,&quot;y&quot;:485.91937199921915,&quot;width&quot;:59.915626525878906,&quot;height&quot;:41.39999961853027,&quot;importance&quot;:0,&quot;second_importance&quot;:0,&quot;column&quot;:4,&quot;dcolumns&quot;:[4]}" transform="translate(690.0421867370605, 485.91937199921915)"><rect x="0" y="0" fill="lightblue" width="76.9156265258789" height="38.39999961853027"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">issues</tspan></text><text x="66.9156265258789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="56.915626525878906" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="76.9156265258789" cy="38.39999961853027" r="5" fill="darkblue" class="resize-handle"></circle></g><g class="entity" id="news" data-entity="{&quot;id&quot;:&quot;news&quot;,&quot;name&quot;:&quot;news&quot;,&quot;columns&quot;:[],&quot;linkedEntities&quot;:[],&quot;x&quot;:372.61933612823486,&quot;y&quot;:212.62828044619934,&quot;width&quot;:54.76132774353027,&quot;height&quot;:41.39999961853027,&quot;importance&quot;:0,&quot;second_importance&quot;:0,&quot;column&quot;:2,&quot;dcolumns&quot;:[2]}" transform="translate(372.61933612823486, 212.62828044619934)"><rect x="0" y="0" fill="lightblue" width="71.7613296508789" height="38.39999961853027"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">news</tspan></text><text x="61.761329650878906" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="51.761329650878906" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="71.7613296508789" cy="38.39999961853027" r="5" fill="darkblue" class="resize-handle"></circle></g><g class="entity" id="trackers" data-entity="{&quot;id&quot;:&quot;trackers&quot;,&quot;name&quot;:&quot;trackers&quot;,&quot;columns&quot;:[],&quot;linkedEntities&quot;:[],&quot;x&quot;:524.1256828308105,&quot;y&quot;:129.30000019073486,&quot;width&quot;:71.7486343383789,&quot;height&quot;:41.39999961853027,&quot;importance&quot;:0,&quot;second_importance&quot;:0,&quot;column&quot;:3,&quot;dcolumns&quot;:[3]}" transform="translate(524.1256828308105, 129.30000019073486)"><rect x="0" y="0" fill="lightblue" width="88.7486343383789" height="38.39999961853027"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">trackers</tspan></text><text x="78.7486343383789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="68.7486343383789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="88.7486343383789" cy="38.39999961853027" r="5" fill="darkblue" class="resize-handle"></circle></g><g class="entity" id="tokens" data-entity="{&quot;id&quot;:&quot;tokens&quot;,&quot;name&quot;:&quot;tokens&quot;,&quot;columns&quot;:[],&quot;linkedEntities&quot;:[],&quot;x&quot;:47.72480392456055,&quot;y&quot;:0.857912803479155,&quot;width&quot;:64.5503921508789,&quot;height&quot;:41.39999961853027,&quot;importance&quot;:0,&quot;second_importance&quot;:0,&quot;column&quot;:0,&quot;dcolumns&quot;:[0]}" transform="translate(47.72480392456055, 0.857912803479155)"><rect x="0" y="0" fill="lightblue" width="81.5503921508789" height="38.39999961853027"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">tokens</tspan></text><text x="71.5503921508789" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="61.550392150878906" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="81.5503921508789" cy="38.39999961853027" r="5" fill="darkblue" class="resize-handle"></circle></g><g class="entity" id="workflows" data-entity="{&quot;id&quot;:&quot;workflows&quot;,&quot;name&quot;:&quot;workflows&quot;,&quot;columns&quot;:[],&quot;linkedEntities&quot;:[],&quot;x&quot;:516.7803707122803,&quot;y&quot;:429.30000019073486,&quot;width&quot;:86.43925857543945,&quot;height&quot;:41.39999961853027,&quot;importance&quot;:0,&quot;second_importance&quot;:0,&quot;column&quot;:3,&quot;dcolumns&quot;:[3]}" transform="translate(516.7803707122803, 429.30000019073486)"><rect x="0" y="0" fill="lightblue" width="103.43925476074219" height="38.39999961853027"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">workflows</tspan></text><text x="93.43925476074219" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="83.43925476074219" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="103.43925476074219" cy="38.39999961853027" r="5" fill="darkblue" class="resize-handle"></circle></g><g class="entity" id="settings" data-entity="{&quot;id&quot;:&quot;settings&quot;,&quot;name&quot;:&quot;settings&quot;,&quot;columns&quot;:[&quot;name&quot;,&quot;value&quot;],&quot;linkedEntities&quot;:[],&quot;x&quot;:356.24618911743164,&quot;y&quot;:579.442854490033,&quot;width&quot;:87.50762176513672,&quot;height&quot;:70.19999694824219,&quot;importance&quot;:0,&quot;second_importance&quot;:0,&quot;column&quot;:2,&quot;dcolumns&quot;:[2]}" transform="translate(356.24618911743164, 579.442854490033)"><rect x="0" y="0" fill="lightblue" width="84.50762176513672" height="67.19999694824219"></rect><text><tspan x="20" y="4" dy="1.2em" font-size="14">settings</tspan><tspan x="5" font-size="12" dy="1.2em">name</tspan><tspan x="5" font-size="12" dy="1.2em">value</tspan></text><text x="74.50762176513672" y="10" font-family="Arial" font-size="12" fill="darkblue" class="delete-button">X</text><text x="64.50762176513672" y="10" font-family="Arial" font-size="12" fill="darkblue" class="describe-button">D</text><circle cx="84.50762176513672" cy="67.19999694824219" r="5" fill="darkblue" class="resize-handle"></circle></g>
+            </g>
+        </svg>
+
+        <!-- Info Panel -->
+        <div class="info-panel" id="info-panel">
+            <h3 id="info-title">Entity Name</h3>
+            <p id="info-description"></p>
+            <p id="info-columns"></p>
+            <button onclick="document.getElementById('info-panel').classList.remove('visible')" style="margin-top: 8px;">Close</button>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend" id="legend">
+            <div class="legend-title">Entity States</div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: lightblue;"></div>
+                <span>Default</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #ff6b6b;"></div>
+                <span>Selected</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #90ee90;"></div>
+                <span>References Selected</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #ffeb3b;"></div>
+                <span>Referenced By Selected</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="status-item">
+            <span>Entities:</span>
+            <span class="status-badge" id="entity-count">0</span>
+        </div>
+        <div class="status-item">
+            <span>Relationships:</span>
+            <span class="status-badge" id="relationship-count">0</span>
+        </div>
+        <div class="status-item">
+            <span>Zoom:</span>
+            <span id="zoom-level">100%</span>
+        </div>
+        <div class="status-item">
+            <span id="status-message">Interactive ERD - Click entities to see relationships</span>
+        </div>
+    </div>
+
+    <script>
+        // ERD Data (will be injected during export)
+        const erdData = {
+  "title": "ERD with 26 Entities",
+  "entities": [
+    {
+      "id": "roles",
+      "name": "roles",
+      "columns": [
+        "id",
+        "permissions",
+        "builtin"
+      ],
+      "linkedEntities": [
+        "member_roles"
+      ],
+      "x": 677.125,
+      "y": 257.69999504089355,
+      "width": 85.75,
+      "height": 84.60000991821289,
+      "importance": 4,
+      "second_importance": 10,
+      "column": 4,
+      "dcolumns": [
+        4
+      ]
+    },
+    {
+      "id": "permissions",
+      "name": "permissions",
+      "columns": [],
+      "linkedEntities": [
+        "permissions_roles",
+        "roles"
+      ],
+      "x": 31.667186737060547,
+      "y": 279.30000019073486,
+      "width": 96.6656265258789,
+      "height": 41.39999961853027,
+      "importance": 3,
+      "second_importance": 10,
+      "column": 0,
+      "dcolumns": [
+        0
+      ]
+    },
+    {
+      "id": "versions",
+      "name": "versions",
+      "columns": [],
+      "linkedEntities": [
+        "permissions",
+        "roles"
+      ],
+      "x": 362.7242183685303,
+      "y": 279.30000019073486,
+      "width": 74.55156326293945,
+      "height": 41.39999961853027,
+      "importance": 2,
+      "second_importance": 9,
+      "column": 2,
+      "dcolumns": [
+        2
+      ]
+    },
+    {
+      "id": "permissions_roles",
+      "name": "permissions_roles",
+      "columns": [],
+      "linkedEntities": [
+        "roles"
+      ],
+      "x": 173.90058517456055,
+      "y": 279.30000019073486,
+      "width": 132.1988296508789,
+      "height": 41.39999961853027,
+      "importance": 1,
+      "second_importance": 8,
+      "column": 1,
+      "dcolumns": [
+        1
+      ]
+    },
+    {
+      "id": "members",
+      "name": "members",
+      "columns": [
+        "id",
+        "user_id",
+        "project_id"
+      ],
+      "linkedEntities": [
+        "member_roles"
+      ],
+      "x": 671.8712882995605,
+      "y": 107.69999504089355,
+      "width": 96.2574234008789,
+      "height": 84.60000991821289,
+      "importance": 3,
+      "second_importance": 7,
+      "column": 4,
+      "dcolumns": [
+        4
+      ]
+    },
+    {
+      "id": "member_roles",
+      "name": "member_roles",
+      "columns": [
+        "member_id",
+        "role_id"
+      ],
+      "linkedEntities": [],
+      "x": 337.07490158081055,
+      "y": 114.9000015258789,
+      "width": 125.8501968383789,
+      "height": 70.19999694824219,
+      "importance": 0,
+      "second_importance": 7,
+      "column": 2,
+      "dcolumns": [
+        2
+      ]
+    },
+    {
+      "id": "issue_categories",
+      "name": "issue_categories",
+      "columns": [],
+      "linkedEntities": [],
+      "x": 338.29609298706055,
+      "y": 429.30000019073486,
+      "width": 123.4078140258789,
+      "height": 41.39999961853027,
+      "importance": 2,
+      "second_importance": 6,
+      "column": 2,
+      "dcolumns": [
+        2
+      ]
+    },
+    {
+      "id": "issue_histories",
+      "name": "issue_histories",
+      "columns": [],
+      "linkedEntities": [
+        "issue_categories"
+      ],
+      "x": 184.24677658081055,
+      "y": 129.30000019073486,
+      "width": 111.5064468383789,
+      "height": 41.39999961853027,
+      "importance": 2,
+      "second_importance": 6,
+      "column": 1,
+      "dcolumns": [
+        1
+      ]
+    },
+    {
+      "id": "issue_statuses",
+      "name": "issue_statuses",
+      "columns": [],
+      "linkedEntities": [
+        "issue_categories",
+        "issue_histories"
+      ],
+      "x": 665.2687492370605,
+      "y": 429.30000019073486,
+      "width": 109.4625015258789,
+      "height": 41.39999961853027,
+      "importance": 2,
+      "second_importance": 6,
+      "column": 4,
+      "dcolumns": [
+        4
+      ]
+    },
+    {
+      "id": "users",
+      "name": "users",
+      "columns": [
+        "id",
+        "login",
+        "hashed_password",
+        "salt",
+        "auth_source_id",
+        "type",
+        "status"
+      ],
+      "linkedEntities": [
+        "members"
+      ],
+      "x": 16.296875,
+      "y": 67,
+      "width": 127.40625,
+      "height": 166,
+      "importance": 2,
+      "second_importance": 6,
+      "column": 0,
+      "dcolumns": [
+        0
+      ],
+      "rectWidth": 127.40625,
+      "rectHeight": 166
+    },
+    {
+      "id": "projects",
+      "name": "projects",
+      "columns": [
+        "id",
+        "identifier",
+        "status",
+        "is_public"
+      ],
+      "linkedEntities": [
+        "members",
+        "enabled_modules"
+      ],
+      "x": 36.18818283081055,
+      "y": 400.5,
+      "width": 87.6236343383789,
+      "height": 99,
+      "importance": 2,
+      "second_importance": 5,
+      "column": 0,
+      "dcolumns": [
+        0
+      ]
+    },
+    {
+      "id": "auth_sources",
+      "name": "auth_sources",
+      "columns": [
+        "id",
+        "host",
+        "port",
+        "tls",
+        "account",
+        "account_password",
+        "base_dn",
+        "attr_login"
+      ],
+      "linkedEntities": [
+        "users"
+      ],
+      "x": 817.806640625,
+      "y": 215.4000015258789,
+      "width": 124.38671875,
+      "height": 169.1999969482422,
+      "importance": 1,
+      "second_importance": 3,
+      "column": 5,
+      "dcolumns": [
+        5
+      ],
+      "rectWidth": 124.38671875,
+      "rectHeight": 169.1999969482422
+    },
+    {
+      "id": "attachments",
+      "name": "attachments",
+      "columns": [],
+      "linkedEntities": [],
+      "x": 190.21455001831055,
+      "y": 429.30000019073486,
+      "width": 99.5708999633789,
+      "height": 41.39999961853027,
+      "importance": 1,
+      "second_importance": 2,
+      "column": 1,
+      "dcolumns": [
+        1
+      ]
+    },
+    {
+      "id": "custom_fields",
+      "name": "custom_fields",
+      "columns": [],
+      "linkedEntities": [
+        "custom_fields_projects",
+        "custom_fields_trackers"
+      ],
+      "x": 506.36249923706055,
+      "y": 279.30000019073486,
+      "width": 107.2750015258789,
+      "height": 41.39999961853027,
+      "importance": 2,
+      "second_importance": 2,
+      "column": 3,
+      "dcolumns": [
+        3
+      ]
+    },
+    {
+      "id": "custom_fields_projects",
+      "name": "custom_fields_projects",
+      "columns": [],
+      "linkedEntities": [],
+      "x": 78.87519073486328,
+      "y": 556.7323297212394,
+      "width": 162.24961853027344,
+      "height": 41.39999961853027,
+      "importance": 0,
+      "second_importance": 2,
+      "column": 0,
+      "dcolumns": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "custom_fields_trackers",
+      "name": "custom_fields_trackers",
+      "columns": [],
+      "linkedEntities": [],
+      "x": 559.3126907348633,
+      "y": 3.0336328841513716,
+      "width": 161.37461853027344,
+      "height": 41.39999961853027,
+      "importance": 0,
+      "second_importance": 2,
+      "column": 3,
+      "dcolumns": [
+        3,
+        4
+      ]
+    },
+    {
+      "id": "documents",
+      "name": "documents",
+      "columns": [],
+      "linkedEntities": [
+        "attachments"
+      ],
+      "x": 673.8581047058105,
+      "y": 51.08098459457118,
+      "width": 92.2837905883789,
+      "height": 41.39999961853027,
+      "importance": 1,
+      "second_importance": 2,
+      "column": 4,
+      "dcolumns": [
+        4
+      ]
+    },
+    {
+      "id": "enabled_modules",
+      "name": "enabled_modules",
+      "columns": [
+        "project_id",
+        "name"
+      ],
+      "linkedEntities": [],
+      "x": 326.5475616455078,
+      "y": 476.96291867482023,
+      "width": 146.90487670898438,
+      "height": 70.19999694824219,
+      "importance": 0,
+      "second_importance": 2,
+      "column": 2,
+      "dcolumns": [
+        2
+      ]
+    },
+    {
+      "id": "custom_values",
+      "name": "custom_values",
+      "columns": [],
+      "linkedEntities": [],
+      "x": 23.494823455810547,
+      "y": 351.39158098755337,
+      "width": 113.0103530883789,
+      "height": 41.39999961853027,
+      "importance": 0,
+      "second_importance": 0,
+      "column": 0,
+      "dcolumns": [
+        0
+      ]
+    },
+    {
+      "id": "enumerations",
+      "name": "enumerations",
+      "columns": [],
+      "linkedEntities": [],
+      "x": 25.901073455810547,
+      "y": 499.6444767015297,
+      "width": 108.1978530883789,
+      "height": 41.39999961853027,
+      "importance": 0,
+      "second_importance": 0,
+      "column": 0,
+      "dcolumns": [
+        0
+      ]
+    },
+    {
+      "id": "issues",
+      "name": "issues",
+      "columns": [],
+      "linkedEntities": [],
+      "x": 690.0421867370605,
+      "y": 485.91937199921915,
+      "width": 59.915626525878906,
+      "height": 41.39999961853027,
+      "importance": 0,
+      "second_importance": 0,
+      "column": 4,
+      "dcolumns": [
+        4
+      ]
+    },
+    {
+      "id": "news",
+      "name": "news",
+      "columns": [],
+      "linkedEntities": [],
+      "x": 372.61933612823486,
+      "y": 212.62828044619934,
+      "width": 54.76132774353027,
+      "height": 41.39999961853027,
+      "importance": 0,
+      "second_importance": 0,
+      "column": 2,
+      "dcolumns": [
+        2
+      ]
+    },
+    {
+      "id": "trackers",
+      "name": "trackers",
+      "columns": [],
+      "linkedEntities": [],
+      "x": 524.1256828308105,
+      "y": 129.30000019073486,
+      "width": 71.7486343383789,
+      "height": 41.39999961853027,
+      "importance": 0,
+      "second_importance": 0,
+      "column": 3,
+      "dcolumns": [
+        3
+      ]
+    },
+    {
+      "id": "tokens",
+      "name": "tokens",
+      "columns": [],
+      "linkedEntities": [],
+      "x": 47.72480392456055,
+      "y": 0.857912803479155,
+      "width": 64.5503921508789,
+      "height": 41.39999961853027,
+      "importance": 0,
+      "second_importance": 0,
+      "column": 0,
+      "dcolumns": [
+        0
+      ]
+    },
+    {
+      "id": "workflows",
+      "name": "workflows",
+      "columns": [],
+      "linkedEntities": [],
+      "x": 516.7803707122803,
+      "y": 429.30000019073486,
+      "width": 86.43925857543945,
+      "height": 41.39999961853027,
+      "importance": 0,
+      "second_importance": 0,
+      "column": 3,
+      "dcolumns": [
+        3
+      ]
+    },
+    {
+      "id": "settings",
+      "name": "settings",
+      "columns": [
+        "name",
+        "value"
+      ],
+      "linkedEntities": [],
+      "x": 356.24618911743164,
+      "y": 579.442854490033,
+      "width": 87.50762176513672,
+      "height": 70.19999694824219,
+      "importance": 0,
+      "second_importance": 0,
+      "column": 2,
+      "dcolumns": [
+        2
+      ]
+    }
+  ],
+  "metadata": {
+    "created": "2026-02-24T08:42:38.646Z",
+    "version": "1.0",
+    "entityCount": 26,
+    "generator": "Acacia ERD VS Code Extension"
+  }
+};
+
+        // State management
+        let scale = 1;
+        let translateX = 0;
+        let translateY = 0;
+        let isPanning = false;
+        let startPanX, startPanY;
+        let isDarkTheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeTheme();
+            setupEventListeners();
+            attachEntityEventListeners();
+            updateStatusBar();
+            fitToScreen();
+        });
+
+        function initializeTheme() {
+            if (isDarkTheme) {
+                document.body.classList.add('dark-theme');
+            }
+        }
+
+        function setupEventListeners() {
+            // Theme toggle
+            document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+
+            // Zoom controls
+            document.getElementById('zoom-in').addEventListener('click', () => zoom(1.2));
+            document.getElementById('zoom-out').addEventListener('click', () => zoom(0.8));
+            document.getElementById('reset-view').addEventListener('click', resetView);
+            document.getElementById('fit-to-screen').addEventListener('click', fitToScreen);
+
+            // Export
+            document.getElementById('export-svg').addEventListener('click', exportSVG);
+
+            // Legend toggle
+            document.getElementById('toggle-legend').addEventListener('click', toggleLegend);
+
+            // Search
+            document.getElementById('search-input').addEventListener('input', handleSearch);
+            document.getElementById('clear-search').addEventListener('click', clearSearch);
+
+            // Panning
+            const svg = document.getElementById('erd-svg');
+            svg.addEventListener('mousedown', startPan);
+            svg.addEventListener('mousemove', pan);
+            svg.addEventListener('mouseup', endPan);
+            svg.addEventListener('mouseleave', endPan);
+
+            // Zoom with mouse wheel
+            svg.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+                zoom(zoomFactor);
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', handleKeyboard);
+        }
+
+        function toggleTheme() {
+            isDarkTheme = !isDarkTheme;
+            document.body.classList.toggle('dark-theme');
+        }
+
+        function zoom(factor) {
+            scale *= factor;
+            scale = Math.max(0.1, Math.min(5, scale)); // Clamp between 0.1 and 5
+            updateTransform();
+            updateZoomLevel();
+        }
+
+        function resetView() {
+            scale = 1;
+            translateX = 0;
+            translateY = 0;
+            updateTransform();
+            updateZoomLevel();
+        }
+
+        function fitToScreen() {
+            const svg = document.getElementById('erd-svg');
+            const content = document.getElementById('svg-content');
+            
+            try {
+                const bbox = content.getBBox();
+                const containerWidth = svg.clientWidth;
+                const containerHeight = svg.clientHeight;
+                
+                if (bbox.width === 0 || bbox.height === 0) {
+                    resetView();
+                    return;
+                }
+                
+                const scaleX = (containerWidth * 0.9) / bbox.width;
+                const scaleY = (containerHeight * 0.9) / bbox.height;
+                scale = Math.min(scaleX, scaleY, 1);
+                
+                translateX = (containerWidth - bbox.width * scale) / 2 - bbox.x * scale;
+                translateY = (containerHeight - bbox.height * scale) / 2 - bbox.y * scale;
+                
+                updateTransform();
+                updateZoomLevel();
+            } catch (e) {
+                console.log('Could not fit to screen:', e);
+                resetView();
+            }
+        }
+
+        function updateTransform() {
+            const content = document.getElementById('svg-content');
+            content.setAttribute('transform', `translate(${translateX}, ${translateY}) scale(${scale})`);
+        }
+
+        function updateZoomLevel() {
+            document.getElementById('zoom-level').textContent = `${Math.round(scale * 100)}%`;
+        }
+
+        function startPan(e) {
+            if (e.target.closest('.entity')) return; // Don't pan when clicking entities
+            isPanning = true;
+            document.getElementById('erd-svg').classList.add('grabbing');
+            startPanX = e.clientX - translateX;
+            startPanY = e.clientY - translateY;
+        }
+
+        function pan(e) {
+            if (!isPanning) return;
+            translateX = e.clientX - startPanX;
+            translateY = e.clientY - startPanY;
+            updateTransform();
+        }
+
+        function endPan() {
+            isPanning = false;
+            document.getElementById('erd-svg').classList.remove('grabbing');
+        }
+
+        function exportSVG() {
+            const svg = document.getElementById('erd-svg');
+            const serializer = new XMLSerializer();
+            let svgString = serializer.serializeToString(svg);
+            
+            // Add XML declaration and make it standalone
+            svgString = '<?xml version="1.0" encoding="UTF-8"?>\n' + svgString;
+            
+            const blob = new Blob([svgString], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'erd_with_26_entities.svg';
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function toggleLegend() {
+            const legend = document.getElementById('legend');
+            legend.style.display = legend.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function handleSearch(e) {
+            const query = e.target.value.toLowerCase().trim();
+            const entities = document.querySelectorAll('.entity');
+            
+            entities.forEach(entity => {
+                const entityData = JSON.parse(entity.getAttribute('data-entity') || '{}');
+                const entityName = entityData.name || '';
+                const matches = entityName.toLowerCase().includes(query);
+                
+                // Highlight matching entities
+                if (query === '') {
+                    entity.style.opacity = '1';
+                    const rect = entity.querySelector('rect');
+                    if (rect && rect.getAttribute('fill') !== 'red') {
+                        rect.setAttribute('fill', 'lightblue');
+                    }
+                } else {
+                    entity.style.opacity = matches ? '1' : '0.3';
+                    if (matches) {
+                        const rect = entity.querySelector('rect');
+                        if (rect && rect.getAttribute('fill') !== 'red') {
+                            rect.setAttribute('fill', '#ffd700'); // Gold for search results
+                        }
+                    }
+                }
+            });
+        }
+
+        function clearSearch() {
+            document.getElementById('search-input').value = '';
+            handleSearch({ target: { value: '' } });
+        }
+
+        function attachEntityEventListeners() {
+            const entities = document.querySelectorAll('.entity');
+            
+            entities.forEach(entity => {
+                let clickTimeout;
+                
+                // Single click - highlight relationships
+                entity.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('delete-button') || 
+                        e.target.classList.contains('describe-button')) {
+                        return;
+                    }
+                    
+                    clearTimeout(clickTimeout);
+                    clickTimeout = setTimeout(() => {
+                        highlightRelationships(entity);
+                    }, 200);
+                });
+                
+                // Double click - show info
+                entity.addEventListener('dblclick', (e) => {
+                    clearTimeout(clickTimeout);
+                    showEntityInfo(entity);
+                });
+            });
+        }
+
+        function highlightRelationships(selectedEntity) {
+            const entityData = JSON.parse(selectedEntity.getAttribute('data-entity') || '{}');
+            const allEntities = document.querySelectorAll('.entity');
+            
+            // Reset all entities
+            allEntities.forEach(entity => {
+                const rect = entity.querySelector('rect');
+                if (rect) {
+                    rect.setAttribute('fill', 'lightblue');
+                }
+            });
+            
+            // Highlight selected entity
+            const selectedRect = selectedEntity.querySelector('rect');
+            if (selectedRect) {
+                selectedRect.setAttribute('fill', '#ff6b6b');
+            }
+            
+            // Highlight related entities
+            if (entityData.linkedEntities) {
+                allEntities.forEach(entity => {
+                    const otherData = JSON.parse(entity.getAttribute('data-entity') || '{}');
+                    
+                    // Entities that selected entity references (green)
+                    if (entityData.linkedEntities.includes(otherData.name)) {
+                        const rect = entity.querySelector('rect');
+                        if (rect) {
+                            rect.setAttribute('fill', '#90ee90');
+                        }
+                    }
+                    
+                    // Entities that reference selected entity (yellow)
+                    if (otherData.linkedEntities && otherData.linkedEntities.includes(entityData.name)) {
+                        const rect = entity.querySelector('rect');
+                        if (rect) {
+                            rect.setAttribute('fill', '#ffeb3b');
+                        }
+                    }
+                });
+            }
+        }
+
+        function showEntityInfo(entity) {
+            const entityData = JSON.parse(entity.getAttribute('data-entity') || '{}');
+            const infoPanel = document.getElementById('info-panel');
+            
+            document.getElementById('info-title').textContent = entityData.name || 'Unknown Entity';
+            document.getElementById('info-description').textContent = entityData.description || 'No description available';
+            
+            if (entityData.columns && entityData.columns.length > 0) {
+                document.getElementById('info-columns').textContent = 
+                    `Columns (${entityData.columns.length}): ${entityData.columns.join(', ')}`;
+            } else {
+                document.getElementById('info-columns').textContent = 'No columns defined';
+            }
+            
+            infoPanel.classList.add('visible');
+        }
+
+        function updateStatusBar() {
+            const entities = document.querySelectorAll('.entity');
+            const usages = document.querySelectorAll('.usage');
+            
+            document.getElementById('entity-count').textContent = entities.length;
+            document.getElementById('relationship-count').textContent = usages.length;
+        }
+
+        function handleKeyboard(e) {
+            // + or = to zoom in
+            if (e.key === '+' || e.key === '=') {
+                zoom(1.2);
+            }
+            // - to zoom out
+            else if (e.key === '-') {
+                zoom(0.8);
+            }
+            // 0 to reset
+            else if (e.key === '0') {
+                resetView();
+            }
+            // F to fit to screen
+            else if (e.key === 'f' || e.key === 'F') {
+                fitToScreen();
+            }
+            // T to toggle theme
+            else if (e.key === 't' || e.key === 'T') {
+                toggleTheme();
+            }
+            // Escape to clear search
+            else if (e.key === 'Escape') {
+                clearSearch();
+            }
+            // / to focus search
+            else if (e.key === '/') {
+                e.preventDefault();
+                document.getElementById('search-input').focus();
+            }
+        }
+
+        // Expose global functions for button handlers
+        window.toggleTheme = toggleTheme;
+        window.zoom = zoom;
+        window.resetView = resetView;
+        window.fitToScreen = fitToScreen;
+        window.exportSVG = exportSVG;
+        window.toggleLegend = toggleLegend;
+    </script>
+</body>
+</html>

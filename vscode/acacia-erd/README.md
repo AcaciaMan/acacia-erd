@@ -1,99 +1,79 @@
-# Acacia ERD
+# Acacia ERD — Interactive Entity Relationship Diagrams for VS Code
 
-**Entity Relationship Diagram (ERD) Visualization for VS Code**
+Create, visualize, and share Entity Relationship Diagrams (ERDs) in VS Code. Design database schemas with drag-and-drop, auto-discover table relationships, and export interactive HTML diagrams that anyone can explore in a browser.
 
-A powerful VS Code extension for creating, managing, and visualizing Entity Relationship Diagrams with an intuitive grid-based layout system. Perfect for database design, documentation, and understanding complex data relationships.
+[![Version](https://img.shields.io/visual-studio-marketplace/v/manacacia.acacia-erd)](https://marketplace.visualstudio.com/items?itemName=manacacia.acacia-erd)
+[![Installs](https://img.shields.io/visual-studio-marketplace/i/manacacia.acacia-erd)](https://marketplace.visualstudio.com/items?itemName=manacacia.acacia-erd)
+[![Rating](https://img.shields.io/visual-studio-marketplace/r/manacacia.acacia-erd)](https://marketplace.visualstudio.com/items?itemName=manacacia.acacia-erd)
+[![License](https://img.shields.io/github/license/AcaciaMan/acacia-erd)](https://github.com/AcaciaMan/acacia-erd/blob/main/LICENSE)
 
-[![Version](https://img.shields.io/badge/version-2.2.0-blue.svg)](https://marketplace.visualstudio.com/items?itemName=manacacia.acacia-erd)
-[![VS Code](https://img.shields.io/badge/VS%20Code-1.98.0+-007ACC.svg)](https://code.visualstudio.com/)
+![Entity Relationship Diagram visualization in VS Code](https://github.com/user-attachments/assets/f607db8d-67d2-46ab-adf6-4d656ca5a61f)
 
-## 🎉 What's New in v2.2.0
+## Key Features
 
-### 🌐 Interactive HTML Export
+- **Interactive ERD Editor** — Drag-and-drop entities on a canvas, visualize relationships, and edit in real time
+- **Interactive HTML Export** — Export standalone HTML files that work in any browser with zoom, pan, search, and dark/light themes
+- **Smart Entity Management** — Auto-discover relationships, search and filter entities, manage columns
+- **Multiple View Modes** — Interactive canvas, entity tree (list and card views), describe entity, and ERD generation
+- **Database Integration** — Import schemas from Oracle, PostgreSQL, and MySQL with ready-to-use SQL queries
+- **SVG & JSON Support** — Save diagrams as SVG, load entity definitions from JSON files
 
-**Export your ERDs as standalone interactive HTML files!** This game-changing feature lets you share your database diagrams with anyone - no VS Code or special software required.
+| Feature | Acacia ERD |
+|---------|-----------|
+| Interactive HTML Export | Yes |
+| Drag & Drop Layout | Yes |
+| VS Code Integration | Yes |
+| Multi-Database Support | Yes |
+| No Account Required | Yes |
+| Works Offline | Yes |
 
-**Highlights:**
-- ✨ One-click export to interactive HTML
-- 🔍 Full interactivity: zoom, pan, search, click to explore
-- 🎨 Beautiful light/dark themes
-- 📱 Works on any device (desktop, tablet, mobile)
-- 📧 Perfect for sharing with stakeholders, teams, and clients
-- 📚 Ideal for documentation, wikis, and presentations
+## Screenshots
 
-Try it now: Open an ERD and click the green "Export HTML" button! 🚀
+### Interactive ERD Editor
 
----
+![Entity Relationship Diagram visualization in VS Code](https://github.com/user-attachments/assets/f607db8d-67d2-46ab-adf6-4d656ca5a61f)
 
-<img alt="Screenshot_erd" src="https://github.com/user-attachments/assets/f607db8d-67d2-46ab-adf6-4d656ca5a61f" />
+### Interactive HTML Export — Shareable Diagrams
 
-## ✨ Features
-
-### � **NEW! Interactive HTML Export** ⭐
-Export your ERDs as **standalone interactive HTML files** that work in any browser!
-
-- **📧 Share with Anyone**: No VS Code or special software required to view
-- **🔍 Fully Interactive**: Zoom, pan, search, and click entities to explore relationships
-- **🎨 Beautiful Themes**: Toggle between light and dark modes
-- **📱 Mobile-Friendly**: Works perfectly on phones and tablets
-- **📚 Perfect for Documentation**: Embed in wikis, websites, or email to team members
-- **🚀 One-Click Export**: Single HTML file with everything embedded
-- **⚡ Lightning Fast**: No server required, runs entirely in the browser
-
-**Use Cases:**
-- Share database schemas with non-technical stakeholders
-- Embed living documentation in project wikis
-- Create interactive presentations and demos
-- Host on GitHub Pages or internal documentation sites
-
-[Learn more about Interactive HTML Export →](docs/INTERACTIVE_HTML_EXPORT.md)
-
-<img alt="Screenshot_erd_html" src="https://github.com/user-attachments/assets/38852015-5e82-4138-89d4-b26863a15a4a" />
-
----
-
-### �🎨 **Interactive ERD Editor**
-- **Drag & Drop Entities**: Easily position entities on the canvas
-- **Visual Relationship Mapping**: Clear visualization of entity relationships
-- **Grid-Based Layout**: Automatic and manual grid layout options
-- **Real-time Editing**: Live updates as you modify entities
-
-### 📊 **Multiple View Modes**
-- **Interactive Canvas**: Full-featured ERD editor with toolbar
-- **Entity Tree View**: Browse entities in a hierarchical list or card view
-- **Describe Entity**: Detailed view of entity columns and relationships
-- **Generate ERD**: Create diagrams from JSON entity definitions
-
-### 🔍 **Smart Entity Management**
-- **Search & Filter**: Quickly find entities in large diagrams
-- **Auto-discover Relationships**: Automatically identify linked entities
-- **Column Management**: Define and organize entity columns
-- **Relationship Tracking**: Visual indicators for entity connections
-
-### 💾 **Import & Export**
-- **Interactive HTML Export**: Share diagrams that anyone can explore in a browser ⭐ NEW!
-- **SVG Export**: Save diagrams as scalable vector graphics
-- **JSON Import**: Load entity definitions from JSON files
-- **Database Integration**: Import directly from Oracle databases (see examples)
-
-### 🎯 **User-Friendly Interface**
-- **Modern Design**: Clean, VS Code-integrated UI
-- **Keyboard Shortcuts**: Efficient workflow with shortcuts
-- **Context Menus**: Quick access to common actions
-- **Status Bar**: Real-time entity and relationship counts
-
-## 📸 Screenshots
+![Interactive HTML export of an Entity Relationship Diagram](https://github.com/user-attachments/assets/38852015-5e82-4138-89d4-b26863a15a4a)
 
 ### WordPress Database ERD
-![Screenshot_wordpress](https://github.com/user-attachments/assets/1d9ade83-b35f-4023-829f-94840ef9dc3c)
+
+![WordPress database Entity Relationship Diagram](https://github.com/user-attachments/assets/1d9ade83-b35f-4023-829f-94840ef9dc3c)
 
 ### Discourse Database ERD
-![Screenshot Discourse](https://github.com/user-attachments/assets/ec06bd8c-47fa-4375-a0b9-4c67351dcc1d)
+
+![Discourse database Entity Relationship Diagram](https://github.com/user-attachments/assets/ec06bd8c-47fa-4375-a0b9-4c67351dcc1d)
 
 ### Redmine Database ERD
-![Screenshot Redmine](https://github.com/user-attachments/assets/47b84e7a-323d-470c-8509-918468181418)
 
-## 🚀 Getting Started
+![Redmine database Entity Relationship Diagram](https://github.com/user-attachments/assets/47b84e7a-323d-470c-8509-918468181418)
+
+## What's New in v2.2.3
+
+### Source Folders & DB Connections Tree Views
+- **Source Folders sidebar** — Manage project source directories with add, remove, and rename
+- **DB Connections sidebar** — Bookmark database connection references with full CRUD operations
+- **Dashboard integration** — Quick action buttons and live project status counts
+- **11 new commands** for managing source folders and database connections
+
+### EntityManager Improvements
+- File watcher auto-reloads entities on external changes
+- Event emitters for reactive UI updates
+- Improved path resolution and proper resource disposal
+
+### Interactive HTML Export
+
+Export your ERDs as standalone interactive HTML files — share database diagrams with anyone, no VS Code required.
+
+- One-click export to interactive HTML
+- Full interactivity: zoom, pan, search, click to explore
+- Beautiful light/dark themes, mobile-responsive design
+- Perfect for sharing with stakeholders, teams, and documentation
+
+[Learn more about Interactive HTML Export](https://github.com/AcaciaMan/acacia-erd/blob/main/vscode/acacia-erd/docs/INTERACTIVE_HTML_EXPORT.md)
+
+## Quick Start
 
 ### Installation
 
@@ -102,49 +82,38 @@ Export your ERDs as **standalone interactive HTML files** that work in any brows
 3. Type: `ext install manacacia.acacia-erd`
 4. Press Enter
 
-Or search for "Acacia ERD" in the VS Code Extensions marketplace.
+Or search for **"Acacia ERD"** in the VS Code Extensions marketplace.
 
-### Quick Start
+### First Steps
 
-1. **Open the Acacia ERD sidebar** by clicking the ERD icon in the Activity Bar
-2. **Create a new ERD** by clicking "Open ERD Editor" in the Manage ERD view
-3. **Add entities** by dragging them from the Entity Tree or generating from JSON
-4. **Arrange entities** using drag & drop or the "Apply Grid" button
-5. **Save your diagram** using `Ctrl+S` or the Save button
-6. **Export as Interactive HTML** using the "Export HTML" button 🌟 NEW!
+1. **Open the Acacia ERD sidebar** — click the ERD icon in the Activity Bar
+2. **Open the ERD Editor** — use the Command Palette (`Ctrl+Shift+P`) and type `Acacia ERD: Open ERD Editor`
+3. **Add entities** — generate from a JSON file or drag from the Entity Tree
+4. **Arrange entities** — drag and drop or click "Apply Grid" for automatic layout
+5. **Save your diagram** — `Ctrl+S` to save as SVG
+6. **Export as Interactive HTML** — click the "Export HTML" button in the toolbar
 
-## 📖 Usage Guide
+## Usage Guide
 
-### 🌐 Exporting Interactive HTML
+### Exporting Interactive HTML
 
-Create shareable, interactive diagrams that anyone can explore:
+Create shareable, interactive diagrams:
 
-1. **Open your ERD** in the Interactive ERD Editor
-2. **Click "Export HTML"** in the toolbar (green button)
-3. **Choose a location** and save the file
-4. **Share the file** - recipients can open it in any browser!
+1. Open your ERD in the Interactive ERD Editor
+2. Click "Export HTML" in the toolbar (green button)
+3. Choose a location and save the file
+4. Share — recipients open it in any browser
 
-**What you get:**
-- ✅ Fully interactive diagram with zoom, pan, and search
-- ✅ Click entities to highlight relationships
-- ✅ Dark/light theme toggle
-- ✅ Mobile-responsive design
-- ✅ No installation or VS Code required to view
-- ✅ Perfect for documentation, presentations, and team sharing
+What you get: fully interactive diagram with zoom, pan, search, entity highlighting, dark/light theme toggle, and mobile-responsive design. No installation required to view.
 
-**Try it yourself:** Export an ERD and open it in your browser to see the magic! ✨
-
-[→ See full Interactive HTML Export guide](docs/INTERACTIVE_HTML_EXPORT.md)
-
----
+[Full Interactive HTML Export guide](https://github.com/AcaciaMan/acacia-erd/blob/main/vscode/acacia-erd/docs/INTERACTIVE_HTML_EXPORT.md)
 
 ### Creating an ERD from JSON
 
 1. Prepare your entities JSON file (see format below)
 2. Click "Generate ERD from Entities List" in the toolbar
-3. Select your JSON file
-4. Configure generation parameters (max entities, auto-discover)
-5. Click "Generate ERD"
+3. Select your JSON file and configure generation parameters
+4. Click "Generate ERD"
 
 #### JSON Format
 
@@ -170,35 +139,35 @@ Create shareable, interactive diagrams that anyone can explore:
 ### Keyboard Shortcuts
 
 #### ERD Editor
-- `Ctrl+S` / `Cmd+S` - Save ERD as SVG
-- `Ctrl+Shift+S` / `Cmd+Shift+S` - Save As new SVG file
-- `Ctrl+F` / `Cmd+F` - Focus search (in Entity Tree)
+- `Ctrl+S` / `Cmd+S` — Save ERD as SVG
+- `Ctrl+Shift+S` / `Cmd+Shift+S` — Save As new SVG file
+- `Ctrl+F` / `Cmd+F` — Focus search (in Entity Tree)
 
 #### Interactive HTML Export (in browser)
-- `+` or `=` - Zoom in
-- `-` - Zoom out
-- `0` - Reset view
-- `F` - Fit to screen
-- `T` - Toggle theme (light/dark)
-- `/` - Focus search
-- `Esc` - Clear search
+- `+` / `=` — Zoom in
+- `-` — Zoom out
+- `0` — Reset view
+- `F` — Fit to screen
+- `T` — Toggle theme
+- `/` — Focus search
+- `Esc` — Clear search
 
 #### Entity Tree
-- Double-click entity - Open entity details
-- Right-click entity - Show context menu
+- Double-click entity — Open entity details
+- Right-click entity — Show context menu
 
 ### Entity Tree Views
 
-- **List View**: Compact list showing entity names and metadata
-- **Card View**: Expanded cards with descriptions and statistics
+- **List View** — Compact list showing entity names and metadata
+- **Card View** — Expanded cards with descriptions and statistics
 
 ### Context Menu Options
 
-- **Open Details** - View/edit entity properties
-- **Describe Entity** - See detailed column information
-- **Delete Entity** - Remove entity from diagram
+- **Open Details** — View/edit entity properties
+- **Describe Entity** — See detailed column information
+- **Delete Entity** — Remove entity from diagram
 
-## 🔧 Configuration
+## Configuration
 
 Configure the extension in VS Code settings:
 
@@ -208,11 +177,11 @@ Configure the extension in VS Code settings:
 }
 ```
 
-## 🗄️ Database Integration
+## Database Integration
 
-### Oracle Database
+Import your existing database schema into Acacia ERD using SQL queries for Oracle, PostgreSQL, and MySQL.
 
-Export your database schema to JSON using this SQL query:
+### Oracle
 
 ```sql
 SELECT JSON_ARRAYAGG(
@@ -282,42 +251,39 @@ FROM information_schema.tables t
 WHERE table_schema = 'your_database';
 ```
 
-## 🎯 Use Cases
+## Use Cases
 
-- **Database Design**: Plan and visualize database schemas
-- **Documentation**: Create clear, interactive diagrams for technical documentation
-- **Team Collaboration**: Share diagrams that anyone can explore in their browser
-- **Client Presentations**: Present interactive ERDs without requiring VS Code
-- **Code Understanding**: Map existing database structures
-- **Knowledge Sharing**: Email interactive diagrams to stakeholders
-- **Migration Planning**: Understand relationships before schema changes
-- **Training Materials**: Create self-explanatory database documentation
-- **Wiki Integration**: Embed interactive diagrams in project wikis
+- **Database Design** — Plan and visualize database schemas
+- **Documentation** — Create interactive diagrams for technical documentation
+- **Team Collaboration** — Share diagrams that anyone can explore in their browser
+- **Client Presentations** — Present interactive ERDs without requiring VS Code
+- **Migration Planning** — Understand relationships before schema changes
+- **Training Materials** — Create self-explanatory database documentation
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## 📝 License
+## License
 
-This extension is licensed under the [MIT License](LICENSE).
+This extension is licensed under the [MIT License](https://github.com/AcaciaMan/acacia-erd/blob/main/LICENSE).
 
-## 🐛 Issues & Feature Requests
+## Issues & Feature Requests
 
 Found a bug or have a feature request? Please open an issue on [GitHub](https://github.com/AcaciaMan/acacia-erd/issues).
 
-## 📚 Additional Resources
+## Additional Resources
 
 - [Wiki Documentation](https://github.com/AcaciaMan/acacia-erd/wiki/Create-ER-diagram-help)
 - [GitHub Repository](https://github.com/AcaciaMan/acacia-erd)
 
-## 🌟 Show Your Support
+## Show Your Support
 
 If you find this extension helpful, please consider:
-- ⭐ Starring the [GitHub repository](https://github.com/AcaciaMan/acacia-erd)
-- 📝 Writing a review on the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=manacacia.acacia-erd)
-- 🐦 Sharing with your developer community
+- Starring the [GitHub repository](https://github.com/AcaciaMan/acacia-erd)
+- Writing a review on the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=manacacia.acacia-erd)
+- Sharing with your developer community
 
 ---
 
-**Made with ❤️ by AcaciaMan**    
+**Made with care by AcaciaMan**

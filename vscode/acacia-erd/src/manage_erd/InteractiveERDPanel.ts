@@ -2,10 +2,41 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import { DescribeEntityPanel } from './DescribeEntity';
-import { ERDGenerationPanel } from './ERDGenerationPanel';
+import { ERDGenerationPanel, GenerationParameters } from './ERDGenerationPanel';
 import * as em from '../utils/EntityManager';
 import { HtmlExporter } from '../utils/HtmlExporter';
 
+/** Data structure for usage items */
+interface UsageData {
+    id: string;
+    text: string;
+}
+
+/** Messages received from the Interactive ERD webview */
+type InteractiveERDMessage =
+    | { command: 'entityClicked'; entity: { name: string } }
+    | { command: 'openEntityDetails'; entity: em.Entity }
+    | { command: 'describeEntity'; entity: em.Entity }
+    | { command: 'saveEntity'; entity: em.Entity; oldEntity: em.Entity }
+    | { command: 'usageClicked'; usage: { text: string } }
+    | { command: 'openUsageDetails'; usage: UsageData }
+    | { command: 'saveUsage'; usage: UsageData }
+    | { command: 'createSVG'; svgContent: string }
+    | { command: 'saveSVG'; svgContent: string }
+    | { command: 'exportInteractiveHtml'; svgContent: string; title?: string }
+    | { command: 'loadSVG' }
+    | { command: 'chooseJSON' }
+    | { command: 'chooseEntitiesList' }
+    | { command: 'deleteEntity'; entityId: string };
+
+/** Messages received from the Edit Entity webview */
+type EditEntityMessage =
+    | { command: 'webviewReady' }
+    | { command: 'saveEntity'; entity: em.Entity; oldEntity: em.Entity };
+
+/** Messages received from the Edit Usage webview */
+type EditUsageMessage =
+    | { command: 'saveUsage'; usage: UsageData };
 
 export class InteractiveERDPanel {
     public static currentPanel: InteractiveERDPanel | undefined;
@@ -45,6 +76,14 @@ export class InteractiveERDPanel {
 
         this._update();
 
+        // Subscribe to entity changes from EntityManager
+        this.mgr.onDidChangeEntities((entities) => {
+            this._panel.webview.postMessage({
+                command: 'updateEntities',
+                entities: entities
+            });
+        });
+
         // Send a message to the interactive ERD webview to load the entities list
         const entitiesJsonPath = this.mgr.getEntitiesJsonPath();
         if (entitiesJsonPath) {
@@ -56,7 +95,7 @@ export class InteractiveERDPanel {
 
         this._panel.onDidDispose(() => this.dispose(), null, []);
 
-        this._panel.webview.onDidReceiveMessage(async message => {
+        this._panel.webview.onDidReceiveMessage(async (message: InteractiveERDMessage) => {
             switch (message.command) {
                 case 'entityClicked':
                     vscode.window.showInformationMessage(`Entity clicked: ${message.entity.name}`);
@@ -193,7 +232,7 @@ export class InteractiveERDPanel {
             };
         }
 
-        panel.webview.onDidReceiveMessage(message => {
+        panel.webview.onDidReceiveMessage((message: EditEntityMessage) => {
             switch (message.command) {
                 case 'webviewReady':
                     // Webview is ready, now send the entity data
@@ -219,7 +258,7 @@ export class InteractiveERDPanel {
     }
 
 
-    private saveEntity(entity: any, oldEntity: any) {
+    private saveEntity(entity: em.Entity, oldEntity: em.Entity) {
         vscode.window.showInformationMessage(`Entity saved: ${entity.name}`);
         // Update the entity in the EntityManager
         const mgr = em.EntityManager.getInstance();
@@ -233,7 +272,7 @@ export class InteractiveERDPanel {
         }
     }
 
-    private async openUsageDetails(usage: { id: string, text: string }) {
+    private async openUsageDetails(usage: UsageData) {
         const panel = vscode.window.createWebviewPanel(
             'editUsage',
             `Edit Usage`,
@@ -254,7 +293,7 @@ export class InteractiveERDPanel {
             text: usage.text
         };
 
-        panel.webview.onDidReceiveMessage(message => {
+        panel.webview.onDidReceiveMessage((message: EditUsageMessage) => {
             switch (message.command) {
                 case 'saveUsage':
                     this.saveUsage(message.usage);
@@ -266,7 +305,7 @@ export class InteractiveERDPanel {
         panel.webview.postMessage(usageDetails);
     }
 
-    private saveUsage(usage: { id: string, text: string }) {
+    private saveUsage(usage: UsageData) {
         vscode.window.showInformationMessage(`Usage saved: ${usage.text}`);
         // Send a message to the interactive ERD webview to update the usage
         if (InteractiveERDPanel.currentPanel) {
@@ -347,7 +386,7 @@ async function loadSVGFile(webview: vscode.Webview): Promise<vscode.Uri | undefi
 
 }
 
-export function chooseJSONFile(webview: vscode.Webview, parameters: { maxEntities: number, discoverLinkedEntities: boolean, entityName: string }) {
+export function chooseJSONFile(webview: vscode.Webview, parameters: GenerationParameters) {
                 const entities = em.EntityManager.getInstance().getEntities();
                 webview.postMessage({
                     command: 'loadEntities',

@@ -1,6 +1,28 @@
 {
     "vscode-git-kafka.workspaceUUID": "vunoksry-0x0n-ac4q-bmfz-r00000000000",
     "vscode-git-kafka.sort": "Clicks (High-Low)",
-    "acacia-erd.entitiesJsonPath": "c:\\work\\GitHub\\acacia-erd\\erd_example\\oracle_ad_entities.json",
-    "acaciaLexer.selectedFolder": "c:\\work\\GitHub\\wordpress-develop"
+    "acacia-erd.entitiesJsonPath": "redmine_entities.json",
+    "acaciaLexer.selectedFolder": "c:\\work\\GitHub\\wordpress-develop",
+    "acacia-log.logDateRegex": "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}",
+    "acacia-log.logDateFormat": "yyyy-MM-dd HH:mm:ss",
+    "acacia-log.logSearchDate": "2023-01-01",
+    "acacia-log.logSearchTime": "12:00:00",
+    "acaciaDb.tablesViewsFile": "c:\\work\\GitHub\\acacia-db\\vscode\\data\\msdyn\\tables_views.json",
+    "acaciaDb.sourceFolder": "c:\\work\\GitHub\\MSDyn\\MSDyn365BC.Code.History",
+    "acacia-erd.sourceFolders": [
+        {
+            "name": "ora_samples",
+            "path": "c:\\work\\GitHub\\oracle-db-examples"
+        },
+        {
+            "name": "redmine",
+            "path": "c:\\work\\GitHub\\redmine"
+        }
+    ],
+    "acacia-erd.dbConnections": [
+        {
+            "name": "test_db",
+            "connectionPath": "localhost"
+        }
+    ]
 }

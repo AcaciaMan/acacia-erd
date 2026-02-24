@@ -3,3 +3,5 @@
 Python/msdyn_entities.json
 *.pyc
 *.vsix
+/vscode/acacia-erd/.vscode-test
+/vscode/acacia-erd/out

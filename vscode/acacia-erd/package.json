@@ -1,80 +1,284 @@
 {
   "name": "acacia-erd",
-  "displayName": "acacia-erd",
-  "description": "Entity Relationship Diagram (ERD) with grid layout",
+  "displayName": "Acacia ERD - Entity Relationship Diagrams",
+  "description": "Visual database schema designer with interactive ERD editor, drag-and-drop layout, and HTML export",
   "repository": {
     "type": "git",
     "url": "https://github.com/AcaciaMan/acacia-erd"
   },
-  "version": "2.2.1",
+  "version": "2.2.3",
   "publisher": "manacacia",
   "icon": "icon.png",
+  "galleryBanner": {
+    "color": "#1e3a5f",
+    "theme": "dark"
+  },
+  "badges": [
+    {
+      "url": "https://img.shields.io/visual-studio-marketplace/v/manacacia.acacia-erd",
+      "href": "https://marketplace.visualstudio.com/items?itemName=manacacia.acacia-erd",
+      "description": "VS Marketplace Version"
+    },
+    {
+      "url": "https://img.shields.io/visual-studio-marketplace/i/manacacia.acacia-erd",
+      "href": "https://marketplace.visualstudio.com/items?itemName=manacacia.acacia-erd",
+      "description": "VS Marketplace Installs"
+    },
+    {
+      "url": "https://img.shields.io/visual-studio-marketplace/r/manacacia.acacia-erd",
+      "href": "https://marketplace.visualstudio.com/items?itemName=manacacia.acacia-erd",
+      "description": "VS Marketplace Rating"
+    },
+    {
+      "url": "https://img.shields.io/github/license/AcaciaMan/acacia-erd",
+      "href": "https://github.com/AcaciaMan/acacia-erd/blob/main/LICENSE",
+      "description": "License"
+    }
+  ],
+  "markdown": "github",
+  "qna": "https://github.com/AcaciaMan/acacia-erd/issues",
   "engines": {
     "vscode": "^1.98.0"
   },
   "categories": [
-    "Visualization",
-    "Data Science"
+    "Visualization"
   ],
   "keywords": [
     "erd",
-    "entity",
-    "relationship",
-    "diagram",
-    "database",
-    "schema",
-    "visualization",
-    "modeling",
-    "data model",
-    "grid layout"
+    "entity relationship diagram",
+    "database diagram",
+    "database design",
+    "schema visualization",
+    "data modeling",
+    "database schema",
+    "sql diagram",
+    "table relationship",
+    "interactive diagram"
   ],
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "acacia-erd.helloWorld",
-        "title": "Hello World"
-      },
-      {
         "command": "acacia-erd.exportInteractiveHtml",
         "title": "Export ERD as Interactive HTML",
+        "category": "Acacia ERD"
+      },
+      {
+        "command": "acacia-erd.openERDEditor",
+        "title": "Open ERD Editor",
+        "category": "Acacia ERD"
+      },
+      {
+        "command": "acacia-erd.showEntityTree",
+        "title": "Show Entity Tree",
+        "category": "Acacia ERD"
+      },
+      {
+        "command": "acacia-erd.addSourceFolder",
+        "title": "Add Source Folder",
+        "category": "Acacia ERD",
+        "icon": "$(add)"
+      },
+      {
+        "command": "acacia-erd.removeSourceFolder",
+        "title": "Remove Source Folder",
+        "category": "Acacia ERD",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "acacia-erd.renameSourceFolder",
+        "title": "Rename Source Folder",
+        "category": "Acacia ERD",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "acacia-erd.refreshSourceFolders",
+        "title": "Refresh Source Folders",
+        "category": "Acacia ERD",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "acacia-erd.addDbConnection",
+        "title": "Add DB Connection",
+        "category": "Acacia ERD",
+        "icon": "$(add)"
+      },
+      {
+        "command": "acacia-erd.removeDbConnection",
+        "title": "Remove DB Connection",
+        "category": "Acacia ERD",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "acacia-erd.renameDbConnection",
+        "title": "Rename DB Connection",
+        "category": "Acacia ERD",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "acacia-erd.editDbConnectionPath",
+        "title": "Edit Connection Path",
+        "category": "Acacia ERD",
+        "icon": "$(pencil)"
+      },
+      {
+        "command": "acacia-erd.refreshDbConnections",
+        "title": "Refresh DB Connections",
+        "category": "Acacia ERD",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "acacia-erd.showSourceFolders",
+        "title": "Show Source Folders",
+        "category": "Acacia ERD"
+      },
+      {
+        "command": "acacia-erd.showDbConnections",
+        "title": "Show DB Connections",
         "category": "Acacia ERD"
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "myExtensionContainer",
-          "title": "Acacia Erd",
+          "id": "acaciaErdContainer",
+          "title": "Acacia ERD",
           "icon": "resources/erd_icon.svg"
         }
       ]
     },
     "views": {
-      "myExtensionContainer": [
+      "acaciaErdContainer": [
         {
           "type": "webview",
           "id": "erdView",
-          "name": "Manage ERD",
+          "name": "ERD Editor",
           "icon": "resources/erd_icon.svg"
         },
         {
           "type": "webview",
           "id": "openEntityTree",
-          "name": "Entities Tree",
+          "name": "Entity Tree",
           "icon": "resources/erd_icon.svg"
+        },
+        {
+          "id": "acaciaSourceFolders",
+          "name": "Source Folders"
+        },
+        {
+          "id": "acaciaDbConnections",
+          "name": "DB Connections"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "acaciaSourceFolders",
+        "contents": "No source folders configured.\n[Add Source Folder](command:acacia-erd.addSourceFolder)"
+      },
+      {
+        "view": "acaciaDbConnections",
+        "contents": "No database connections configured.\n[Add DB Connection](command:acacia-erd.addDbConnection)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "acacia-erd.addSourceFolder",
+          "when": "view == acaciaSourceFolders",
+          "group": "navigation"
+        },
+        {
+          "command": "acacia-erd.refreshSourceFolders",
+          "when": "view == acaciaSourceFolders",
+          "group": "navigation"
+        },
+        {
+          "command": "acacia-erd.addDbConnection",
+          "when": "view == acaciaDbConnections",
+          "group": "navigation"
+        },
+        {
+          "command": "acacia-erd.refreshDbConnections",
+          "when": "view == acaciaDbConnections",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "acacia-erd.renameSourceFolder",
+          "when": "view == acaciaSourceFolders && viewItem == sourceFolder",
+          "group": "inline"
+        },
+        {
+          "command": "acacia-erd.removeSourceFolder",
+          "when": "view == acaciaSourceFolders && viewItem == sourceFolder",
+          "group": "inline"
+        },
+        {
+          "command": "acacia-erd.renameDbConnection",
+          "when": "view == acaciaDbConnections && viewItem == dbConnection",
+          "group": "inline"
+        },
+        {
+          "command": "acacia-erd.editDbConnectionPath",
+          "when": "view == acaciaDbConnections && viewItem == dbConnection",
+          "group": "inline"
+        },
+        {
+          "command": "acacia-erd.removeDbConnection",
+          "when": "view == acaciaDbConnections && viewItem == dbConnection",
+          "group": "inline"
         }
       ]
     },
     "configuration": {
       "type": "object",
-      "title": "Acacia ERD Configuration",
+      "title": "Acacia ERD",
       "properties": {
         "acacia-erd.entitiesJsonPath": {
           "type": "string",
           "default": "resources/entities.json",
-          "description": "Path to the JSON file containing the entities list."
+          "description": "Path to the JSON file containing the entities list. Relative paths are resolved from the workspace root folder."
+        },
+        "acacia-erd.sourceFolders": {
+          "type": "array",
+          "default": [],
+          "description": "List of source code folders for the ERD project. Each entry has a name and path.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Descriptive name for the source folder (e.g., 'App Source', 'Migrations')"
+              },
+              "path": {
+                "type": "string",
+                "description": "Path to the folder. Relative paths resolve from the workspace root."
+              }
+            },
+            "required": ["name", "path"]
+          }
+        },
+        "acacia-erd.dbConnections": {
+          "type": "array",
+          "default": [],
+          "description": "List of database connection references for the ERD project. Each entry has a name and connection path. No credentials are stored.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Descriptive name for the connection (e.g., 'Dev DB', 'Test DB', 'Production Schema')"
+              },
+              "connectionPath": {
+                "type": "string",
+                "description": "Connection path — file path, connection string (without credentials), or URL"
+              }
+            },
+            "required": ["name", "connectionPath"]
+          }
         }
       }
     }
@@ -96,6 +300,8 @@
   "devDependencies": {
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
+    "@types/proxyquire": "^1.3.31",
+    "@types/sinon": "^21.0.0",
     "@types/vscode": "^1.98.0",
     "@typescript-eslint/eslint-plugin": "^8.25.0",
     "@typescript-eslint/parser": "^8.25.0",
@@ -104,6 +310,8 @@
     "esbuild": "^0.25.0",
     "eslint": "^9.21.0",
     "npm-run-all": "^4.1.5",
+    "proxyquire": "^2.1.3",
+    "sinon": "^21.0.1",
     "typescript": "^5.7.3"
   },
   "dependencies": {

@@ -1,9 +1,9 @@
 export class ObjectRegistry {
     private static instance: ObjectRegistry;
-    private registry: Map<string, any>;
+    private registry: Map<string, unknown>;
 
     private constructor() {
-        this.registry = new Map<string, any>();
+        this.registry = new Map<string, unknown>();
     }
 
     // Get the singleton instance
@@ -15,7 +15,7 @@ export class ObjectRegistry {
     }
 
     // Add an object to the registry
-    public set(key: string, value: any): void {
+    public set(key: string, value: unknown): void {
         this.registry.set(key, value);
     }
 

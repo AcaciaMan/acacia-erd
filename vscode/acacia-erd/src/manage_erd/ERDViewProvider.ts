@@ -4,9 +4,16 @@ import * as fs from 'fs';
 
 import { InteractiveERDPanel } from './InteractiveERDPanel';
 import { ERDGenerationPanel } from './ERDGenerationPanel';
+import { EntityManager } from '../utils/EntityManager';
+import { SourceFolderManager } from '../utils/SourceFolderManager';
+import { DbConnectionManager } from '../utils/DbConnectionManager';
 
 export class ERDViewProvider implements vscode.WebviewViewProvider {
-    constructor(private readonly context: vscode.ExtensionContext) {}
+    constructor(
+        private readonly context: vscode.ExtensionContext,
+        private readonly sourceFolderManager: SourceFolderManager,
+        private readonly dbConnectionManager: DbConnectionManager
+    ) {}
 
     resolveWebviewView(webviewView: vscode.WebviewView) {
         webviewView.webview.options = {
@@ -32,6 +39,15 @@ export class ERDViewProvider implements vscode.WebviewViewProvider {
                     // Focus on the Entity Tree view
                     vscode.commands.executeCommand('openEntityTree.focus');
                     break;
+                case 'viewSourceFolders':
+                    vscode.commands.executeCommand('acaciaSourceFolders.focus');
+                    break;
+                case 'viewDbConnections':
+                    vscode.commands.executeCommand('acaciaDbConnections.focus');
+                    break;
+                case 'requestStatus':
+                    this.sendStatus(webviewView.webview);
+                    break;
                 case 'refresh':
                     // Refresh the webview
                     webviewView.webview.html = htmlContent;
@@ -39,6 +55,23 @@ export class ERDViewProvider implements vscode.WebviewViewProvider {
                     break;
             }
         });
+
+        // Subscribe to changes to update status
+        const entityMgr = EntityManager.getInstance();
+        entityMgr.onDidChangeEntities(() => this.sendStatus(webviewView.webview));
+        entityMgr.onDidChangeEntitiesPath(() => this.sendStatus(webviewView.webview));
+        this.sourceFolderManager.onDidChange(() => this.sendStatus(webviewView.webview));
+        this.dbConnectionManager.onDidChange(() => this.sendStatus(webviewView.webview));
     }
 
+    private sendStatus(webview: vscode.Webview): void {
+        const entityMgr = EntityManager.getInstance();
+        webview.postMessage({
+            command: 'updateStatus',
+            entityCount: entityMgr.getEntities().length,
+            sourceFolderCount: this.sourceFolderManager.getFolders().length,
+            dbConnectionCount: this.dbConnectionManager.getConnections().length,
+            entitiesFilePath: entityMgr.getEntitiesJsonPath()
+        });
+    }
 }

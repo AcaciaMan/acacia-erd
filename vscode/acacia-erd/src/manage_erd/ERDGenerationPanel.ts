@@ -2,7 +2,11 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { chooseJSONFile, InteractiveERDPanel } from './InteractiveERDPanel';
 
-
+export interface GenerationParameters {
+    maxEntities: number;
+    discoverLinkedEntities: boolean;
+    entityName: string;
+}
 
 export class ERDGenerationPanel {
     public static currentPanel: ERDGenerationPanel | undefined;
@@ -236,7 +240,7 @@ export class ERDGenerationPanel {
         `;
     }
 
-    private generateERD(parameters: { maxEntities: number, discoverLinkedEntities: boolean, entityName: string }) {
+    private generateERD(parameters: GenerationParameters) {
         vscode.window.showInformationMessage(`Generating ERD for ${parameters.entityName} with max ${parameters.maxEntities} entities. Discover linked entities: ${parameters.discoverLinkedEntities}`);
         // Implement the ERD generation logic here
         if (InteractiveERDPanel.currentPanel) {

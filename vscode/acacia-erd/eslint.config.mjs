@@ -25,4 +25,15 @@ export default [{
         "no-throw-literal": "warn",
         semi: "warn",
     },
+}, {
+    files: ["src/**/*.ts"],
+    ignores: ["src/test/**"],
+    rules: {
+        "@typescript-eslint/no-explicit-any": "warn",
+    },
+}, {
+    files: ["src/test/**/*.ts"],
+    rules: {
+        "@typescript-eslint/no-explicit-any": "off",
+    },
 }];
