@@ -1,7 +1,7 @@
 {
     "vscode-git-kafka.workspaceUUID": "vunoksry-0x0n-ac4q-bmfz-r00000000000",
     "vscode-git-kafka.sort": "Clicks (High-Low)",
-    "acacia-erd.entitiesJsonPath": "redmine_entities.json",
+    "acacia-erd.entitiesJsonPath": "entities.json",
     "acaciaLexer.selectedFolder": "c:\\work\\GitHub\\wordpress-develop",
     "acacia-log.logDateRegex": "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}",
     "acacia-log.logDateFormat": "yyyy-MM-dd HH:mm:ss",

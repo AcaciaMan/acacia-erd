@@ -135,7 +135,7 @@ export class InteractiveERDPanel {
                     ERDGenerationPanel.createOrShow(this._extensionPath);
                     break;
                 case 'chooseEntitiesList':
-                    chooseEntitiesList(panel.webview);
+                    await chooseEntitiesList(panel.webview);
                     break;     
                 case 'deleteEntity':
                     deleteEntity(message.entityId);
@@ -395,26 +395,52 @@ export function chooseJSONFile(webview: vscode.Webview, parameters: GenerationPa
                 });
 }
 
-function chooseEntitiesList(webview: vscode.Webview) {
-    const options: vscode.OpenDialogOptions = {
-        canSelectMany: false,
-        openLabel: 'Open JSON',
-        filters: {
-            'JSON Files': ['json']
-        }
-    };
+async function chooseEntitiesList(webview: vscode.Webview) {
+    const choice = await vscode.window.showQuickPick(
+        [
+            { label: '$(folder-opened) Open Existing', description: 'Browse for an existing entities JSON file', value: 'open' },
+            { label: '$(new-file) Create New', description: 'Create a new empty entities list', value: 'create' }
+        ],
+        { placeHolder: 'Open an existing entities list or create a new one' }
+    );
 
-    vscode.window.showOpenDialog(options).then(fileUri => {
-        if (fileUri && fileUri[0]) {
-            const mgr = em.EntityManager.getInstance();
-            mgr.setEntitiesJsonPath(fileUri[0].fsPath);
-
-            webview.postMessage({
-                command: 'loadEntitiesList',
-                entitiesListPath: fileUri[0].fsPath
-            });
+    if (!choice) {
+        return;
     }
 
+    if (choice.value === 'open') {
+        const fileUri = await vscode.window.showOpenDialog({
+            canSelectMany: false,
+            openLabel: 'Open JSON',
+            filters: { 'JSON Files': ['json'] }
+        });
+
+        if (fileUri && fileUri[0]) {
+            applyEntitiesListPath(webview, fileUri[0].fsPath);
+        }
+    } else {
+        const fileUri = await vscode.window.showSaveDialog({
+            saveLabel: 'Create Entities List',
+            filters: { 'JSON Files': ['json'] },
+            defaultUri: vscode.workspace.workspaceFolders?.[0]
+                ? vscode.Uri.joinPath(vscode.workspace.workspaceFolders[0].uri, 'entities.json')
+                : undefined
+        });
+
+        if (fileUri) {
+            fs.writeFileSync(fileUri.fsPath, '[]', 'utf8');
+            applyEntitiesListPath(webview, fileUri.fsPath);
+            vscode.window.showInformationMessage(`Created new entities list: ${path.basename(fileUri.fsPath)}`);
+        }
+    }
+}
+
+function applyEntitiesListPath(webview: vscode.Webview, filePath: string) {
+    const mgr = em.EntityManager.getInstance();
+    mgr.setEntitiesJsonPath(filePath);
+    webview.postMessage({
+        command: 'loadEntitiesList',
+        entitiesListPath: filePath
     });
 }
 
