@@ -49,6 +49,30 @@ body {
     color: var(--vscode-foreground);
 }
 
+/* File indicator */
+.file-indicator {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--vscode-descriptionForeground);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.file-indicator .file-icon {
+    flex-shrink: 0;
+    font-size: 11px;
+}
+
+.file-indicator .file-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* Controls */
 #controls {
     padding: 12px 16px;
@@ -380,6 +404,26 @@ ul {
 .empty-state-description {
     font-size: 12px;
     line-height: 1.5;
+}
+
+.empty-state-actions {
+    margin-top: 16px;
+}
+
+.empty-state-button {
+    padding: 6px 14px;
+    font-size: 12px;
+    font-family: var(--vscode-font-family);
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+    background-color: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+    transition: background-color 0.2s ease;
+}
+
+.empty-state-button:hover {
+    background-color: var(--vscode-button-hoverBackground);
 }
 
 /* Scrollbar */

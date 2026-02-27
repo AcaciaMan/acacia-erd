@@ -5,13 +5,15 @@ import { ObjectRegistry } from '../utils/ObjectRegistry';
 import { InteractiveERDPanel } from './InteractiveERDPanel';
 import { EntityManager, Entity } from '../utils/EntityManager';
 import { DescribeEntityPanel } from './DescribeEntity';
+import { getNonce } from '../utils/nonce';
 
 type EntityTreeMessage =
     | { command: 'alert'; text: string }
     | { command: 'openEntityDetails'; entity: Entity }
     | { command: 'describeEntity'; entity: Entity }
     | { command: 'deleteEntity'; entityName: string }
-    | { command: 'showInfoMessage'; message: string };
+    | { command: 'showInfoMessage'; message: string }
+    | { command: 'browseAssets' };
 
 export class EntityTreePanel implements vscode.WebviewViewProvider {
 
@@ -25,6 +27,16 @@ export class EntityTreePanel implements vscode.WebviewViewProvider {
         this.mgr.onDidChangeEntities((entities) => {
             if (this._webviewView) {
                 this._webviewView.webview.postMessage({ command: 'loadEntities', entities });
+            }
+        });
+
+        // Subscribe to entities path changes to update file indicator
+        this.mgr.onDidChangeEntitiesPath((newPath) => {
+            if (this._webviewView) {
+                this._webviewView.webview.postMessage({
+                    command: 'updateEntitiesPath',
+                    entitiesFilePath: newPath
+                });
             }
         });
     }
@@ -52,10 +64,12 @@ export class EntityTreePanel implements vscode.WebviewViewProvider {
         webviewView.webview.html = this._getHtmlForWebview(scriptUri, styleUri, nonce);
 
         this._loadEntities(webviewView.webview);
+        this._sendEntitiesPath(webviewView.webview);
 
         webviewView.onDidChangeVisibility(() => {
             if (webviewView.visible) {
                 this._loadEntities(webviewView.webview);
+                this._sendEntitiesPath(webviewView.webview);
             }
         });
 
@@ -77,6 +91,9 @@ export class EntityTreePanel implements vscode.WebviewViewProvider {
                     return;    
                 case 'showInfoMessage':
                     vscode.window.showInformationMessage(message.message);
+                    return;
+                case 'browseAssets':
+                    vscode.commands.executeCommand('acaciaAssets.focus');
                     return;
             }
         });
@@ -104,6 +121,10 @@ export class EntityTreePanel implements vscode.WebviewViewProvider {
                             <span>Visible:</span>
                             <span class="stat-value" id="visible-count">0</span>
                         </div>
+                    </div>
+                    <div class="file-indicator" id="file-indicator" title="">
+                        <span class="file-icon">📄</span>
+                        <span class="file-name" id="file-name">–</span>
                     </div>
                 </div>
                 <div id="controls">
@@ -151,17 +172,15 @@ export class EntityTreePanel implements vscode.WebviewViewProvider {
         vscode.window.showInformationMessage(`Entity with ID ${entityName} has been deleted.`);
     }
 
+    private _sendEntitiesPath(webview: vscode.Webview) {
+        webview.postMessage({
+            command: 'updateEntitiesPath',
+            entitiesFilePath: this.mgr.getEntitiesJsonPath()
+        });
+    }
+
     public _loadEntities(webview: vscode.Webview) {
         const entities = this.mgr.getEntities();
             webview.postMessage({ command: 'loadEntities', entities });
     }
-}
-
-function getNonce() {
-    let text = '';
-    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    for (let i = 0; i < 32; i++) {
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
-    }
-    return text;
 }

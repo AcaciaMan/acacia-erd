@@ -6,7 +6,7 @@
     "type": "git",
     "url": "https://github.com/AcaciaMan/acacia-erd"
   },
-  "version": "2.2.3",
+  "version": "2.3.0",
   "publisher": "manacacia",
   "icon": "icon.png",
   "galleryBanner": {
@@ -93,12 +93,6 @@
         "icon": "$(edit)"
       },
       {
-        "command": "acacia-erd.refreshSourceFolders",
-        "title": "Refresh Source Folders",
-        "category": "Acacia ERD",
-        "icon": "$(refresh)"
-      },
-      {
         "command": "acacia-erd.addDbConnection",
         "title": "Add DB Connection",
         "category": "Acacia ERD",
@@ -123,12 +117,6 @@
         "icon": "$(pencil)"
       },
       {
-        "command": "acacia-erd.refreshDbConnections",
-        "title": "Refresh DB Connections",
-        "category": "Acacia ERD",
-        "icon": "$(refresh)"
-      },
-      {
         "command": "acacia-erd.showSourceFolders",
         "title": "Show Source Folders",
         "category": "Acacia ERD"
@@ -136,6 +124,41 @@
       {
         "command": "acacia-erd.showDbConnections",
         "title": "Show DB Connections",
+        "category": "Acacia ERD"
+      },
+      {
+        "command": "acacia-erd.refreshAssets",
+        "title": "Refresh Assets",
+        "category": "Acacia ERD",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "acacia-erd.addEntitiesList",
+        "title": "Add Entities List",
+        "category": "Acacia ERD",
+        "icon": "$(add)"
+      },
+      {
+        "command": "acacia-erd.removeEntitiesList",
+        "title": "Remove Entities List",
+        "category": "Acacia ERD",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "acacia-erd.renameEntitiesList",
+        "title": "Rename Entities List",
+        "category": "Acacia ERD",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "acacia-erd.editEntitiesListPath",
+        "title": "Edit Entities List Path",
+        "category": "Acacia ERD",
+        "icon": "$(pencil)"
+      },
+      {
+        "command": "acacia-erd.selectEntitiesList",
+        "title": "Select Entities List",
         "category": "Acacia ERD"
       }
     ],
@@ -163,72 +186,120 @@
           "icon": "resources/erd_icon.svg"
         },
         {
-          "id": "acaciaSourceFolders",
-          "name": "Source Folders"
-        },
-        {
-          "id": "acaciaDbConnections",
-          "name": "DB Connections"
+          "id": "acaciaAssets",
+          "name": "Assets",
+          "icon": "resources/erd_icon.svg"
         }
       ]
     },
-    "viewsWelcome": [
-      {
-        "view": "acaciaSourceFolders",
-        "contents": "No source folders configured.\n[Add Source Folder](command:acacia-erd.addSourceFolder)"
-      },
-      {
-        "view": "acaciaDbConnections",
-        "contents": "No database connections configured.\n[Add DB Connection](command:acacia-erd.addDbConnection)"
-      }
-    ],
     "menus": {
+      "commandPalette": [
+        {
+          "command": "acacia-erd.selectEntitiesList",
+          "when": "false"
+        },
+        {
+          "command": "acacia-erd.removeSourceFolder",
+          "when": "false"
+        },
+        {
+          "command": "acacia-erd.renameSourceFolder",
+          "when": "false"
+        },
+        {
+          "command": "acacia-erd.removeDbConnection",
+          "when": "false"
+        },
+        {
+          "command": "acacia-erd.renameDbConnection",
+          "when": "false"
+        },
+        {
+          "command": "acacia-erd.editDbConnectionPath",
+          "when": "false"
+        },
+        {
+          "command": "acacia-erd.removeEntitiesList",
+          "when": "false"
+        },
+        {
+          "command": "acacia-erd.renameEntitiesList",
+          "when": "false"
+        },
+        {
+          "command": "acacia-erd.editEntitiesListPath",
+          "when": "false"
+        },
+        {
+          "command": "acacia-erd.showSourceFolders",
+          "when": "false"
+        },
+        {
+          "command": "acacia-erd.showDbConnections",
+          "when": "false"
+        }
+      ],
       "view/title": [
         {
           "command": "acacia-erd.addSourceFolder",
-          "when": "view == acaciaSourceFolders",
-          "group": "navigation"
-        },
-        {
-          "command": "acacia-erd.refreshSourceFolders",
-          "when": "view == acaciaSourceFolders",
+          "when": "view == acaciaAssets",
           "group": "navigation"
         },
         {
           "command": "acacia-erd.addDbConnection",
-          "when": "view == acaciaDbConnections",
+          "when": "view == acaciaAssets",
           "group": "navigation"
         },
         {
-          "command": "acacia-erd.refreshDbConnections",
-          "when": "view == acaciaDbConnections",
+          "command": "acacia-erd.addEntitiesList",
+          "when": "view == acaciaAssets",
+          "group": "navigation"
+        },
+        {
+          "command": "acacia-erd.refreshAssets",
+          "when": "view == acaciaAssets",
           "group": "navigation"
         }
       ],
       "view/item/context": [
         {
           "command": "acacia-erd.renameSourceFolder",
-          "when": "view == acaciaSourceFolders && viewItem == sourceFolder",
+          "when": "view == acaciaAssets && viewItem == sourceFolder",
           "group": "inline"
         },
         {
           "command": "acacia-erd.removeSourceFolder",
-          "when": "view == acaciaSourceFolders && viewItem == sourceFolder",
+          "when": "view == acaciaAssets && viewItem == sourceFolder",
           "group": "inline"
         },
         {
           "command": "acacia-erd.renameDbConnection",
-          "when": "view == acaciaDbConnections && viewItem == dbConnection",
+          "when": "view == acaciaAssets && viewItem == dbConnection",
           "group": "inline"
         },
         {
           "command": "acacia-erd.editDbConnectionPath",
-          "when": "view == acaciaDbConnections && viewItem == dbConnection",
+          "when": "view == acaciaAssets && viewItem == dbConnection",
           "group": "inline"
         },
         {
           "command": "acacia-erd.removeDbConnection",
-          "when": "view == acaciaDbConnections && viewItem == dbConnection",
+          "when": "view == acaciaAssets && viewItem == dbConnection",
+          "group": "inline"
+        },
+        {
+          "command": "acacia-erd.renameEntitiesList",
+          "when": "view == acaciaAssets && viewItem == entitiesList",
+          "group": "inline"
+        },
+        {
+          "command": "acacia-erd.editEntitiesListPath",
+          "when": "view == acaciaAssets && viewItem == entitiesList",
+          "group": "inline"
+        },
+        {
+          "command": "acacia-erd.removeEntitiesList",
+          "when": "view == acaciaAssets && viewItem == entitiesList",
           "group": "inline"
         }
       ]
@@ -278,6 +349,25 @@
               }
             },
             "required": ["name", "connectionPath"]
+          }
+        },
+        "acacia-erd.entitiesLists": {
+          "type": "array",
+          "default": [],
+          "description": "List of named entities list references for the ERD project. Each entry has a name and path to an entities JSON file.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Descriptive name for the entities list (e.g., 'Main Schema', 'Auth Module')"
+              },
+              "jsonPath": {
+                "type": "string",
+                "description": "Path to the entities JSON file. Relative paths resolve from the workspace root."
+              }
+            },
+            "required": ["name", "jsonPath"]
           }
         }
       }

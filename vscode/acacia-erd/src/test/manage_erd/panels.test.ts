@@ -142,20 +142,39 @@ suite('Webview Panels', () => {
         let erdGenCreateOrShow: sinon.SinonStub;
         let mockSourceFolderManager: any;
         let mockDbConnectionManager: any;
+        let mockEntitiesListManager: any;
+        let entityChangeCallback: (() => void) | undefined;
+        let entityPathChangeCallback: (() => void) | undefined;
+        let sourceFolderChangeCallback: (() => void) | undefined;
+        let dbConnectionChangeCallback: (() => void) | undefined;
+        let entitiesListChangeCallback: (() => void) | undefined;
 
         function createMockManagers() {
             mockSourceFolderManager = {
                 getFolders: sinon.stub().returns([]),
-                onDidChange: sinon.stub().returns({ dispose: sinon.stub() }),
+                onDidChange: sinon.stub().callsFake((cb: () => void) => {
+                    sourceFolderChangeCallback = cb;
+                    return { dispose: sinon.stub() };
+                }),
             };
             mockDbConnectionManager = {
                 getConnections: sinon.stub().returns([]),
-                onDidChange: sinon.stub().returns({ dispose: sinon.stub() }),
+                onDidChange: sinon.stub().callsFake((cb: () => void) => {
+                    dbConnectionChangeCallback = cb;
+                    return { dispose: sinon.stub() };
+                }),
+            };
+            mockEntitiesListManager = {
+                getLists: sinon.stub().returns([]),
+                onDidChange: sinon.stub().callsFake((cb: () => void) => {
+                    entitiesListChangeCallback = cb;
+                    return { dispose: sinon.stub() };
+                }),
             };
         }
 
         function createProvider() {
-            return new ERDViewProvider(createMockContext(), mockSourceFolderManager, mockDbConnectionManager);
+            return new ERDViewProvider(createMockContext(), mockSourceFolderManager, mockDbConnectionManager, mockEntitiesListManager);
         }
 
         setup(() => {
@@ -163,6 +182,11 @@ suite('Webview Panels', () => {
             vsMock = createBaseVscodeStub();
             interactiveCreateOrShow = sinon.stub();
             erdGenCreateOrShow = sinon.stub();
+            entityChangeCallback = undefined;
+            entityPathChangeCallback = undefined;
+            sourceFolderChangeCallback = undefined;
+            dbConnectionChangeCallback = undefined;
+            entitiesListChangeCallback = undefined;
             createMockManagers();
 
             const mod = proxyquire('../../manage_erd/ERDViewProvider', {
@@ -175,14 +199,21 @@ suite('Webview Panels', () => {
                         getInstance: () => ({
                             getEntities: sinon.stub().returns([]),
                             getEntitiesJsonPath: sinon.stub().returns('resources/entities.json'),
-                            onDidChangeEntities: sinon.stub().returns({ dispose: sinon.stub() }),
-                            onDidChangeEntitiesPath: sinon.stub().returns({ dispose: sinon.stub() }),
+                            onDidChangeEntities: sinon.stub().callsFake((cb: () => void) => {
+                                entityChangeCallback = cb;
+                                return { dispose: sinon.stub() };
+                            }),
+                            onDidChangeEntitiesPath: sinon.stub().callsFake((cb: () => void) => {
+                                entityPathChangeCallback = cb;
+                                return { dispose: sinon.stub() };
+                            }),
                         })
                     },
                     '@noCallThru': true,
                 },
                 '../utils/SourceFolderManager': { '@noCallThru': true },
                 '../utils/DbConnectionManager': { '@noCallThru': true },
+                '../utils/EntitiesListManager': { '@noCallThru': true },
             });
             ERDViewProvider = mod.ERDViewProvider;
         });
@@ -235,24 +266,6 @@ suite('Webview Panels', () => {
             assert.ok(vsMock.commands.executeCommand.calledWith('openEntityTree.focus'));
         });
 
-        test('message "viewSourceFolders" → calls executeCommand("acaciaSourceFolders.focus")', async () => {
-            const provider = createProvider();
-            const { view, fireMessage } = createMockWebviewView();
-            provider.resolveWebviewView(view);
-
-            await fireMessage({ command: 'viewSourceFolders' });
-            assert.ok(vsMock.commands.executeCommand.calledWith('acaciaSourceFolders.focus'));
-        });
-
-        test('message "viewDbConnections" → calls executeCommand("acaciaDbConnections.focus")', async () => {
-            const provider = createProvider();
-            const { view, fireMessage } = createMockWebviewView();
-            provider.resolveWebviewView(view);
-
-            await fireMessage({ command: 'viewDbConnections' });
-            assert.ok(vsMock.commands.executeCommand.calledWith('acaciaDbConnections.focus'));
-        });
-
         test('message "requestStatus" → posts updateStatus message', async () => {
             const provider = createProvider();
             const { view, fireMessage } = createMockWebviewView();
@@ -276,6 +289,132 @@ suite('Webview Panels', () => {
             await fireMessage({ command: 'refresh' });
             assert.strictEqual(view.webview.html, '<html>manage_erd</html>');
         });
+
+        // ── Auto-status update tests ─────────────────────────────────────
+
+        test('entity change → auto-posts updateStatus', () => {
+            const provider = createProvider();
+            const { view, webview } = createMockWebviewView();
+            provider.resolveWebviewView(view);
+
+            webview.postMessage.resetHistory();
+            entityChangeCallback!();
+
+            assert.ok(webview.postMessage.calledOnce);
+            const msg = webview.postMessage.firstCall.args[0];
+            assert.strictEqual(msg.command, 'updateStatus');
+            assert.strictEqual(msg.entityCount, 0);
+        });
+
+        test('entities path change → auto-posts updateStatus', () => {
+            const provider = createProvider();
+            const { view, webview } = createMockWebviewView();
+            provider.resolveWebviewView(view);
+
+            webview.postMessage.resetHistory();
+            entityPathChangeCallback!();
+
+            assert.ok(webview.postMessage.calledOnce);
+            const msg = webview.postMessage.firstCall.args[0];
+            assert.strictEqual(msg.command, 'updateStatus');
+        });
+
+        test('source folder change → posts updateStatus with correct count', () => {
+            const provider = createProvider();
+            const { view, webview } = createMockWebviewView();
+            provider.resolveWebviewView(view);
+
+            mockSourceFolderManager.getFolders.returns([
+                { name: 'Src', path: '/src' },
+                { name: 'Lib', path: '/lib' },
+            ]);
+            webview.postMessage.resetHistory();
+            sourceFolderChangeCallback!();
+
+            assert.ok(webview.postMessage.calledOnce);
+            const msg = webview.postMessage.firstCall.args[0];
+            assert.strictEqual(msg.command, 'updateStatus');
+            assert.strictEqual(msg.sourceFolderCount, 2);
+        });
+
+        test('DB connection change → posts updateStatus with correct count', () => {
+            const provider = createProvider();
+            const { view, webview } = createMockWebviewView();
+            provider.resolveWebviewView(view);
+
+            mockDbConnectionManager.getConnections.returns([
+                { name: 'Dev DB', connectionPath: 'localhost:5432/dev' },
+            ]);
+            webview.postMessage.resetHistory();
+            dbConnectionChangeCallback!();
+
+            assert.ok(webview.postMessage.calledOnce);
+            const msg = webview.postMessage.firstCall.args[0];
+            assert.strictEqual(msg.command, 'updateStatus');
+            assert.strictEqual(msg.dbConnectionCount, 1);
+        });
+
+        test('auto-status does nothing if view not yet resolved', () => {
+            // Subscriptions are set up in resolveWebviewView, not the constructor.
+            // Manager onDidChange stubs are called during resolveWebviewView.
+            // Before that, callbacks are not registered, so no auto-status fires.
+            const provider = createProvider();
+            assert.strictEqual(entityChangeCallback, undefined,
+                'entity change callback should not be set before resolveWebviewView');
+            assert.strictEqual(entityPathChangeCallback, undefined,
+                'entity path change callback should not be set before resolveWebviewView');
+
+            // After resolveWebviewView, callbacks should be captured
+            const { view } = createMockWebviewView();
+            provider.resolveWebviewView(view);
+            assert.ok(entityChangeCallback, 'entity change callback should be set after resolveWebviewView');
+            assert.ok(sourceFolderChangeCallback, 'source folder change callback should be set');
+            assert.ok(dbConnectionChangeCallback, 'db connection change callback should be set');
+            assert.ok(entitiesListChangeCallback, 'entities list change callback should be set');
+        });
+
+        test('message "viewAssets" → calls executeCommand("acaciaAssets.focus")', async () => {
+            const provider = createProvider();
+            const { view, fireMessage } = createMockWebviewView();
+            provider.resolveWebviewView(view);
+
+            await fireMessage({ command: 'viewAssets' });
+            assert.ok(vsMock.commands.executeCommand.calledWith('acaciaAssets.focus'));
+        });
+
+        test('message "requestStatus" → updateStatus includes entitiesListCount', async () => {
+            mockEntitiesListManager.getLists.returns([
+                { name: 'Schema A', jsonPath: 'a.json' },
+                { name: 'Schema B', jsonPath: 'b.json' },
+            ]);
+
+            const provider = createProvider();
+            const { view, fireMessage } = createMockWebviewView();
+            provider.resolveWebviewView(view);
+
+            await fireMessage({ command: 'requestStatus' });
+            assert.ok(view.webview.postMessage.calledOnce);
+            const msg = view.webview.postMessage.firstCall.args[0];
+            assert.strictEqual(msg.command, 'updateStatus');
+            assert.strictEqual(msg.entitiesListCount, 2);
+        });
+
+        test('entities list change → posts updateStatus with correct count', () => {
+            const provider = createProvider();
+            const { view, webview } = createMockWebviewView();
+            provider.resolveWebviewView(view);
+
+            mockEntitiesListManager.getLists.returns([
+                { name: 'Schema', jsonPath: 'schema.json' },
+            ]);
+            webview.postMessage.resetHistory();
+            entitiesListChangeCallback!();
+
+            assert.ok(webview.postMessage.calledOnce);
+            const msg = webview.postMessage.firstCall.args[0];
+            assert.strictEqual(msg.command, 'updateStatus');
+            assert.strictEqual(msg.entitiesListCount, 1);
+        });
     });
 
     // ── EntityTreePanel ─────────────────────────────────────────────────
@@ -287,10 +426,14 @@ suite('Webview Panels', () => {
         let mockEntityManager: any;
         let mockDescribeCreateOrShow: sinon.SinonStub;
         let mockInteractivePanel: any;
+        let entityChangeCallback: ((entities: any[]) => void) | undefined;
+        let entityPathChangeCallback: ((path: string) => void) | undefined;
 
         setup(() => {
             resetSingletons();
             ObjectRegistry.getInstance().clear();
+            entityChangeCallback = undefined;
+            entityPathChangeCallback = undefined;
 
             fsStub = createFsStub();
             vsMock = createBaseVscodeStub();
@@ -299,8 +442,16 @@ suite('Webview Panels', () => {
                 getEntities: sinon.stub().returns([
                     { id: '1', name: 'User', columns: ['id'], linkedEntities: [] },
                 ]),
+                getEntitiesJsonPath: sinon.stub().returns('resources/entities.json'),
                 deleteEntity: sinon.stub(),
-                onDidChangeEntities: sinon.stub().returns({ dispose: sinon.stub() }),
+                onDidChangeEntities: sinon.stub().callsFake((cb: (entities: any[]) => void) => {
+                    entityChangeCallback = cb;
+                    return { dispose: sinon.stub() };
+                }),
+                onDidChangeEntitiesPath: sinon.stub().callsFake((cb: (path: string) => void) => {
+                    entityPathChangeCallback = cb;
+                    return { dispose: sinon.stub() };
+                }),
             };
             mockEntityManager.getInstance.returns(mockEntityManager);
 
@@ -348,10 +499,11 @@ suite('Webview Panels', () => {
             const { view, webview } = createMockWebviewView();
             panel.resolveWebviewView(view);
 
-            assert.ok(webview.postMessage.calledOnce);
-            const msg = webview.postMessage.firstCall.args[0];
-            assert.strictEqual(msg.command, 'loadEntities');
-            assert.ok(Array.isArray(msg.entities));
+            const loadMsg = webview.postMessage.args.find(
+                (a: any[]) => a[0].command === 'loadEntities'
+            );
+            assert.ok(loadMsg, 'should post loadEntities message');
+            assert.ok(Array.isArray(loadMsg![0].entities));
         });
 
         test('when visibility changes to visible → reloads entities', () => {
@@ -363,8 +515,10 @@ suite('Webview Panels', () => {
             view.visible = true;
             fireVisibilityChange();
 
-            assert.ok(webview.postMessage.calledOnce);
-            assert.strictEqual(webview.postMessage.firstCall.args[0].command, 'loadEntities');
+            const loadMsg = webview.postMessage.args.find(
+                (a: any[]) => a[0].command === 'loadEntities'
+            );
+            assert.ok(loadMsg, 'should post loadEntities on visibility change');
         });
 
         test('message "deleteEntity" → calls EntityManager.deleteEntity()', async () => {
@@ -396,6 +550,161 @@ suite('Webview Panels', () => {
             const msg = webview.postMessage.firstCall.args[0];
             assert.strictEqual(msg.command, 'loadEntities');
             assert.ok(Array.isArray(msg.entities));
+        });
+
+        test('onDidChangeEntities → posts loadEntities to webview', () => {
+            const panel = new EntityTreePanel(createMockContext());
+            const { view, webview } = createMockWebviewView();
+            panel.resolveWebviewView(view);
+
+            webview.postMessage.resetHistory();
+            const newEntities = [{ id: '2', name: 'Order', columns: [], linkedEntities: [] }];
+            entityChangeCallback!(newEntities);
+
+            assert.ok(webview.postMessage.calledOnce);
+            const msg = webview.postMessage.firstCall.args[0];
+            assert.strictEqual(msg.command, 'loadEntities');
+            assert.deepStrictEqual(msg.entities, newEntities);
+        });
+
+        test('onDidChangeEntities — does nothing if webviewView not yet resolved', () => {
+            new EntityTreePanel(createMockContext());
+            // Do NOT call resolveWebviewView
+            const newEntities = [{ id: '2', name: 'Order', columns: [], linkedEntities: [] }];
+            assert.doesNotThrow(() => entityChangeCallback!(newEntities));
+        });
+
+        test('message "alert" → calls showErrorMessage', async () => {
+            const panel = new EntityTreePanel(createMockContext());
+            const { view, fireMessage } = createMockWebviewView();
+            panel.resolveWebviewView(view);
+
+            await fireMessage({ command: 'alert', text: 'Something went wrong' });
+            assert.ok(vsMock.window.showErrorMessage.calledWith('Something went wrong'));
+        });
+
+        test('message "openEntityDetails" — with active InteractiveERDPanel', async () => {
+            mockInteractivePanel.currentPanel = {
+                openEntityDetails: sinon.stub(),
+                deleteEntity: sinon.stub(),
+            };
+            const panel = new EntityTreePanel(createMockContext());
+            const { view, fireMessage } = createMockWebviewView();
+            panel.resolveWebviewView(view);
+
+            const entity = { id: '1', name: 'User' };
+            await fireMessage({ command: 'openEntityDetails', entity });
+            assert.ok(mockInteractivePanel.currentPanel.openEntityDetails.calledOnce);
+            assert.deepStrictEqual(
+                mockInteractivePanel.currentPanel.openEntityDetails.firstCall.args[0], entity
+            );
+        });
+
+        test('message "openEntityDetails" — no active InteractiveERDPanel', async () => {
+            mockInteractivePanel.currentPanel = null;
+            const panel = new EntityTreePanel(createMockContext());
+            const { view, fireMessage } = createMockWebviewView();
+            panel.resolveWebviewView(view);
+
+            const entity = { id: '1', name: 'User' };
+            assert.doesNotThrow(() => fireMessage({ command: 'openEntityDetails', entity }));
+        });
+
+        test('message "showInfoMessage" → calls showInformationMessage', async () => {
+            const panel = new EntityTreePanel(createMockContext());
+            const { view, fireMessage } = createMockWebviewView();
+            panel.resolveWebviewView(view);
+
+            await fireMessage({ command: 'showInfoMessage', message: 'Entity saved' });
+            assert.ok(vsMock.window.showInformationMessage.calledWith('Entity saved'));
+        });
+
+        test('constructor subscribes to EntityManager.onDidChangeEntitiesPath', () => {
+            new EntityTreePanel(createMockContext());
+            assert.ok(entityPathChangeCallback, 'onDidChangeEntitiesPath callback should be captured');
+        });
+
+        test('onDidChangeEntitiesPath → posts updateEntitiesPath to webview', () => {
+            const panel = new EntityTreePanel(createMockContext());
+            const { view, webview } = createMockWebviewView();
+            panel.resolveWebviewView(view);
+
+            webview.postMessage.resetHistory();
+            entityPathChangeCallback!('/new/path/entities.json');
+
+            const pathMsg = webview.postMessage.args.find(
+                (a: any[]) => a[0].command === 'updateEntitiesPath'
+            );
+            assert.ok(pathMsg, 'should post updateEntitiesPath message');
+            assert.strictEqual(pathMsg![0].entitiesFilePath, '/new/path/entities.json');
+        });
+
+        test('onDidChangeEntitiesPath — does nothing if webviewView not yet resolved', () => {
+            new EntityTreePanel(createMockContext());
+            assert.doesNotThrow(() => entityPathChangeCallback!('/some/path.json'));
+        });
+
+        test('resolveWebviewView posts updateEntitiesPath with initial path', () => {
+            const panel = new EntityTreePanel(createMockContext());
+            const { view, webview } = createMockWebviewView();
+            panel.resolveWebviewView(view);
+
+            const pathMsg = webview.postMessage.args.find(
+                (a: any[]) => a[0].command === 'updateEntitiesPath'
+            );
+            assert.ok(pathMsg, 'should post updateEntitiesPath on resolve');
+            assert.strictEqual(pathMsg![0].entitiesFilePath, 'resources/entities.json');
+        });
+
+        test('when visibility changes to visible → sends updateEntitiesPath', () => {
+            const panel = new EntityTreePanel(createMockContext());
+            const { view, webview, fireVisibilityChange } = createMockWebviewView();
+            panel.resolveWebviewView(view);
+
+            webview.postMessage.resetHistory();
+            view.visible = true;
+            fireVisibilityChange();
+
+            const pathMsg = webview.postMessage.args.find(
+                (a: any[]) => a[0].command === 'updateEntitiesPath'
+            );
+            assert.ok(pathMsg, 'should post updateEntitiesPath on visibility change');
+        });
+
+        test('message "browseAssets" → calls executeCommand("acaciaAssets.focus")', async () => {
+            const panel = new EntityTreePanel(createMockContext());
+            const { view, fireMessage } = createMockWebviewView();
+            panel.resolveWebviewView(view);
+
+            await fireMessage({ command: 'browseAssets' });
+            assert.ok(vsMock.commands.executeCommand.calledWith('acaciaAssets.focus'));
+        });
+
+        test('resolveWebviewView generates HTML with file-indicator element', () => {
+            const panel = new EntityTreePanel(createMockContext());
+            const { view } = createMockWebviewView();
+            panel.resolveWebviewView(view);
+
+            const html = view.webview.html;
+            assert.ok(html.includes('file-indicator'), 'should contain file indicator element');
+            assert.ok(html.includes('file-name'), 'should contain file name element');
+        });
+
+        test('message "deleteEntity" — also notifies InteractiveERDPanel', async () => {
+            mockInteractivePanel.currentPanel = {
+                openEntityDetails: sinon.stub(),
+                deleteEntity: sinon.stub(),
+            };
+            const panel = new EntityTreePanel(createMockContext());
+            const { view, fireMessage } = createMockWebviewView();
+            panel.resolveWebviewView(view);
+
+            await fireMessage({ command: 'deleteEntity', entityName: 'User' });
+            assert.ok(mockEntityManager.deleteEntity.calledWith('User'));
+            assert.ok(mockInteractivePanel.currentPanel.deleteEntity.calledOnce);
+            assert.strictEqual(
+                mockInteractivePanel.currentPanel.deleteEntity.firstCall.args[0], 'User'
+            );
         });
     });
 

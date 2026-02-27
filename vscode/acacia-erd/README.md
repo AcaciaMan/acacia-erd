@@ -49,17 +49,28 @@ Create, visualize, and share Entity Relationship Diagrams (ERDs) in VS Code. Des
 
 ![Redmine database Entity Relationship Diagram](https://github.com/user-attachments/assets/47b84e7a-323d-470c-8509-918468181418)
 
-## What's New in v2.2.3
+## What's New in v2.3.0
 
-### Source Folders & DB Connections Tree Views
-- **Source Folders sidebar** — Manage project source directories with add, remove, and rename
-- **DB Connections sidebar** — Bookmark database connection references with full CRUD operations
-- **Dashboard integration** — Quick action buttons and live project status counts
-- **11 new commands** for managing source folders and database connections
+### Create Entities Lists from UI
+- **New or Open** — The "Choose Entities List" dialog now lets you create a brand-new entities JSON file or browse for an existing one
+- **Save dialog** — Native VS Code save dialog pre-filled with your workspace root and a `.json` filter
+
+### Previously in v2.2.3
+
+### Unified Assets Tree & Entities Lists
+- **Assets sidebar** — Single tree view combining Entities Lists, Source Folders, and DB Connections with collapsible sections
+- **Entities Lists management** — Add, remove, rename, and switch between multiple entities JSON files
+- **Active list indicator** — See which entities list is currently loaded with a check icon (✓) and "active" badge
+- **Entity Tree file indicator** — Know which file is loaded directly in the Entity Tree header
+- **Smart empty state** — Contextual guidance when no entities are loaded, with quick "Browse Assets" action
+
+### Project Dashboard
+- **Quick Actions** — View Entities and View Assets buttons for fast navigation
+- **Live Status** — Real-time counts for entities, entities lists, source folders, and DB connections
 
 ### EntityManager Improvements
 - File watcher auto-reloads entities on external changes
-- Event emitters for reactive UI updates
+- Event emitters for reactive UI updates across all views
 - Improved path resolution and proper resource disposal
 
 ### Interactive HTML Export
@@ -173,9 +184,28 @@ Configure the extension in VS Code settings:
 
 ```json
 {
-  "acacia-erd.entitiesJsonPath": "resources/entities.json"
+  "acacia-erd.entitiesJsonPath": "resources/entities.json",
+  "acacia-erd.entitiesLists": [
+    { "name": "Main Schema", "jsonPath": "resources/entities.json" },
+    { "name": "Auth Module", "jsonPath": "resources/auth_entities.json" }
+  ],
+  "acacia-erd.sourceFolders": [
+    { "name": "App Source", "path": "src" },
+    { "name": "Migrations", "path": "db/migrate" }
+  ],
+  "acacia-erd.dbConnections": [
+    { "name": "Dev DB", "connectionPath": "sqlite:///data/dev.db" },
+    { "name": "Test DB", "connectionPath": "localhost:5432/testdb" }
+  ]
 }
 ```
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `entitiesJsonPath` | `string` | `"resources/entities.json"` | Path to the active entities JSON file |
+| `entitiesLists` | `array` | `[]` | Named references to entities JSON files |
+| `sourceFolders` | `array` | `[]` | Project source code directories |
+| `dbConnections` | `array` | `[]` | Database connection references (no credentials) |
 
 ## Database Integration
 

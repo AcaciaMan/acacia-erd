@@ -4,25 +4,45 @@ All notable changes to the "acacia-erd" extension will be documented in this fil
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [2.3.0] - 2026-02-27
+
+### Added
+- **Create New Entities List from UI** — The "Choose Entities List" dialog now offers both "Open Existing" and "Create New" options, allowing users to create a new empty entities JSON file directly from the Interactive ERD Editor
+- **Save dialog for new entities lists** — Uses the native VS Code save dialog with a default filename and JSON filter, pre-populated with the workspace root
+
+### Improved
+- **Async entities list selection** — The `chooseEntitiesList` flow is now fully async/await for more reliable dialog handling
+- **Refactored path application** — Extracted `applyEntitiesListPath` helper to reduce code duplication when setting the entities JSON path
+
 ## [2.2.3] - 2026-02-24
 
 ### Added
-- **Source Folders Tree View** — New sidebar tree for managing source code directories with add, remove, rename, and refresh commands
-- **DB Connections Tree View** — New sidebar tree for bookmarking database connection references with add, remove, rename, edit path, and refresh commands
+- **Unified Assets Tree** — Single sidebar tree combining Source Folders, DB Connections, and Entities Lists with collapsible sections
+- **Entities Lists management** — Add, remove, rename, and edit paths for multiple entities JSON files, persisted to workspace configuration (`acacia-erd.entitiesLists`)
+- **Active entities list indicator** — Check icon (✓) and "active" badge on the currently loaded entities list in the Assets tree
+- **Select entities list** — Click an entities list in Assets to switch the active entities file across all views
+- **Entity Tree file indicator** — Shows which entities JSON file is currently loaded in the Entity Tree header
+- **Entity Tree enhanced empty state** — Contextual messaging for filter-no-match vs no-entities-loaded, with "Browse Assets" action button
+- **InteractiveERD path sync** — Path display in Interactive ERD Editor auto-updates when switching entities lists
+- **Dashboard integration** — Quick Actions grid with "View Entities" and "View Assets" buttons; Project Status shows live counts for entities, entities lists, source folders, and DB connections
 - **SourceFolderManager** utility — CRUD operations for source folders persisted to workspace configuration (`acacia-erd.sourceFolders`)
 - **DbConnectionManager** utility — CRUD operations for DB connections persisted to workspace configuration (`acacia-erd.dbConnections`)
-- **Dashboard integration** — Quick Actions grid now includes Source Folders and DB Connections buttons; Project Status section shows live-updating counts for entities, source folders, and DB connections
+- **EntitiesListManager** utility — CRUD operations for entities lists persisted to workspace configuration (`acacia-erd.entitiesLists`)
 - **EntityManager file watcher** — Auto-reloads entities on external create/change/delete events with debounced reload (300ms)
 - **EntityManager event emitters** — `onDidChangeEntities` and `onDidChangeEntitiesPath` events for reactive updates
 - **EntityManager configuration listener** — Watches `acacia-erd.entitiesJsonPath` setting changes and re-initializes
-- **11 new commands** — Full CRUD operations for Source Folders and DB Connections tree views
-- **Welcome views** — Shown when Source Folders or DB Connections lists are empty with call-to-action links
-- **Test suites** — New tests for `SourceFoldersTreeProvider` and `DbConnectionsTreeProvider`
+- **AssetsTreeProvider** — Native tree data provider with inline context menu actions (rename, edit path, remove)
+- **Comprehensive test suites** — Tests for AssetsTreeProvider, EntitiesListManager, EntityTreePanel, ERDViewProvider, InteractiveERDPanel, and all extension commands
 
 ### Improved
+- **Sidebar organization** — Consolidated three separate views into a single Assets tree for cleaner UX
 - **EntityManager path resolution** — Resolves relative paths from workspace root; stores workspace-relative paths in settings
 - **EntityManager disposal** — Properly disposes file watcher, config listener, event emitters, and debounce timeout
-- **ERDViewProvider** — Now accepts `SourceFolderManager` and `DbConnectionManager` instances with auto-updating status
+- **ERDViewProvider** — Dashboard auto-updates status on entity/path/list/folder/connection changes
+
+### Removed
+- **Separate Source Folders and DB Connections tree views** — Replaced by unified Assets tree
+- **Welcome views** for empty Source Folders / DB Connections — Replaced by empty-section labels in Assets tree
 
 ## [2.2.2] - 2026-02-24
 

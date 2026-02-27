@@ -108,6 +108,8 @@ function createVscodeStub(primaryPanel: any, secondaryPanel?: any) {
 }
 
 function createMockEntityManager() {
+    let pathChangeCallback: ((path: string) => void) | undefined;
+
     const mgr: any = {
         getEntitiesJsonPath: sinon.stub().returns('resources/entities.json'),
         getEntities: sinon.stub().returns([
@@ -123,6 +125,10 @@ function createMockEntityManager() {
         deleteEntity: sinon.stub(),
         setEntitiesJsonPath: sinon.stub(),
         onDidChangeEntities: sinon.stub().returns({ dispose: sinon.stub() }),
+        onDidChangeEntitiesPath: sinon.stub().callsFake((cb: (path: string) => void) => {
+            pathChangeCallback = cb;
+            return { dispose: sinon.stub() };
+        }),
     };
     return {
         EntityManager: {
@@ -130,6 +136,7 @@ function createMockEntityManager() {
         },
         Entity: undefined,
         mgr,
+        pathChangeCallback: () => pathChangeCallback,
         '@noCallThru': true,
     };
 }
@@ -426,6 +433,38 @@ suite('InteractiveERDPanel', () => {
             );
             assert.ok(updateMsg);
             assert.deepStrictEqual(updateMsg![0].entity, entity);
+        });
+    });
+
+    // ── Path sync (onDidChangeEntitiesPath) ─────────────────────────────
+
+    suite('Path sync', () => {
+        test('subscribes to EntityManager.onDidChangeEntitiesPath', () => {
+            InteractiveERDPanel.createOrShow('/ext');
+            assert.ok(emMock.mgr.onDidChangeEntitiesPath.calledOnce,
+                'should subscribe to onDidChangeEntitiesPath');
+        });
+
+        test('onDidChangeEntitiesPath → posts loadEntitiesList to webview', () => {
+            InteractiveERDPanel.createOrShow('/ext');
+            panelKit.webview.postMessage.resetHistory();
+
+            const cb = emMock.pathChangeCallback();
+            assert.ok(cb, 'path change callback should be captured');
+            cb('/new/path/entities.json');
+
+            const pathMsg = panelKit.webview.postMessage.args.find(
+                (a: any[]) => a[0].command === 'loadEntitiesList'
+            );
+            assert.ok(pathMsg, 'should post loadEntitiesList message');
+            assert.strictEqual(pathMsg![0].entitiesListPath, '/new/path/entities.json');
+        });
+
+        test('dispose cleans up without error', () => {
+            InteractiveERDPanel.createOrShow('/ext');
+            assert.doesNotThrow(() => {
+                InteractiveERDPanel.currentPanel.dispose();
+            });
         });
     });
 

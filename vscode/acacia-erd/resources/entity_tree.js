@@ -23,7 +23,24 @@ document.addEventListener('DOMContentLoaded', () => {
             renderEntities();
             updateStats();
         }
+        if (message.command === 'updateEntitiesPath') {
+            updateFileIndicator(message.entitiesFilePath);
+        }
     });
+
+    function updateFileIndicator(filePath) {
+        const fileNameEl = document.getElementById('file-name');
+        const fileIndicatorEl = document.getElementById('file-indicator');
+        if (fileNameEl && filePath) {
+            // Show just the filename, full path in tooltip
+            const fileName = filePath.split(/[/\\]/).pop() || filePath;
+            fileNameEl.textContent = fileName;
+            fileIndicatorEl.title = filePath;
+        } else if (fileNameEl) {
+            fileNameEl.textContent = '–';
+            fileIndicatorEl.title = '';
+        }
+    }
 
     // Filter entities based on input
     filterInput.addEventListener('input', () => {
@@ -204,16 +221,41 @@ document.addEventListener('DOMContentLoaded', () => {
     function showEmptyState() {
         const emptyDiv = document.createElement('div');
         emptyDiv.className = 'empty-state';
-        emptyDiv.innerHTML = `
-            <svg viewBox=\"0 0 16 16\" xmlns=\"http://www.w3.org/2000/svg\">
-                <path d=\"M11.5 10h-.8l-.3-.3c1-1.1 1.6-2.6 1.6-4.2C12 2.5 9.5 0 6.5 0S1 2.5 1 5.5 3.5 11 6.5 11c1.6 0 3.1-.6 4.2-1.6l.3.3v.8l5 5 1.5-1.5-5-5zm-5 0C4 10 2 8 2 5.5S4 1 6.5 1 11 3 11 5.5 9 10 6.5 10z\"/>
-            </svg>
-            <div class=\"empty-state-title\">No entities found</div>
-            <div class=\"empty-state-description\">
-                ${filterInput.value ? 'Try adjusting your search terms' : 'No entities are available yet'}
-            </div>
-        `;
+
+        if (filterInput.value) {
+            // User is searching but no results match
+            emptyDiv.innerHTML = `
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M11.5 10h-.8l-.3-.3c1-1.1 1.6-2.6 1.6-4.2C12 2.5 9.5 0 6.5 0S1 2.5 1 5.5 3.5 11 6.5 11c1.6 0 3.1-.6 4.2-1.6l.3.3v.8l5 5 1.5-1.5-5-5zm-5 0C4 10 2 8 2 5.5S4 1 6.5 1 11 3 11 5.5 9 10 6.5 10z"/>
+                </svg>
+                <div class="empty-state-title">No matching entities</div>
+                <div class="empty-state-description">Try adjusting your search terms</div>
+            `;
+        } else {
+            // No entities loaded at all
+            emptyDiv.innerHTML = `
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M14 2H8L7 1H2L1 2v12l1 1h12l1-1V3l-1-1zM2 13V2h4.5l1 1H14v10H2z"/>
+                </svg>
+                <div class="empty-state-title">No entities loaded</div>
+                <div class="empty-state-description">
+                    Select an entities list from the Assets view, or open a JSON file in the ERD Editor.
+                </div>
+                <div class="empty-state-actions">
+                    <button class="empty-state-button" id="browse-assets-button">Browse Assets</button>
+                </div>
+            `;
+        }
+
         entityTree.appendChild(emptyDiv);
+
+        // Attach action button handler if present
+        const browseBtn = document.getElementById('browse-assets-button');
+        if (browseBtn) {
+            browseBtn.addEventListener('click', () => {
+                vscode.postMessage({ command: 'browseAssets' });
+            });
+        }
     }
 
     function showContextMenu(event, entity) {

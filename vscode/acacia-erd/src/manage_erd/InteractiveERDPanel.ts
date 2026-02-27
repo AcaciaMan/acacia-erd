@@ -84,6 +84,14 @@ export class InteractiveERDPanel {
             });
         });
 
+        // Subscribe to entities path changes to keep the path display in sync
+        this.mgr.onDidChangeEntitiesPath((newPath) => {
+            this._panel.webview.postMessage({
+                command: 'loadEntitiesList',
+                entitiesListPath: newPath
+            });
+        });
+
         // Send a message to the interactive ERD webview to load the entities list
         const entitiesJsonPath = this.mgr.getEntitiesJsonPath();
         if (entitiesJsonPath) {
@@ -445,6 +453,7 @@ function applyEntitiesListPath(webview: vscode.Webview, filePath: string) {
 }
 
 function deleteEntity(entityId: string) {
-    // Implement any additional logic needed for deleting the entity
+    const entityManager = em.EntityManager.getInstance();
+    entityManager.deleteEntity(entityId);
     vscode.window.showInformationMessage(`Entity ${entityId} deleted`);
 }

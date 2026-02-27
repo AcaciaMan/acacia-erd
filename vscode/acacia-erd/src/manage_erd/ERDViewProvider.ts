@@ -7,12 +7,14 @@ import { ERDGenerationPanel } from './ERDGenerationPanel';
 import { EntityManager } from '../utils/EntityManager';
 import { SourceFolderManager } from '../utils/SourceFolderManager';
 import { DbConnectionManager } from '../utils/DbConnectionManager';
+import { EntitiesListManager } from '../utils/EntitiesListManager';
 
 export class ERDViewProvider implements vscode.WebviewViewProvider {
     constructor(
         private readonly context: vscode.ExtensionContext,
         private readonly sourceFolderManager: SourceFolderManager,
-        private readonly dbConnectionManager: DbConnectionManager
+        private readonly dbConnectionManager: DbConnectionManager,
+        private readonly entitiesListManager: EntitiesListManager
     ) {}
 
     resolveWebviewView(webviewView: vscode.WebviewView) {
@@ -39,11 +41,8 @@ export class ERDViewProvider implements vscode.WebviewViewProvider {
                     // Focus on the Entity Tree view
                     vscode.commands.executeCommand('openEntityTree.focus');
                     break;
-                case 'viewSourceFolders':
-                    vscode.commands.executeCommand('acaciaSourceFolders.focus');
-                    break;
-                case 'viewDbConnections':
-                    vscode.commands.executeCommand('acaciaDbConnections.focus');
+                case 'viewAssets':
+                    vscode.commands.executeCommand('acaciaAssets.focus');
                     break;
                 case 'requestStatus':
                     this.sendStatus(webviewView.webview);
@@ -62,6 +61,7 @@ export class ERDViewProvider implements vscode.WebviewViewProvider {
         entityMgr.onDidChangeEntitiesPath(() => this.sendStatus(webviewView.webview));
         this.sourceFolderManager.onDidChange(() => this.sendStatus(webviewView.webview));
         this.dbConnectionManager.onDidChange(() => this.sendStatus(webviewView.webview));
+        this.entitiesListManager.onDidChange(() => this.sendStatus(webviewView.webview));
     }
 
     private sendStatus(webview: vscode.Webview): void {
@@ -69,6 +69,7 @@ export class ERDViewProvider implements vscode.WebviewViewProvider {
         webview.postMessage({
             command: 'updateStatus',
             entityCount: entityMgr.getEntities().length,
+            entitiesListCount: this.entitiesListManager.getLists().length,
             sourceFolderCount: this.sourceFolderManager.getFolders().length,
             dbConnectionCount: this.dbConnectionManager.getConnections().length,
             entitiesFilePath: entityMgr.getEntitiesJsonPath()

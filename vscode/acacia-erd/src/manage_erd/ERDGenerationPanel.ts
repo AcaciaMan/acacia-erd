@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { chooseJSONFile, InteractiveERDPanel } from './InteractiveERDPanel';
+import { getNonce } from '../utils/nonce';
 
 export interface GenerationParameters {
     maxEntities: number;
@@ -249,13 +250,4 @@ export class ERDGenerationPanel {
             vscode.window.showErrorMessage('InteractiveERDPanel is not available.');
         }
     }
-}
-
-function getNonce() {
-    let text = '';
-    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    for (let i = 0; i < 32; i++) {
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
-    }
-    return text;
 }

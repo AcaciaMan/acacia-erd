@@ -1,7 +1,7 @@
 {
     "vscode-git-kafka.workspaceUUID": "vunoksry-0x0n-ac4q-bmfz-r00000000000",
     "vscode-git-kafka.sort": "Clicks (High-Low)",
-    "acacia-erd.entitiesJsonPath": "entities.json",
+    "acacia-erd.entitiesJsonPath": "redmine_entities.json",
     "acaciaLexer.selectedFolder": "c:\\work\\GitHub\\wordpress-develop",
     "acacia-log.logDateRegex": "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}",
     "acacia-log.logDateFormat": "yyyy-MM-dd HH:mm:ss",
@@ -15,7 +15,7 @@
             "path": "c:\\work\\GitHub\\oracle-db-examples"
         },
         {
-            "name": "redmine",
+            "name": "redmine_dev",
             "path": "c:\\work\\GitHub\\redmine"
         }
     ],
@@ -23,6 +23,12 @@
         {
             "name": "test_db",
             "connectionPath": "localhost"
+        }
+    ],
+    "acacia-erd.entitiesLists": [
+        {
+            "name": "redmine",
+            "jsonPath": "redmine_entities.json"
         }
     ]
 }

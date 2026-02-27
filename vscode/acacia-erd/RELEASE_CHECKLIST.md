@@ -1,4 +1,4 @@
-# Release Checklist - v2.2.3
+# Release Checklist - v2.3.0
 
 ## Pre-Release Testing ✅
 

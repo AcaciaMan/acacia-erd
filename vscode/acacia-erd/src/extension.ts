@@ -4,9 +4,9 @@ import { EntityTreePanel } from './manage_erd/EntityTreePanel';
 import { InteractiveERDPanel } from './manage_erd/InteractiveERDPanel';
 import { EntityManager } from './utils/EntityManager';
 import { SourceFolderManager } from './utils/SourceFolderManager';
-import { SourceFoldersTreeProvider, SourceFolderTreeItem } from './manage_erd/SourceFoldersTreeProvider';
 import { DbConnectionManager } from './utils/DbConnectionManager';
-import { DbConnectionsTreeProvider, DbConnectionTreeItem } from './manage_erd/DbConnectionsTreeProvider';
+import { AssetsTreeProvider, SourceFolderItem, DbConnectionItem, EntitiesListItem } from './manage_erd/AssetsTreeProvider';
+import { EntitiesListManager } from './utils/EntitiesListManager';
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -15,11 +15,12 @@ export function activate(context: vscode.ExtensionContext) {
 	// Create managers first (needed by ERDViewProvider and tree views)
 	const sourceFolderManager = new SourceFolderManager();
 	const dbConnectionManager = new DbConnectionManager();
+	const entitiesListManager = new EntitiesListManager();
 
 	// ERD Dashboard - pass managers for status display
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider('erdView',
-			new ERDViewProvider(context, sourceFolderManager, dbConnectionManager))
+			new ERDViewProvider(context, sourceFolderManager, dbConnectionManager, entitiesListManager))
 	);
 
 	context.subscriptions.push(
@@ -55,15 +56,16 @@ export function activate(context: vscode.ExtensionContext) {
 	const entityManager = EntityManager.getInstance();
 	context.subscriptions.push({ dispose: () => entityManager.dispose() });
 
-	// Source Folders tree
-	const sourceFoldersTreeProvider = new SourceFoldersTreeProvider(sourceFolderManager);
+	// Assets tree (unified: Source Folders + DB Connections + Entities Lists)
+	const assetsTreeProvider = new AssetsTreeProvider(sourceFolderManager, dbConnectionManager, entitiesListManager);
 	context.subscriptions.push(
-		vscode.window.createTreeView('acaciaSourceFolders', {
-			treeDataProvider: sourceFoldersTreeProvider,
-			showCollapseAll: false
+		vscode.window.createTreeView('acaciaAssets', {
+			treeDataProvider: assetsTreeProvider,
+			showCollapseAll: true
 		})
 	);
 	context.subscriptions.push({ dispose: () => sourceFolderManager.dispose() });
+	context.subscriptions.push({ dispose: () => entitiesListManager.dispose() });
 
 	// Source Folders commands
 	context.subscriptions.push(
@@ -93,7 +95,7 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand('acacia-erd.removeSourceFolder', async (item?: SourceFolderTreeItem) => {
+		vscode.commands.registerCommand('acacia-erd.removeSourceFolder', async (item?: SourceFolderItem) => {
 			if (item) {
 				await sourceFolderManager.removeFolder(item.folder.name);
 			}
@@ -101,7 +103,7 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand('acacia-erd.renameSourceFolder', async (item?: SourceFolderTreeItem) => {
+		vscode.commands.registerCommand('acacia-erd.renameSourceFolder', async (item?: SourceFolderItem) => {
 			if (item) {
 				const newName = await vscode.window.showInputBox({
 					prompt: 'Enter new name for the source folder',
@@ -120,20 +122,6 @@ export function activate(context: vscode.ExtensionContext) {
 		})
 	);
 
-	context.subscriptions.push(
-		vscode.commands.registerCommand('acacia-erd.refreshSourceFolders', () => {
-			sourceFoldersTreeProvider.refresh();
-		})
-	);
-
-	// DB Connections tree
-	const dbConnectionsTreeProvider = new DbConnectionsTreeProvider(dbConnectionManager);
-	context.subscriptions.push(
-		vscode.window.createTreeView('acaciaDbConnections', {
-			treeDataProvider: dbConnectionsTreeProvider,
-			showCollapseAll: false
-		})
-	);
 	context.subscriptions.push({ dispose: () => dbConnectionManager.dispose() });
 
 	// DB Connections commands
@@ -168,7 +156,7 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand('acacia-erd.removeDbConnection', async (item?: DbConnectionTreeItem) => {
+		vscode.commands.registerCommand('acacia-erd.removeDbConnection', async (item?: DbConnectionItem) => {
 			if (item) {
 				await dbConnectionManager.removeConnection(item.connection.name);
 			}
@@ -176,7 +164,7 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand('acacia-erd.renameDbConnection', async (item?: DbConnectionTreeItem) => {
+		vscode.commands.registerCommand('acacia-erd.renameDbConnection', async (item?: DbConnectionItem) => {
 			if (item) {
 				const newName = await vscode.window.showInputBox({
 					prompt: 'Enter new name for the database connection',
@@ -196,7 +184,7 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	context.subscriptions.push(
-		vscode.commands.registerCommand('acacia-erd.editDbConnectionPath', async (item?: DbConnectionTreeItem) => {
+		vscode.commands.registerCommand('acacia-erd.editDbConnectionPath', async (item?: DbConnectionItem) => {
 			if (item) {
 				const newPath = await vscode.window.showInputBox({
 					prompt: 'Enter new connection path',
@@ -215,22 +203,107 @@ export function activate(context: vscode.ExtensionContext) {
 		})
 	);
 
+	// Entities Lists commands
 	context.subscriptions.push(
-		vscode.commands.registerCommand('acacia-erd.refreshDbConnections', () => {
-			dbConnectionsTreeProvider.refresh();
+		vscode.commands.registerCommand('acacia-erd.addEntitiesList', async () => {
+			const name = await vscode.window.showInputBox({
+				prompt: 'Enter a descriptive name for this entities list',
+				placeHolder: 'e.g., Main Schema, Auth Module, User Management',
+				validateInput: (value) => {
+					if (!value || !value.trim()) {
+						return 'Name cannot be empty';
+					}
+					return undefined;
+				}
+			});
+			if (!name) { return; }
+
+			const fileUri = await vscode.window.showOpenDialog({
+				canSelectFiles: true,
+				canSelectFolders: false,
+				canSelectMany: false,
+				openLabel: 'Select Entities JSON File',
+				filters: { 'JSON Files': ['json'] }
+			});
+			if (fileUri && fileUri[0]) {
+				await entitiesListManager.addList(name.trim(), fileUri[0].fsPath);
+			}
 		})
 	);
 
-	// Focus commands for new views
+	context.subscriptions.push(
+		vscode.commands.registerCommand('acacia-erd.removeEntitiesList', async (item?: EntitiesListItem) => {
+			if (item) {
+				await entitiesListManager.removeList(item.list.name);
+			}
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('acacia-erd.renameEntitiesList', async (item?: EntitiesListItem) => {
+			if (item) {
+				const newName = await vscode.window.showInputBox({
+					prompt: 'Enter new name for the entities list',
+					value: item.list.name,
+					validateInput: (value) => {
+						if (!value || !value.trim()) {
+							return 'Name cannot be empty';
+						}
+						return undefined;
+					}
+				});
+				if (newName && newName.trim() !== item.list.name) {
+					await entitiesListManager.renameList(item.list.name, newName.trim());
+				}
+			}
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('acacia-erd.editEntitiesListPath', async (item?: EntitiesListItem) => {
+			if (item) {
+				const fileUri = await vscode.window.showOpenDialog({
+					canSelectFiles: true,
+					canSelectFolders: false,
+					canSelectMany: false,
+					openLabel: 'Select New Entities JSON File',
+					filters: { 'JSON Files': ['json'] }
+				});
+				if (fileUri && fileUri[0]) {
+					await entitiesListManager.editListPath(item.list.name, fileUri[0].fsPath);
+				}
+			}
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('acacia-erd.selectEntitiesList', async (item?: EntitiesListItem) => {
+			if (item) {
+				const entityManager = EntityManager.getInstance();
+				entityManager.setEntitiesJsonPath(item.absolutePath);
+				vscode.window.showInformationMessage(`Loaded entities list: ${item.list.name}`);
+				// Focus the Entity Tree so user sees the loaded entities
+				vscode.commands.executeCommand('openEntityTree.focus');
+			}
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('acacia-erd.refreshAssets', () => {
+			assetsTreeProvider.refresh();
+		})
+	);
+
+	// Focus commands for views
 	context.subscriptions.push(
 		vscode.commands.registerCommand('acacia-erd.showSourceFolders', () => {
-			vscode.commands.executeCommand('acaciaSourceFolders.focus');
+			vscode.commands.executeCommand('acaciaAssets.focus');
 		})
 	);
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('acacia-erd.showDbConnections', () => {
-			vscode.commands.executeCommand('acaciaDbConnections.focus');
+			vscode.commands.executeCommand('acaciaAssets.focus');
 		})
 	);
 }
