@@ -4,6 +4,26 @@ All notable changes to the "acacia-erd" extension will be documented in this fil
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [2.3.1] - 2026-02-27
+
+### Added
+- **Dimension Manager** — New `DimensionManager` utility for defining, persisting, and managing custom dimensions (e.g., Level, Environment, Schema) with seed defaults and file-based storage (`acacia-erd.dimensions.json`)
+- **Dimension Editor Panel** — Dedicated webview panel for creating, editing, and deleting dimensions and their values, with asset assignment matrix
+- **Assign Dimensions context menu** — Right-click any Source Folder, DB Connection, or Entities List in the Assets tree to assign dimension values
+- **Filter Assets by Dimensions** — Quick Pick multi-step filter: select a dimension, then pick values to show only matching assets in the tree
+- **Filter badge & clear** — Active filter count badge on the Assets tree view; "Clear Asset Filters" button appears when filters are active
+- **Inline dimension badges** — Assets tree items display dimension value badges for at-a-glance categorization
+- **Interactive ERD dimension display** — Dimension assignments surfaced in the Interactive ERD Editor
+- **Dimension configuration setting** — New `acacia-erd.dimensionsFilePath` setting to customize the dimensions file location
+- **Dimension properties on asset configs** — `dimensions` object added to Source Folder, DB Connection, and Entities List configuration schemas
+- **DimensionManager test suite** — Comprehensive tests for dimension CRUD, file persistence, and event handling
+- **AssetsTreeProvider dimension tests** — Extended test suite covering dimension badges, filtering, and assignment
+
+### Improved
+- **AssetsTreeProvider** — Refactored to support dimension filtering, badge rendering, and `DimensionManager` integration
+- **ERDViewProvider** — Now accepts `DimensionManager` for dimension-aware dashboard status
+- **InteractiveERDPanel** — Enhanced to receive `DimensionManager` and `EntitiesListManager` for richer context
+
 ## [2.3.0] - 2026-02-27
 
 ### Added

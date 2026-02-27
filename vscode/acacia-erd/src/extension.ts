@@ -5,8 +5,10 @@ import { InteractiveERDPanel } from './manage_erd/InteractiveERDPanel';
 import { EntityManager } from './utils/EntityManager';
 import { SourceFolderManager } from './utils/SourceFolderManager';
 import { DbConnectionManager } from './utils/DbConnectionManager';
-import { AssetsTreeProvider, SourceFolderItem, DbConnectionItem, EntitiesListItem } from './manage_erd/AssetsTreeProvider';
+import { AssetsTreeProvider, AssetTreeItem, SourceFolderItem, DbConnectionItem, EntitiesListItem } from './manage_erd/AssetsTreeProvider';
 import { EntitiesListManager } from './utils/EntitiesListManager';
+import { DimensionManager } from './utils/DimensionManager';
+import { DimensionEditorPanel } from './manage_erd/DimensionEditorPanel';
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -16,11 +18,13 @@ export function activate(context: vscode.ExtensionContext) {
 	const sourceFolderManager = new SourceFolderManager();
 	const dbConnectionManager = new DbConnectionManager();
 	const entitiesListManager = new EntitiesListManager();
+	const dimensionManager = new DimensionManager();
+	context.subscriptions.push({ dispose: () => dimensionManager.dispose() });
 
 	// ERD Dashboard - pass managers for status display
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider('erdView',
-			new ERDViewProvider(context, sourceFolderManager, dbConnectionManager, entitiesListManager))
+			new ERDViewProvider(context, sourceFolderManager, dbConnectionManager, entitiesListManager, dimensionManager))
 	);
 
 	context.subscriptions.push(
@@ -41,7 +45,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// Register command to open the Interactive ERD Editor
 	context.subscriptions.push(
 		vscode.commands.registerCommand('acacia-erd.openERDEditor', () => {
-			InteractiveERDPanel.createOrShow(context.extensionPath);
+			InteractiveERDPanel.createOrShow(context.extensionPath, dimensionManager, entitiesListManager);
 		})
 	);
 
@@ -57,13 +61,12 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push({ dispose: () => entityManager.dispose() });
 
 	// Assets tree (unified: Source Folders + DB Connections + Entities Lists)
-	const assetsTreeProvider = new AssetsTreeProvider(sourceFolderManager, dbConnectionManager, entitiesListManager);
-	context.subscriptions.push(
-		vscode.window.createTreeView('acaciaAssets', {
-			treeDataProvider: assetsTreeProvider,
-			showCollapseAll: true
-		})
-	);
+	const assetsTreeProvider = new AssetsTreeProvider(sourceFolderManager, dbConnectionManager, entitiesListManager, dimensionManager);
+	const assetsTreeView = vscode.window.createTreeView('acaciaAssets', {
+		treeDataProvider: assetsTreeProvider,
+		showCollapseAll: true
+	});
+	context.subscriptions.push(assetsTreeView);
 	context.subscriptions.push({ dispose: () => sourceFolderManager.dispose() });
 	context.subscriptions.push({ dispose: () => entitiesListManager.dispose() });
 
@@ -294,6 +297,70 @@ export function activate(context: vscode.ExtensionContext) {
 		})
 	);
 
+	// Dimension Editor command
+	context.subscriptions.push(
+		vscode.commands.registerCommand('acacia-erd.openDimensionEditor', () => {
+			DimensionEditorPanel.createOrShow(
+				context.extensionPath,
+				dimensionManager,
+				sourceFolderManager,
+				dbConnectionManager,
+				entitiesListManager
+			);
+		})
+	);
+
+	// Assign Dimensions context menu command
+	context.subscriptions.push(
+		vscode.commands.registerCommand('acacia-erd.assignDimensions', (item?: SourceFolderItem | DbConnectionItem | EntitiesListItem) => {
+			if (!item) { return; }
+
+			let assetType: string;
+			let assetName: string;
+
+			if (item instanceof SourceFolderItem) {
+				assetType = 'sourceFolder';
+				assetName = item.folder.name;
+			} else if (item instanceof DbConnectionItem) {
+				assetType = 'dbConnection';
+				assetName = item.connection.name;
+			} else if (item instanceof EntitiesListItem) {
+				assetType = 'entitiesList';
+				assetName = item.list.name;
+			} else {
+				return;
+			}
+
+			DimensionEditorPanel.focusAsset(
+				context.extensionPath,
+				dimensionManager,
+				sourceFolderManager,
+				dbConnectionManager,
+				entitiesListManager,
+				assetType,
+				assetName
+			);
+		})
+	);
+
+	// Filter Assets commands
+	context.subscriptions.push(
+		vscode.commands.registerCommand('acacia-erd.filterAssets', async () => {
+			await showDimensionFilterPicker(dimensionManager, assetsTreeProvider);
+			onFilterChanged(assetsTreeProvider, assetsTreeView);
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('acacia-erd.clearAssetFilters', () => {
+			assetsTreeProvider.clearAllFilters();
+			onFilterChanged(assetsTreeProvider, assetsTreeView);
+		})
+	);
+
+	// Initialize filter context key and badge
+	onFilterChanged(assetsTreeProvider, assetsTreeView);
+
 	// Focus commands for views
 	context.subscriptions.push(
 		vscode.commands.registerCommand('acacia-erd.showSourceFolders', () => {
@@ -310,3 +377,144 @@ export function activate(context: vscode.ExtensionContext) {
 
 // This method is called when your extension is deactivated
 export function deactivate() {}
+
+function updateFilterContext(assetsTreeProvider: AssetsTreeProvider): void {
+	vscode.commands.executeCommand(
+		'setContext',
+		'acacia-erd.hasActiveFilters',
+		assetsTreeProvider.hasActiveFilters()
+	);
+}
+
+function updateFilterBadge(
+	treeView: vscode.TreeView<AssetTreeItem>,
+	assetsTreeProvider: AssetsTreeProvider
+): void {
+	const count = assetsTreeProvider.getActiveFilterCount();
+	if (count > 0) {
+		treeView.badge = {
+			value: count,
+			tooltip: `Filtering by ${count} dimension${count > 1 ? 's' : ''}`
+		};
+	} else {
+		treeView.badge = undefined;
+	}
+}
+
+function onFilterChanged(
+	assetsTreeProvider: AssetsTreeProvider,
+	assetsTreeView: vscode.TreeView<AssetTreeItem>
+): void {
+	updateFilterContext(assetsTreeProvider);
+	updateFilterBadge(assetsTreeView, assetsTreeProvider);
+}
+
+async function showDimensionFilterPicker(
+	dimensionManager: DimensionManager,
+	assetsTreeProvider: AssetsTreeProvider
+): Promise<void> {
+	const dimensions = dimensionManager.getDimensions();
+
+	if (dimensions.length === 0) {
+		vscode.window.showInformationMessage('No dimensions defined. Open the Dimension Editor to create dimensions.');
+		return;
+	}
+
+	// Step 1: Show dimensions list
+	const currentFilters = assetsTreeProvider.getFilters();
+
+	interface DimensionPickItem extends vscode.QuickPickItem {
+		dimensionId?: string;
+		action?: 'clearAll';
+	}
+
+	const items: DimensionPickItem[] = dimensions.map(dim => {
+		const activeValues = currentFilters.get(dim.id);
+		const description = activeValues && activeValues.size > 0
+			? `(${activeValues.size} value${activeValues.size > 1 ? 's' : ''} selected)`
+			: '';
+		return {
+			label: dim.name,
+			description,
+			dimensionId: dim.id,
+			iconPath: activeValues && activeValues.size > 0
+				? new vscode.ThemeIcon('filter-filled')
+				: new vscode.ThemeIcon('filter'),
+		};
+	});
+
+	// Add "Clear All" option if filters are active
+	if (assetsTreeProvider.hasActiveFilters()) {
+		items.push({
+			label: '',
+			kind: vscode.QuickPickItemKind.Separator,
+		} as DimensionPickItem);
+		items.push({
+			label: '$(clear-all) Clear All Filters',
+			action: 'clearAll',
+		});
+	}
+
+	const picked = await vscode.window.showQuickPick(items, {
+		title: 'Filter Assets by Dimension',
+		placeHolder: 'Select a dimension to filter by...',
+	});
+
+	if (!picked) { return; }
+
+	if (picked.action === 'clearAll') {
+		assetsTreeProvider.clearAllFilters();
+		updateFilterContext(assetsTreeProvider);
+		return;
+	}
+
+	if (!picked.dimensionId) { return; }
+
+	// Step 2: Show values for the selected dimension
+	const dimension = dimensionManager.getDimension(picked.dimensionId);
+	if (!dimension) { return; }
+
+	const activeValues = currentFilters.get(dimension.id);
+
+	interface ValuePickItem extends vscode.QuickPickItem {
+		valueId: string;
+	}
+
+	const valueItems: ValuePickItem[] = [
+		// Dimension values sorted by sortOrder
+		...dimension.values
+			.sort((a, b) => a.sortOrder - b.sortOrder)
+			.map(val => ({
+				label: val.label,
+				valueId: val.id,
+				picked: activeValues?.has(val.id) || false,
+			})),
+		// Separator + "Unspecified" option
+		{
+			label: '',
+			kind: vscode.QuickPickItemKind.Separator,
+			valueId: '',
+		} as ValuePickItem,
+		{
+			label: 'Unspecified',
+			description: 'Assets with no value for this dimension',
+			valueId: '__unspecified__',
+			picked: activeValues?.has('__unspecified__') || false,
+		},
+	];
+
+	const pickedValues = await vscode.window.showQuickPick(valueItems, {
+		title: `Filter by ${dimension.name}`,
+		placeHolder: 'Select values to include (multi-select)...',
+		canPickMany: true,
+	});
+
+	if (pickedValues === undefined) {
+		// User cancelled — don't change anything
+		return;
+	}
+
+	// Apply filter
+	const selectedIds = new Set(pickedValues.map(v => v.valueId).filter(Boolean));
+	assetsTreeProvider.setDimensionFilter(dimension.id, selectedIds);
+}

@@ -6,7 +6,7 @@
     "type": "git",
     "url": "https://github.com/AcaciaMan/acacia-erd"
   },
-  "version": "2.3.0",
+  "version": "2.3.1",
   "publisher": "manacacia",
   "icon": "icon.png",
   "galleryBanner": {
@@ -160,6 +160,30 @@
         "command": "acacia-erd.selectEntitiesList",
         "title": "Select Entities List",
         "category": "Acacia ERD"
+      },
+      {
+        "command": "acacia-erd.openDimensionEditor",
+        "title": "Open Dimension Editor",
+        "category": "Acacia ERD",
+        "icon": "$(tag)"
+      },
+      {
+        "command": "acacia-erd.assignDimensions",
+        "title": "Assign Dimensions",
+        "category": "Acacia ERD",
+        "icon": "$(tag)"
+      },
+      {
+        "command": "acacia-erd.filterAssets",
+        "title": "Filter Assets by Dimensions",
+        "category": "Acacia ERD",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "acacia-erd.clearAssetFilters",
+        "title": "Clear Asset Filters",
+        "category": "Acacia ERD",
+        "icon": "$(clear-all)"
       }
     ],
     "viewsContainers": {
@@ -237,6 +261,14 @@
         {
           "command": "acacia-erd.showDbConnections",
           "when": "false"
+        },
+        {
+          "command": "acacia-erd.clearAssetFilters",
+          "when": "false"
+        },
+        {
+          "command": "acacia-erd.assignDimensions",
+          "when": "false"
         }
       ],
       "view/title": [
@@ -253,6 +285,21 @@
         {
           "command": "acacia-erd.addEntitiesList",
           "when": "view == acaciaAssets",
+          "group": "navigation"
+        },
+        {
+          "command": "acacia-erd.openDimensionEditor",
+          "when": "view == acaciaAssets",
+          "group": "navigation"
+        },
+        {
+          "command": "acacia-erd.filterAssets",
+          "when": "view == acaciaAssets",
+          "group": "navigation"
+        },
+        {
+          "command": "acacia-erd.clearAssetFilters",
+          "when": "view == acaciaAssets && acacia-erd.hasActiveFilters",
           "group": "navigation"
         },
         {
@@ -301,6 +348,21 @@
           "command": "acacia-erd.removeEntitiesList",
           "when": "view == acaciaAssets && viewItem == entitiesList",
           "group": "inline"
+        },
+        {
+          "command": "acacia-erd.assignDimensions",
+          "when": "view == acaciaAssets && viewItem == sourceFolder",
+          "group": "1_dimensions"
+        },
+        {
+          "command": "acacia-erd.assignDimensions",
+          "when": "view == acaciaAssets && viewItem == dbConnection",
+          "group": "1_dimensions"
+        },
+        {
+          "command": "acacia-erd.assignDimensions",
+          "when": "view == acaciaAssets && viewItem == entitiesList",
+          "group": "1_dimensions"
         }
       ]
     },
@@ -327,6 +389,16 @@
               "path": {
                 "type": "string",
                 "description": "Path to the folder. Relative paths resolve from the workspace root."
+              },
+              "dimensions": {
+                "type": "object",
+                "description": "Dimension assignments for this asset. Keys are dimension IDs, values are arrays of selected value IDs.",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
               }
             },
             "required": ["name", "path"]
@@ -346,6 +418,16 @@
               "connectionPath": {
                 "type": "string",
                 "description": "Connection path — file path, connection string (without credentials), or URL"
+              },
+              "dimensions": {
+                "type": "object",
+                "description": "Dimension assignments for this asset. Keys are dimension IDs, values are arrays of selected value IDs.",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
               }
             },
             "required": ["name", "connectionPath"]
@@ -365,10 +447,25 @@
               "jsonPath": {
                 "type": "string",
                 "description": "Path to the entities JSON file. Relative paths resolve from the workspace root."
+              },
+              "dimensions": {
+                "type": "object",
+                "description": "Dimension assignments for this asset. Keys are dimension IDs, values are arrays of selected value IDs.",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
               }
             },
             "required": ["name", "jsonPath"]
           }
+        },
+        "acacia-erd.dimensionsFilePath": {
+          "type": "string",
+          "default": "acacia-erd.dimensions.json",
+          "description": "Path to the JSON file containing dimension definitions. Relative paths are resolved from the workspace root folder."
         }
       }
     }

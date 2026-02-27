@@ -1,22 +1,45 @@
-import * as vscode from 'vscode';
-import * as path from 'path';
-import { DimensionAssignments } from './DimensionManager';
-
-/** Persisted data shape for an entities list entry. */
-export interface EntitiesListConfig {
-    /** User-friendly name, e.g. "Main Schema", "Auth Module" */
-    name: string;
-    /** Path to the entities JSON file. Relative paths resolve from workspace root. */
-    jsonPath: string;
-    /** Optional dimension assignments. Keys are dimension IDs, values are arrays of selected value IDs. */
-    dimensions?: DimensionAssignments;
-}
-
-export class EntitiesListManager {
-    private readonly _onDidChange = new vscode.EventEmitter<EntitiesListConfig[]>();
-    public readonly onDidChange: vscode.Event<EntitiesListConfig[]> = this._onDidChange.event;
-    private _configListener: vscode.Disposable;
-
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.EntitiesListManager = void 0;
+const vscode = __importStar(require("vscode"));
+const path = __importStar(require("path"));
+class EntitiesListManager {
+    _onDidChange = new vscode.EventEmitter();
+    onDidChange = this._onDidChange.event;
+    _configListener;
     constructor() {
         this._configListener = vscode.workspace.onDidChangeConfiguration(e => {
             if (e.affectsConfiguration('acacia-erd.entitiesLists')) {
@@ -24,15 +47,13 @@ export class EntitiesListManager {
             }
         });
     }
-
     /** Read all entities lists from settings. */
-    public getLists(): EntitiesListConfig[] {
+    getLists() {
         return vscode.workspace.getConfiguration('acacia-erd')
-            .get<EntitiesListConfig[]>('entitiesLists', []);
+            .get('entitiesLists', []);
     }
-
     /** Add a new entities list. Shows warning if name already exists. */
-    public async addList(name: string, jsonPath: string): Promise<void> {
+    async addList(name, jsonPath) {
         const lists = this.getLists();
         if (lists.some(l => l.name === name)) {
             vscode.window.showWarningMessage(`Entities list "${name}" already exists.`);
@@ -42,15 +63,13 @@ export class EntitiesListManager {
         lists.push({ name, jsonPath: storedPath });
         await this.saveLists(lists);
     }
-
     /** Remove an entities list by name. */
-    public async removeList(name: string): Promise<void> {
+    async removeList(name) {
         const lists = this.getLists().filter(l => l.name !== name);
         await this.saveLists(lists);
     }
-
     /** Rename an entities list. */
-    public async renameList(oldName: string, newName: string): Promise<void> {
+    async renameList(oldName, newName) {
         const lists = this.getLists();
         const list = lists.find(l => l.name === oldName);
         if (list) {
@@ -58,9 +77,8 @@ export class EntitiesListManager {
             await this.saveLists(lists);
         }
     }
-
     /** Edit the JSON path of an existing entities list. */
-    public async editListPath(name: string, newPath: string): Promise<void> {
+    async editListPath(name, newPath) {
         const lists = this.getLists();
         const list = lists.find(l => l.name === name);
         if (list) {
@@ -68,9 +86,8 @@ export class EntitiesListManager {
             await this.saveLists(lists);
         }
     }
-
     /** Resolve a relative jsonPath to an absolute path. */
-    public resolveAbsolutePath(list: EntitiesListConfig): string {
+    resolveAbsolutePath(list) {
         if (path.isAbsolute(list.jsonPath)) {
             return list.jsonPath;
         }
@@ -80,9 +97,8 @@ export class EntitiesListManager {
         }
         return path.resolve(list.jsonPath);
     }
-
     /** Convert absolute path to workspace-relative when possible. */
-    private toWorkspaceRelativePath(absolutePath: string): string {
+    toWorkspaceRelativePath(absolutePath) {
         const wsFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         if (wsFolder && path.isAbsolute(absolutePath)) {
             const relative = path.relative(wsFolder, absolutePath);
@@ -92,16 +108,16 @@ export class EntitiesListManager {
         }
         return absolutePath;
     }
-
     /** Save lists to config and fire change event. */
-    private async saveLists(lists: EntitiesListConfig[]): Promise<void> {
+    async saveLists(lists) {
         await vscode.workspace.getConfiguration('acacia-erd')
             .update('entitiesLists', lists, vscode.ConfigurationTarget.Workspace);
         this._onDidChange.fire(lists);
     }
-
-    public dispose(): void {
+    dispose() {
         this._configListener.dispose();
         this._onDidChange.dispose();
     }
 }
+exports.EntitiesListManager = EntitiesListManager;
+//# sourceMappingURL=EntitiesListManager.js.map

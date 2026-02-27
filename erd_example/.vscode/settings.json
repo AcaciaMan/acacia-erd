@@ -28,7 +28,18 @@
     "acacia-erd.entitiesLists": [
         {
             "name": "redmine",
-            "jsonPath": "redmine_entities.json"
+            "jsonPath": "redmine_entities.json",
+            "dimensions": {
+                "level": [
+                    "physical"
+                ],
+                "environment": [
+                    "prod"
+                ],
+                "schema": [
+                    "relational"
+                ]
+            }
         }
     ]
 }

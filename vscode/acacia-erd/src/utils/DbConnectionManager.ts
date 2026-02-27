@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { DimensionAssignments } from './DimensionManager';
 
 /** Persisted data shape for a database connection entry. */
 export interface DbConnectionConfig {
@@ -12,6 +13,8 @@ export interface DbConnectionConfig {
      *    "server=myhost;database=mydb"
      */
     connectionPath: string;
+    /** Optional dimension assignments. Keys are dimension IDs, values are arrays of selected value IDs. */
+    dimensions?: DimensionAssignments;
 }
 
 export class DbConnectionManager {

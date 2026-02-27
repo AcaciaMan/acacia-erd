@@ -1,0 +1,194 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.EntityTreePanel = void 0;
+const vscode = __importStar(require("vscode"));
+const path = __importStar(require("path"));
+const ObjectRegistry_1 = require("../utils/ObjectRegistry");
+const InteractiveERDPanel_1 = require("./InteractiveERDPanel");
+const EntityManager_1 = require("../utils/EntityManager");
+const DescribeEntity_1 = require("./DescribeEntity");
+const nonce_1 = require("../utils/nonce");
+class EntityTreePanel {
+    context;
+    _webviewView;
+    mgr = EntityManager_1.EntityManager.getInstance();
+    constructor(context) {
+        this.context = context;
+        ObjectRegistry_1.ObjectRegistry.getInstance().set('EntityTreePanel', this);
+        // Subscribe to entity changes
+        this.mgr.onDidChangeEntities((entities) => {
+            if (this._webviewView) {
+                this._webviewView.webview.postMessage({ command: 'loadEntities', entities });
+            }
+        });
+        // Subscribe to entities path changes to update file indicator
+        this.mgr.onDidChangeEntitiesPath((newPath) => {
+            if (this._webviewView) {
+                this._webviewView.webview.postMessage({
+                    command: 'updateEntitiesPath',
+                    entitiesFilePath: newPath
+                });
+            }
+        });
+    }
+    resolveWebviewView(webviewView) {
+        this._webviewView = webviewView;
+        webviewView.webview.options = {
+            enableScripts: true,
+            localResourceRoots: [vscode.Uri.file(path.join(this.context.extensionPath, 'resources'))]
+        };
+        const scriptPathOnDisk = vscode.Uri.file(path.join(this.context.extensionPath, 'resources', 'entity_tree.js'));
+        const scriptUri = webviewView.webview.asWebviewUri(scriptPathOnDisk);
+        const stylePathOnDisk = vscode.Uri.file(path.join(this.context.extensionPath, 'resources', 'entity_tree.css'));
+        const styleUri = webviewView.webview.asWebviewUri(stylePathOnDisk);
+        const nonce = (0, nonce_1.getNonce)();
+        webviewView.webview.html = this._getHtmlForWebview(scriptUri, styleUri, nonce);
+        this._loadEntities(webviewView.webview);
+        this._sendEntitiesPath(webviewView.webview);
+        webviewView.onDidChangeVisibility(() => {
+            if (webviewView.visible) {
+                this._loadEntities(webviewView.webview);
+                this._sendEntitiesPath(webviewView.webview);
+            }
+        });
+        webviewView.webview.onDidReceiveMessage(async (message) => {
+            switch (message.command) {
+                case 'alert':
+                    vscode.window.showErrorMessage(message.text);
+                    return;
+                case 'openEntityDetails':
+                    InteractiveERDPanel_1.InteractiveERDPanel.currentPanel?.openEntityDetails(message.entity);
+                    return;
+                case 'describeEntity':
+                    DescribeEntity_1.DescribeEntityPanel.createOrShow(this.context.extensionPath, message.entity);
+                    return;
+                case 'deleteEntity':
+                    this.deleteEntity(message.entityName);
+                    // send a message to the InteractiveERDPanel to delete the entity from the graph
+                    InteractiveERDPanel_1.InteractiveERDPanel.currentPanel?.deleteEntity(message.entityName);
+                    return;
+                case 'showInfoMessage':
+                    vscode.window.showInformationMessage(message.message);
+                    return;
+                case 'browseAssets':
+                    vscode.commands.executeCommand('acaciaAssets.focus');
+                    return;
+            }
+        });
+    }
+    _getHtmlForWebview(scriptUri, styleUri, nonce) {
+        return `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Entity Tree</title>
+                <link href="${styleUri}" rel="stylesheet">
+            </head>
+            <body>
+                <div class="header">
+                    <div class="header-title">Entities</div>
+                    <div class="stats-bar">
+                        <div class="stat-item">
+                            <span>Total:</span>
+                            <span class="stat-value" id="total-count">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>Visible:</span>
+                            <span class="stat-value" id="visible-count">0</span>
+                        </div>
+                    </div>
+                    <div class="file-indicator" id="file-indicator" title="">
+                        <span class="file-icon">📄</span>
+                        <span class="file-name" id="file-name">–</span>
+                    </div>
+                </div>
+                <div id="controls">
+                    <div class="search-container">
+                        <svg class="search-icon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M11.5 10h-.8l-.3-.3c1-1.1 1.6-2.6 1.6-4.2C12 2.5 9.5 0 6.5 0S1 2.5 1 5.5 3.5 11 6.5 11c1.6 0 3.1-.6 4.2-1.6l.3.3v.8l5 5 1.5-1.5-5-5zm-5 0C4 10 2 8 2 5.5S4 1 6.5 1 11 3 11 5.5 9 10 6.5 10z"/>
+                        </svg>
+                        <input type="text" id="filter-input" placeholder="Search entities..." />
+                    </div>
+                    <div class="controls-row">
+                        <select id="sort-select">
+                            <option value="name-asc">Name (A-Z)</option>
+                            <option value="name-desc">Name (Z-A)</option>
+                            <option value="columns-desc">Most Columns</option>
+                            <option value="relations-desc">Most Relations</option>
+                        </select>
+                        <div class="view-toggle">
+                            <button id="list-view" class="active" title="List view">
+                                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M2 3h12v1H2V3zm0 3h12v1H2V6zm0 3h12v1H2V9zm0 3h12v1H2v-1z"/>
+                                </svg>
+                            </button>
+                            <button id="card-view" title="Card view">
+                                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M1 1h6v6H1V1zm1 1v4h4V2H2zm7-1h6v6H9V1zm1 1v4h4V2h-4zM1 9h6v6H1V9zm1 1v4h4v-4H2zm7-1h6v6H9V9zm1 1v4h4v-4h-4z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="entity-container">
+                    <ul id="entity-tree">
+                        <!-- Tree will be populated by JavaScript -->
+                    </ul>
+                </div>
+                <script nonce="${nonce}" src="${scriptUri}"></script>
+            </body>
+            </html>
+        `;
+    }
+    deleteEntity(entityName) {
+        this.mgr.deleteEntity(entityName);
+        vscode.window.showInformationMessage(`Entity with ID ${entityName} has been deleted.`);
+    }
+    _sendEntitiesPath(webview) {
+        webview.postMessage({
+            command: 'updateEntitiesPath',
+            entitiesFilePath: this.mgr.getEntitiesJsonPath()
+        });
+    }
+    _loadEntities(webview) {
+        const entities = this.mgr.getEntities();
+        webview.postMessage({ command: 'loadEntities', entities });
+    }
+}
+exports.EntityTreePanel = EntityTreePanel;
+//# sourceMappingURL=EntityTreePanel.js.map

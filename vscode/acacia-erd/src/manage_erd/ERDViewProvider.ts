@@ -8,13 +8,15 @@ import { EntityManager } from '../utils/EntityManager';
 import { SourceFolderManager } from '../utils/SourceFolderManager';
 import { DbConnectionManager } from '../utils/DbConnectionManager';
 import { EntitiesListManager } from '../utils/EntitiesListManager';
+import { DimensionManager } from '../utils/DimensionManager';
 
 export class ERDViewProvider implements vscode.WebviewViewProvider {
     constructor(
         private readonly context: vscode.ExtensionContext,
         private readonly sourceFolderManager: SourceFolderManager,
         private readonly dbConnectionManager: DbConnectionManager,
-        private readonly entitiesListManager: EntitiesListManager
+        private readonly entitiesListManager: EntitiesListManager,
+        private readonly dimensionManager?: DimensionManager
     ) {}
 
     resolveWebviewView(webviewView: vscode.WebviewView) {
@@ -31,7 +33,7 @@ export class ERDViewProvider implements vscode.WebviewViewProvider {
             switch (message.command) {
                 case 'createERD':
                     vscode.window.showInformationMessage('Opening ERD Editor...');
-                    InteractiveERDPanel.createOrShow(this.context.extensionPath);
+                    InteractiveERDPanel.createOrShow(this.context.extensionPath, this.dimensionManager, this.entitiesListManager);
                     break;
                 case 'generateERD':
                     vscode.window.showInformationMessage('Opening ERD Generator...');

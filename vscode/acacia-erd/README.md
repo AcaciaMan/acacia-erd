@@ -49,7 +49,16 @@ Create, visualize, and share Entity Relationship Diagrams (ERDs) in VS Code. Des
 
 ![Redmine database Entity Relationship Diagram](https://github.com/user-attachments/assets/47b84e7a-323d-470c-8509-918468181418)
 
-## What's New in v2.3.0
+## What's New in v2.3.1
+
+### Dimensions — Categorize & Filter Your Assets
+- **Dimension Manager** — Define custom dimensions (Level, Environment, Schema, etc.) with configurable values, persisted to a JSON file
+- **Dimension Editor** — Full webview panel to create, edit, and delete dimensions and assign them to assets
+- **Assign Dimensions** — Right-click any asset in the Assets tree to tag it with dimension values
+- **Filter by Dimensions** — Multi-step Quick Pick to filter the Assets tree by dimension values; badge shows active filter count
+- **Inline badges** — Dimension values displayed as badges on each asset in the tree
+
+### Previously in v2.3.0
 
 ### Create Entities Lists from UI
 - **New or Open** — The "Choose Entities List" dialog now lets you create a brand-new entities JSON file or browse for an existing one
@@ -196,7 +205,8 @@ Configure the extension in VS Code settings:
   "acacia-erd.dbConnections": [
     { "name": "Dev DB", "connectionPath": "sqlite:///data/dev.db" },
     { "name": "Test DB", "connectionPath": "localhost:5432/testdb" }
-  ]
+  ],
+  "acacia-erd.dimensionsFilePath": "acacia-erd.dimensions.json"
 }
 ```
 
@@ -206,6 +216,7 @@ Configure the extension in VS Code settings:
 | `entitiesLists` | `array` | `[]` | Named references to entities JSON files |
 | `sourceFolders` | `array` | `[]` | Project source code directories |
 | `dbConnections` | `array` | `[]` | Database connection references (no credentials) |
+| `dimensionsFilePath` | `string` | `"acacia-erd.dimensions.json"` | Path to the dimensions definition file |
 
 ## Database Integration
 

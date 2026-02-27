@@ -5,6 +5,8 @@ import { DescribeEntityPanel } from './DescribeEntity';
 import { ERDGenerationPanel, GenerationParameters } from './ERDGenerationPanel';
 import * as em from '../utils/EntityManager';
 import { HtmlExporter } from '../utils/HtmlExporter';
+import { DimensionManager } from '../utils/DimensionManager';
+import { EntitiesListManager } from '../utils/EntitiesListManager';
 
 /** Data structure for usage items */
 interface UsageData {
@@ -44,8 +46,14 @@ export class InteractiveERDPanel {
     private readonly _extensionPath: string;
     private _place: vscode.Uri | undefined;
     private mgr: em.EntityManager = em.EntityManager.getInstance();
+    private dimensionManager?: DimensionManager;
+    private entitiesListManager?: EntitiesListManager;
 
-    public static createOrShow(extensionPath: string) {
+    public static createOrShow(
+        extensionPath: string,
+        dimensionManager?: DimensionManager,
+        entitiesListManager?: EntitiesListManager
+    ): void {
         const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
 
         if (InteractiveERDPanel.currentPanel) {
@@ -66,13 +74,20 @@ export class InteractiveERDPanel {
                 }
             );
 
-            InteractiveERDPanel.currentPanel = new InteractiveERDPanel(panel, extensionPath);
+            InteractiveERDPanel.currentPanel = new InteractiveERDPanel(panel, extensionPath, dimensionManager, entitiesListManager);
         }
     }
 
-    private constructor(panel: vscode.WebviewPanel, extensionPath: string) {
+    private constructor(
+        panel: vscode.WebviewPanel,
+        extensionPath: string,
+        dimensionManager?: DimensionManager,
+        entitiesListManager?: EntitiesListManager
+    ) {
         this._panel = panel;
         this._extensionPath = extensionPath;
+        this.dimensionManager = dimensionManager;
+        this.entitiesListManager = entitiesListManager;
 
         this._update();
 
@@ -90,7 +105,22 @@ export class InteractiveERDPanel {
                 command: 'loadEntitiesList',
                 entitiesListPath: newPath
             });
+            this.sendDimensionsToWebview();
         });
+
+        // When dimensions change externally, update the display
+        if (this.dimensionManager) {
+            this.dimensionManager.onDidChangeDimensions(() => {
+                this.sendDimensionsToWebview();
+            });
+        }
+
+        // When entities list configs change (e.g., dimensions reassigned in editor)
+        if (this.entitiesListManager) {
+            this.entitiesListManager.onDidChange(() => {
+                this.sendDimensionsToWebview();
+            });
+        }
 
         // Send a message to the interactive ERD webview to load the entities list
         const entitiesJsonPath = this.mgr.getEntitiesJsonPath();
@@ -100,6 +130,9 @@ export class InteractiveERDPanel {
                 entitiesListPath: entitiesJsonPath
             });
         }
+
+        // Send initial dimensions
+        this.sendDimensionsToWebview();
 
         this._panel.onDidDispose(() => this.dispose(), null, []);
 
@@ -332,6 +365,61 @@ export class InteractiveERDPanel {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             vscode.window.showErrorMessage(`Failed to export HTML: ${errorMessage}`);
         }
+    }
+
+    /**
+     * Build display-friendly dimension labels for the active entities list.
+     * Returns an array of { name, values } for dimensions that have assigned values.
+     */
+    private getActiveListDimensions(): { name: string; values: string[] }[] {
+        if (!this.entitiesListManager || !this.dimensionManager) {
+            return [];
+        }
+
+        // Find the active entities list config by matching the current path
+        const currentPath = this.mgr.getEntitiesJsonPath();
+        if (!currentPath) {
+            return [];
+        }
+        const lists = this.entitiesListManager.getLists();
+        const activeList = lists.find(l => {
+            const absPath = this.entitiesListManager!.resolveAbsolutePath(l);
+            return this.normalizePath(absPath) === this.normalizePath(currentPath);
+        });
+
+        if (!activeList?.dimensions) {
+            return [];
+        }
+
+        const result: { name: string; values: string[] }[] = [];
+        const allDimensions = this.dimensionManager.getDimensions();
+
+        for (const dim of allDimensions) {
+            const assignedValueIds = activeList.dimensions[dim.id] || [];
+            if (assignedValueIds.length > 0) {
+                const labels = assignedValueIds
+                    .map(vid => dim.values.find(v => v.id === vid)?.label || vid)
+                    .filter(Boolean);
+                if (labels.length > 0) {
+                    result.push({ name: dim.name, values: labels });
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private normalizePath(p: string): string {
+        const normalized = path.normalize(p);
+        return process.platform === 'win32' ? normalized.toLowerCase() : normalized;
+    }
+
+    private sendDimensionsToWebview(): void {
+        const dimensions = this.getActiveListDimensions();
+        this._panel.webview.postMessage({
+            command: 'updateDimensions',
+            dimensions
+        });
     }
 
     

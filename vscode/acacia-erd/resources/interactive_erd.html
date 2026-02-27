@@ -142,6 +142,61 @@
             fill: var(--vscode-editorInfo-foreground);
         }
 
+        /* Dimensions Bar */
+        .dimensions-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 4px 12px;
+            background-color: var(--vscode-editorGroupHeader-tabsBackground);
+            border-bottom: 1px solid var(--vscode-editorGroup-border);
+            font-size: 11px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            min-height: 0;
+        }
+
+        .dimension-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .dimension-tag-name {
+            color: var(--vscode-descriptionForeground);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 10px;
+        }
+
+        .dimension-tag-values {
+            display: inline-flex;
+            gap: 4px;
+        }
+
+        .dimension-tag-value {
+            background-color: var(--vscode-badge-background);
+            color: var(--vscode-badge-foreground);
+            padding: 1px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        .dimensions-bar .dimensions-label {
+            color: var(--vscode-descriptionForeground);
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-right: 4px;
+        }
+
+        .dimensions-bar .no-dimensions {
+            color: var(--vscode-descriptionForeground);
+            font-style: italic;
+            font-size: 11px;
+        }
+
         /* SVG Canvas Container */
         .canvas-container {
             flex: 1;
@@ -391,6 +446,11 @@
         </a>
     </div>
 
+    <!-- Dimensions Bar (shows active entities list dimensions) -->
+    <div class="dimensions-bar" id="dimensions-bar" style="display: none;">
+        <!-- Populated dynamically by JS -->
+    </div>
+
     <!-- Canvas Container -->
     <div class="canvas-container">
         <svg id="erd-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -575,6 +635,9 @@
                 case 'loadEntitiesList':
                     document.getElementById('entities-list-path').value = message.entitiesListPath;
                     setStatusMessage('Entities list path updated');
+                    break;
+                case 'updateDimensions':
+                    updateDimensionsBar(message.dimensions);
                     break; 
             }
         });
@@ -587,6 +650,51 @@
             attachUsageEventListeners();
             updateStatusBar();
         });
+
+        function updateDimensionsBar(dimensions) {
+            const bar = document.getElementById('dimensions-bar');
+            
+            if (!dimensions || dimensions.length === 0) {
+                bar.style.display = 'none';
+                return;
+            }
+            
+            bar.style.display = 'flex';
+            bar.innerHTML = '<span class="dimensions-label">Dimensions:</span>';
+            
+            dimensions.forEach((dim, index) => {
+                const tag = document.createElement('span');
+                tag.className = 'dimension-tag';
+                
+                const name = document.createElement('span');
+                name.className = 'dimension-tag-name';
+                name.textContent = dim.name + ':';
+                tag.appendChild(name);
+                
+                const valuesContainer = document.createElement('span');
+                valuesContainer.className = 'dimension-tag-values';
+                
+                dim.values.forEach(val => {
+                    const badge = document.createElement('span');
+                    badge.className = 'dimension-tag-value';
+                    badge.textContent = val;
+                    valuesContainer.appendChild(badge);
+                });
+                
+                tag.appendChild(valuesContainer);
+                bar.appendChild(tag);
+                
+                // Add separator between dimension groups (except last)
+                if (index < dimensions.length - 1) {
+                    const sep = document.createElement('span');
+                    sep.className = 'dimension-separator';
+                    sep.textContent = '|';
+                    sep.style.color = 'var(--vscode-descriptionForeground)';
+                    sep.style.margin = '0 4px';
+                    bar.appendChild(sep);
+                }
+            });
+        }
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {

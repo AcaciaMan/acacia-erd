@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import { DimensionAssignments } from './DimensionManager';
 
 /** Persisted data shape for a source folder entry. */
 export interface SourceFolderConfig {
@@ -7,6 +8,8 @@ export interface SourceFolderConfig {
     name: string;
     /** Path to the folder. Relative paths resolve from workspace root. */
     path: string;
+    /** Optional dimension assignments. Keys are dimension IDs, values are arrays of selected value IDs. */
+    dimensions?: DimensionAssignments;
 }
 
 export class SourceFolderManager {
