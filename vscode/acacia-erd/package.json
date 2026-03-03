@@ -1,12 +1,12 @@
 {
   "name": "acacia-erd",
   "displayName": "Acacia ERD - Entity Relationship Diagrams",
-  "description": "Visual database schema designer with interactive ERD editor, drag-and-drop layout, and HTML export",
+  "description": "Visual database schema designer with interactive ERD editor, drag-and-drop layout, and HTML export by AcaciaMan",
   "repository": {
     "type": "git",
     "url": "https://github.com/AcaciaMan/acacia-erd"
   },
-  "version": "2.3.2",
+  "version": "2.3.3",
   "publisher": "manacacia",
   "icon": "icon.png",
   "galleryBanner": {
@@ -78,7 +78,7 @@
         "command": "acacia-erd.addSourceFolder",
         "title": "Add Source Folder",
         "category": "Acacia ERD",
-        "icon": "$(add)"
+        "icon": "$(new-folder)"
       },
       {
         "command": "acacia-erd.removeSourceFolder",
@@ -96,7 +96,7 @@
         "command": "acacia-erd.addDbConnection",
         "title": "Add DB Connection",
         "category": "Acacia ERD",
-        "icon": "$(add)"
+        "icon": "$(database)"
       },
       {
         "command": "acacia-erd.removeDbConnection",
@@ -136,7 +136,7 @@
         "command": "acacia-erd.addEntitiesList",
         "title": "Add Entities List",
         "category": "Acacia ERD",
-        "icon": "$(add)"
+        "icon": "$(list-unordered)"
       },
       {
         "command": "acacia-erd.removeEntitiesList",

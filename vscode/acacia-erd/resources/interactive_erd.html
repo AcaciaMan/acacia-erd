@@ -684,7 +684,7 @@
                     updateDimensionsBar(message.dimensions);
                     break;
                 case 'loadDiagram':
-                    loadDiagramIntoCanvas(message.diagram);
+                    loadDiagramIntoCanvas(message.diagram, message.entities);
                     break;
                 case 'diagramInfo':
                     // Extension is telling us which diagram is loaded

@@ -165,9 +165,9 @@ class ERDGenerationPanel {
                                     <span class="range-value" id="maxEntitiesValue">10</span>
                                 </label>
                                 <div class="range-container">
-                                    <input type="range" id="maxEntities" name="maxEntities" min="1" max="100" value="10">
+                                    <input type="range" id="maxEntities" name="maxEntities" min="0" max="100" value="10">
                                     <div class="range-labels">
-                                        <span>1</span>
+                                        <span>0</span>
                                         <span>100</span>
                                     </div>
                                 </div>

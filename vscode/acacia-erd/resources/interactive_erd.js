@@ -446,9 +446,9 @@ function collectDiagramState() {
  * Filters the current entities list to show only the diagram's entities,
  * and positions them according to the saved positions.
  */
-function loadDiagramIntoCanvas(diagram) {
-    // Get all currently available entities (from the loaded entities list)
-    const allEntities = getERDEntities();
+function loadDiagramIntoCanvas(diagram, providedEntities) {
+    // Use provided entities if available, otherwise fall back to entities already in the DOM
+    const allEntities = (providedEntities && providedEntities.length > 0) ? providedEntities : getERDEntities();
 
     // If there are entities in the diagram, filter and position them
     if (diagram.entityIds && diagram.entityIds.length > 0) {

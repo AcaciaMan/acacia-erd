@@ -108,7 +108,8 @@ export class InteractiveERDPanel {
             // Update panel title to show diagram name
             panel._panel.title = `ERD: ${diagram.name}`;
 
-            // Send diagram data to webview
+            // Send diagram data to webview along with full entity objects
+            const allEntities = em.EntityManager.getInstance().getEntities();
             panel._panel.webview.postMessage({
                 command: 'loadDiagram',
                 diagram: {
@@ -116,7 +117,8 @@ export class InteractiveERDPanel {
                     name: diagram.name,
                     entityIds: diagram.entityIds,
                     positions: diagram.positions
-                }
+                },
+                entities: allEntities
             });
         }
     }

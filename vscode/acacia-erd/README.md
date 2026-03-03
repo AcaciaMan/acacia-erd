@@ -49,7 +49,13 @@ Create, visualize, and share Entity Relationship Diagrams (ERDs) in VS Code. Des
 
 ![Redmine database Entity Relationship Diagram](https://github.com/user-attachments/assets/47b84e7a-323d-470c-8509-918468181418)
 
-## What's New in v2.3.2
+## What's New in v2.3.3
+
+### Open Diagram — Reliable Entity Loading
+- **Saved entities always shown** — Clicking an ERD diagram in the Assets tree now reliably renders all saved entities with their saved positions, even when the ERD Editor is opened fresh
+- **No more empty canvas** — Fixed a race condition where opening a diagram on a newly created panel could show a blank canvas because entity data hadn't been loaded into the webview yet
+
+### Previously in v2.3.2
 
 ### ERD Diagram Management — Named, Persistent Diagrams
 - **Diagrams in the Assets tree** — Named ERD diagrams appear as children of their Entities List, with entity count badges and double-click to open

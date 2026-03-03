@@ -4,6 +4,15 @@ All notable changes to the "acacia-erd" extension will be documented in this fil
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [2.3.3] - 2026-03-03
+
+### Fixed
+- **Open Diagram shows saved entities** — Clicking an ERD diagram in the Assets tree now correctly renders the saved entities in the ERD Editor, even when the panel is freshly created. Previously the diagram could open with an empty canvas because entity data was not passed to the webview.
+
+### Improved
+- **InteractiveERDPanel.openDiagram()** — Now sends the full entities array alongside diagram metadata in the `loadDiagram` message, so the webview always has entity data available
+- **loadDiagramIntoCanvas()** — Accepts optional `providedEntities` parameter, falling back to DOM entities only when none are supplied
+
 ## [2.3.2] - 2026-03-03
 
 ### Added

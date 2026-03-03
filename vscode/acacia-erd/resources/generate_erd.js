@@ -175,8 +175,8 @@ function applyForceLayout(entities, width, height, sliceEntities, maxEntities, e
     // divide width in 5 columns
     let columnWidth = width / 5;
 
-    if(sliceEntities) {
-    // generate only first 30 entities
+    if(sliceEntities && maxEntities > 0) {
+    // generate only first N entities (0 = unlimited)
         entities = entities.slice(0, maxEntities);
     }
 
