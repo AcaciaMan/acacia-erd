@@ -6,6 +6,7 @@ import { SourceFolderManager, SourceFolderConfig } from '../utils/SourceFolderMa
 import { DbConnectionManager, DbConnectionConfig } from '../utils/DbConnectionManager';
 import { EntitiesListManager, EntitiesListConfig } from '../utils/EntitiesListManager';
 import { DimensionAssignments, DimensionManager } from '../utils/DimensionManager';
+import { DiagramManager, DiagramConfig } from '../utils/DiagramManager';
 
 export class AssetCategoryItem extends vscode.TreeItem {
     constructor(
@@ -67,7 +68,9 @@ export class EntitiesListItem extends vscode.TreeItem {
         public readonly absolutePath: string,
         public readonly isActive: boolean = false
     ) {
-        super(list.name, vscode.TreeItemCollapsibleState.None);
+        super(list.name, list.diagramsPath
+            ? vscode.TreeItemCollapsibleState.Collapsed
+            : vscode.TreeItemCollapsibleState.None);
         this.description = isActive ? `${list.jsonPath} ✦ active` : list.jsonPath;
         this.tooltip = `${list.name}\n${absolutePath}${isActive ? '\n(currently active)' : ''}`;
         this.contextValue = 'entitiesList';
@@ -87,7 +90,27 @@ export class EntitiesListItem extends vscode.TreeItem {
     }
 }
 
-export type AssetTreeItem = AssetCategoryItem | SourceFolderItem | DbConnectionItem | EntitiesListItem;
+export class DiagramItem extends vscode.TreeItem {
+    constructor(
+        public readonly diagram: DiagramConfig,
+        public readonly parentListName: string
+    ) {
+        super(diagram.name, vscode.TreeItemCollapsibleState.None);
+        this.description = `${diagram.entityIds.length} entities`;
+        this.tooltip = `${diagram.name}\n${diagram.entityIds.length} entities`;
+        this.contextValue = 'erdDiagram';
+        this.iconPath = new vscode.ThemeIcon('type-hierarchy-sub');
+
+        // Double-click opens the diagram in the ERD editor
+        this.command = {
+            command: 'acacia-erd.openDiagram',
+            title: 'Open Diagram',
+            arguments: [this]
+        };
+    }
+}
+
+export type AssetTreeItem = AssetCategoryItem | SourceFolderItem | DbConnectionItem | EntitiesListItem | DiagramItem;
 
 export class AssetsTreeProvider implements vscode.TreeDataProvider<AssetTreeItem> {
     private _onDidChangeTreeData = new vscode.EventEmitter<AssetTreeItem | undefined | void>();
@@ -96,6 +119,9 @@ export class AssetsTreeProvider implements vscode.TreeDataProvider<AssetTreeItem
     /** Active dimension filters. Key = dimensionId, Value = set of selected valueIds.
      *  Special value '__unspecified__' matches assets with no values for that dimension. */
     private _filters: Map<string, Set<string>> = new Map();
+
+    /** Cache of DiagramManager instances, keyed by absolute diagramsPath. */
+    private _diagramManagers: Map<string, DiagramManager> = new Map();
 
     constructor(
         private readonly sourceFolderManager: SourceFolderManager,
@@ -218,6 +244,16 @@ export class AssetsTreeProvider implements vscode.TreeDataProvider<AssetTreeItem
             }
         }
 
+        if (element instanceof EntitiesListItem) {
+            const list = element.list;
+            if (!list.diagramsPath) { return []; }
+            const absPath = this.resolveDiagramsPath(list.diagramsPath);
+            const diagramManager = this.getDiagramManager(absPath);
+            return diagramManager.getDiagrams().map(
+                diagram => new DiagramItem(diagram, list.name)
+            );
+        }
+
         return [];
     }
 
@@ -267,6 +303,38 @@ export class AssetsTreeProvider implements vscode.TreeDataProvider<AssetTreeItem
             return path.resolve(wsFolder, currentPath);
         }
         return path.resolve(currentPath);
+    }
+
+    /** Get or create a DiagramManager for a given diagrams file path. */
+    private getDiagramManager(absoluteDiagramsPath: string): DiagramManager {
+        let manager = this._diagramManagers.get(absoluteDiagramsPath);
+        if (!manager) {
+            manager = new DiagramManager(absoluteDiagramsPath);
+            manager.onDidChange(() => {
+                this._onDidChangeTreeData.fire();
+            });
+            this._diagramManagers.set(absoluteDiagramsPath, manager);
+        }
+        return manager;
+    }
+
+    /** Get a DiagramManager for a specific entities list (by list name). Returns undefined if the list has no diagramsPath. */
+    public getDiagramManagerForList(listName: string): DiagramManager | undefined {
+        const list = this.entitiesListManager.getLists().find(l => l.name === listName);
+        if (!list?.diagramsPath) { return undefined; }
+        const absPath = this.resolveDiagramsPath(list.diagramsPath);
+        return this._diagramManagers.get(absPath);
+    }
+
+    private resolveDiagramsPath(diagramsPath: string): string {
+        if (path.isAbsolute(diagramsPath)) {
+            return diagramsPath;
+        }
+        const wsFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        if (wsFolder) {
+            return path.resolve(wsFolder, diagramsPath);
+        }
+        return path.resolve(diagramsPath);
     }
 
     private normalizePath(p: string): string {

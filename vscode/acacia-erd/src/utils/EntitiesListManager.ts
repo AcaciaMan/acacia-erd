@@ -10,6 +10,8 @@ export interface EntitiesListConfig {
     jsonPath: string;
     /** Optional dimension assignments. Keys are dimension IDs, values are arrays of selected value IDs. */
     dimensions?: DimensionAssignments;
+    /** Path to the diagrams JSON file for this entities list. Relative paths resolve from workspace root. */
+    diagramsPath?: string;
 }
 
 export class EntitiesListManager {
@@ -65,6 +67,16 @@ export class EntitiesListManager {
         const list = lists.find(l => l.name === name);
         if (list) {
             list.jsonPath = this.toWorkspaceRelativePath(newPath);
+            await this.saveLists(lists);
+        }
+    }
+
+    /** Set or update the diagrams file path for an entities list. */
+    public async setDiagramsPath(listName: string, diagramsPath: string): Promise<void> {
+        const lists = this.getLists();
+        const list = lists.find(l => l.name === listName);
+        if (list) {
+            list.diagramsPath = this.toWorkspaceRelativePath(diagramsPath);
             await this.saveLists(lists);
         }
     }

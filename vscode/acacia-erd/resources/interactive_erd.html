@@ -411,6 +411,25 @@
         </div>
 
         <div class="toolbar-group">
+            <span class="toolbar-label">Diagram</span>
+            <button id="save-diagram-button" class="toolbar-button" title="Save diagram (positions and entity selection)" style="display:none;">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.5 1h-11l-.5.5v13l.5.5h11l.5-.5v-13l-.5-.5zM3 13V2h10v11H3z"/>
+                    <path d="M9 2H7v4h2V2zm2 0h1v4h-1V2z"/>
+                </svg>
+                <span>💾 Save Diagram</span>
+            </button>
+            <button id="save-as-diagram-button" class="toolbar-button" title="Save current ERD as a new named diagram">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.5 1h-11l-.5.5v13l.5.5h11l.5-.5v-13l-.5-.5zM3 13V2h10v11H3z"/>
+                    <path d="M9 2H7v4h2V2zm2 0h1v4h-1V2z"/>
+                    <path d="M8 9l-1 1v3h2v-3l-1-1z"/>
+                </svg>
+                <span>📋 Save As Diagram</span>
+            </button>
+        </div>
+
+        <div class="toolbar-group">
             <span class="toolbar-label">Layout</span>
             <button id="apply-erd-button" title="Apply a grid layout to the ERD">
                 <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
@@ -438,6 +457,7 @@
         </svg>
         <span>Entities File:</span>
         <input type="text" id="entities-list-path" value="entities.json" readonly/>
+        <span id="diagram-name-display" style="display:none; margin-left: 10px; font-weight: bold; color: var(--vscode-foreground);"></span>
         <a href="https://github.com/AcaciaMan/acacia-erd/wiki/Create-ER-diagram-help" target="_blank">
             <svg width="14" height="14" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
                 <path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm.5 11h-1v-1h1v1zm0-2h-1V5h1v5z"/>
@@ -574,6 +594,30 @@
             setStatusMessage('Exporting as interactive HTML...');
         });
 
+        // Save Diagram
+        document.getElementById('save-diagram-button').addEventListener('click', () => {
+            const diagramState = collectDiagramState();
+            vscode.postMessage({
+                command: 'saveDiagram',
+                entityIds: diagramState.entityIds,
+                positions: diagramState.positions,
+                svgContent: diagramState.svgContent
+            });
+            setStatusMessage('Saving diagram...');
+        });
+
+        // Save As Diagram
+        document.getElementById('save-as-diagram-button').addEventListener('click', () => {
+            const diagramState = collectDiagramState();
+            vscode.postMessage({
+                command: 'saveAsDiagram',
+                entityIds: diagramState.entityIds,
+                positions: diagramState.positions,
+                svgContent: diagramState.svgContent
+            });
+            setStatusMessage('Saving as new diagram...');
+        });
+
         // Generate ERD
         document.getElementById('generate-erd-button').addEventListener('click', () => {
             vscode.postMessage({
@@ -638,7 +682,19 @@
                     break;
                 case 'updateDimensions':
                     updateDimensionsBar(message.dimensions);
-                    break; 
+                    break;
+                case 'loadDiagram':
+                    loadDiagramIntoCanvas(message.diagram);
+                    break;
+                case 'diagramInfo':
+                    // Extension is telling us which diagram is loaded
+                    updateDiagramStatusBar(message.diagram, message.listName);
+                    // Show save diagram button since we now have a diagram context
+                    const saveDiagramBtn2 = document.getElementById('save-diagram-button');
+                    if (saveDiagramBtn2) {
+                        saveDiagramBtn2.style.display = 'inline-block';
+                    }
+                    break;
             }
         });
 

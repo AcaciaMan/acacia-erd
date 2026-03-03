@@ -1,11 +1,12 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { ERDViewProvider } from './manage_erd/ERDViewProvider';
 import { EntityTreePanel } from './manage_erd/EntityTreePanel';
 import { InteractiveERDPanel } from './manage_erd/InteractiveERDPanel';
 import { EntityManager } from './utils/EntityManager';
 import { SourceFolderManager } from './utils/SourceFolderManager';
 import { DbConnectionManager } from './utils/DbConnectionManager';
-import { AssetsTreeProvider, AssetTreeItem, SourceFolderItem, DbConnectionItem, EntitiesListItem } from './manage_erd/AssetsTreeProvider';
+import { AssetsTreeProvider, AssetTreeItem, SourceFolderItem, DbConnectionItem, EntitiesListItem, DiagramItem } from './manage_erd/AssetsTreeProvider';
 import { EntitiesListManager } from './utils/EntitiesListManager';
 import { DimensionManager } from './utils/DimensionManager';
 import { DimensionEditorPanel } from './manage_erd/DimensionEditorPanel';
@@ -287,6 +288,150 @@ export function activate(context: vscode.ExtensionContext) {
 				vscode.window.showInformationMessage(`Loaded entities list: ${item.list.name}`);
 				// Focus the Entity Tree so user sees the loaded entities
 				vscode.commands.executeCommand('openEntityTree.focus');
+			}
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('acacia-erd.addDiagram', async (item?: EntitiesListItem) => {
+			// If not invoked from tree context, ask user to pick an entities list
+			if (!item) {
+				const lists = entitiesListManager.getLists();
+				if (lists.length === 0) {
+					vscode.window.showWarningMessage('No entities lists configured. Add an entities list first.');
+					return;
+				}
+				const picked = await vscode.window.showQuickPick(
+					lists.map(l => ({ label: l.name, list: l })),
+					{ placeHolder: 'Select an entities list to add a diagram to' }
+				);
+				if (!picked) { return; }
+				// Create a synthetic EntitiesListItem for the picked list
+				const absPath = entitiesListManager.resolveAbsolutePath(picked.list);
+				item = new EntitiesListItem(picked.list, absPath);
+			}
+
+			const name = await vscode.window.showInputBox({
+				prompt: 'Enter a name for the new ERD diagram',
+				placeHolder: 'e.g., Overview, User Module, Full Schema',
+				validateInput: (value) => {
+					if (!value || !value.trim()) {
+						return 'Name cannot be empty';
+					}
+					return undefined;
+				}
+			});
+			if (!name) { return; }
+
+			// Ensure the entities list has a diagramsPath; auto-generate if missing
+			let list = item.list;
+			if (!list.diagramsPath) {
+				const baseName = path.basename(list.jsonPath, path.extname(list.jsonPath));
+				const dir = path.dirname(entitiesListManager.resolveAbsolutePath(list));
+				const diagramsFileName = `${baseName}.diagrams.json`;
+				const diagramsAbsPath = path.join(dir, diagramsFileName);
+				await entitiesListManager.setDiagramsPath(list.name, diagramsAbsPath);
+				// Re-read the list to get the updated config
+				list = entitiesListManager.getLists().find(l => l.name === list.name) || list;
+			}
+
+			// Get or create DiagramManager and add the diagram
+			const diagramManager = assetsTreeProvider.getDiagramManagerForList(list.name);
+			if (diagramManager) {
+				diagramManager.addDiagram(name.trim());
+			}
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('acacia-erd.openDiagram', async (item?: DiagramItem) => {
+			if (!item) { return; }
+
+			const diagramManager = assetsTreeProvider.getDiagramManagerForList(item.parentListName);
+			if (!diagramManager) {
+				vscode.window.showErrorMessage(`Cannot find diagram data for entities list "${item.parentListName}".`);
+				return;
+			}
+
+			// Load the entities list into EntityManager first so the webview has the full entity data
+			const list = entitiesListManager.getLists().find(l => l.name === item.parentListName);
+			if (list) {
+				const absPath = entitiesListManager.resolveAbsolutePath(list);
+				const entityManager = EntityManager.getInstance();
+				// Only switch if not already on this entities list
+				if (entityManager.getEntitiesJsonPath() !== absPath) {
+					entityManager.setEntitiesJsonPath(absPath);
+				}
+			}
+
+			InteractiveERDPanel.openDiagram(
+				context.extensionPath,
+				item.diagram,
+				item.parentListName,
+				diagramManager,
+				dimensionManager,
+				entitiesListManager
+			);
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('acacia-erd.renameDiagram', async (item?: DiagramItem) => {
+			if (!item) { return; }
+			const newName = await vscode.window.showInputBox({
+				prompt: 'Enter new name for the diagram',
+				value: item.diagram.name,
+				validateInput: (value) => {
+					if (!value || !value.trim()) {
+						return 'Name cannot be empty';
+					}
+					return undefined;
+				}
+			});
+			if (newName && newName.trim() !== item.diagram.name) {
+				const diagramManager = assetsTreeProvider.getDiagramManagerForList(item.parentListName);
+				if (diagramManager) {
+					diagramManager.renameDiagram(item.diagram.id, newName.trim());
+				}
+			}
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('acacia-erd.deleteDiagram', async (item?: DiagramItem) => {
+			if (!item) { return; }
+			const confirm = await vscode.window.showWarningMessage(
+				`Delete diagram "${item.diagram.name}"?`,
+				{ modal: true },
+				'Delete'
+			);
+			if (confirm === 'Delete') {
+				const diagramManager = assetsTreeProvider.getDiagramManagerForList(item.parentListName);
+				if (diagramManager) {
+					diagramManager.deleteDiagram(item.diagram.id);
+				}
+			}
+		})
+	);
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand('acacia-erd.duplicateDiagram', async (item?: DiagramItem) => {
+			if (!item) { return; }
+			const newName = await vscode.window.showInputBox({
+				prompt: 'Enter name for the duplicate diagram',
+				value: `${item.diagram.name} (copy)`,
+				validateInput: (value) => {
+					if (!value || !value.trim()) {
+						return 'Name cannot be empty';
+					}
+					return undefined;
+				}
+			});
+			if (newName) {
+				const diagramManager = assetsTreeProvider.getDiagramManagerForList(item.parentListName);
+				if (diagramManager) {
+					diagramManager.duplicateDiagram(item.diagram.id, newName.trim());
+				}
 			}
 		})
 	);

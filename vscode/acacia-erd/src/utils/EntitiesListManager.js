@@ -86,6 +86,15 @@ class EntitiesListManager {
             await this.saveLists(lists);
         }
     }
+    /** Set or update the diagrams file path for an entities list. */
+    async setDiagramsPath(listName, diagramsPath) {
+        const lists = this.getLists();
+        const list = lists.find(l => l.name === listName);
+        if (list) {
+            list.diagramsPath = this.toWorkspaceRelativePath(diagramsPath);
+            await this.saveLists(lists);
+        }
+    }
     /** Resolve a relative jsonPath to an absolute path. */
     resolveAbsolutePath(list) {
         if (path.isAbsolute(list.jsonPath)) {

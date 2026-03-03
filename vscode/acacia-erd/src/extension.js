@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.activate = activate;
 exports.deactivate = deactivate;
 const vscode = __importStar(require("vscode"));
+const path = __importStar(require("path"));
 const ERDViewProvider_1 = require("./manage_erd/ERDViewProvider");
 const EntityTreePanel_1 = require("./manage_erd/EntityTreePanel");
 const InteractiveERDPanel_1 = require("./manage_erd/InteractiveERDPanel");
@@ -55,7 +56,7 @@ function activate(context) {
     const dimensionManager = new DimensionManager_1.DimensionManager();
     context.subscriptions.push({ dispose: () => dimensionManager.dispose() });
     // ERD Dashboard - pass managers for status display
-    context.subscriptions.push(vscode.window.registerWebviewViewProvider('erdView', new ERDViewProvider_1.ERDViewProvider(context, sourceFolderManager, dbConnectionManager, entitiesListManager)));
+    context.subscriptions.push(vscode.window.registerWebviewViewProvider('erdView', new ERDViewProvider_1.ERDViewProvider(context, sourceFolderManager, dbConnectionManager, entitiesListManager, dimensionManager)));
     context.subscriptions.push(vscode.window.registerWebviewViewProvider('openEntityTree', new EntityTreePanel_1.EntityTreePanel(context)));
     // Register command to export interactive HTML
     context.subscriptions.push(vscode.commands.registerCommand('acacia-erd.exportInteractiveHtml', async () => {
@@ -68,7 +69,7 @@ function activate(context) {
     }));
     // Register command to open the Interactive ERD Editor
     context.subscriptions.push(vscode.commands.registerCommand('acacia-erd.openERDEditor', () => {
-        InteractiveERDPanel_1.InteractiveERDPanel.createOrShow(context.extensionPath);
+        InteractiveERDPanel_1.InteractiveERDPanel.createOrShow(context.extensionPath, dimensionManager, entitiesListManager);
     }));
     // Register command to focus the Entity Tree view
     context.subscriptions.push(vscode.commands.registerCommand('acacia-erd.showEntityTree', () => {
@@ -272,12 +273,157 @@ function activate(context) {
             vscode.commands.executeCommand('openEntityTree.focus');
         }
     }));
+    context.subscriptions.push(vscode.commands.registerCommand('acacia-erd.addDiagram', async (item) => {
+        // If not invoked from tree context, ask user to pick an entities list
+        if (!item) {
+            const lists = entitiesListManager.getLists();
+            if (lists.length === 0) {
+                vscode.window.showWarningMessage('No entities lists configured. Add an entities list first.');
+                return;
+            }
+            const picked = await vscode.window.showQuickPick(lists.map(l => ({ label: l.name, list: l })), { placeHolder: 'Select an entities list to add a diagram to' });
+            if (!picked) {
+                return;
+            }
+            // Create a synthetic EntitiesListItem for the picked list
+            const absPath = entitiesListManager.resolveAbsolutePath(picked.list);
+            item = new AssetsTreeProvider_1.EntitiesListItem(picked.list, absPath);
+        }
+        const name = await vscode.window.showInputBox({
+            prompt: 'Enter a name for the new ERD diagram',
+            placeHolder: 'e.g., Overview, User Module, Full Schema',
+            validateInput: (value) => {
+                if (!value || !value.trim()) {
+                    return 'Name cannot be empty';
+                }
+                return undefined;
+            }
+        });
+        if (!name) {
+            return;
+        }
+        // Ensure the entities list has a diagramsPath; auto-generate if missing
+        let list = item.list;
+        if (!list.diagramsPath) {
+            const baseName = path.basename(list.jsonPath, path.extname(list.jsonPath));
+            const dir = path.dirname(entitiesListManager.resolveAbsolutePath(list));
+            const diagramsFileName = `${baseName}.diagrams.json`;
+            const diagramsAbsPath = path.join(dir, diagramsFileName);
+            await entitiesListManager.setDiagramsPath(list.name, diagramsAbsPath);
+            // Re-read the list to get the updated config
+            list = entitiesListManager.getLists().find(l => l.name === list.name) || list;
+        }
+        // Get or create DiagramManager and add the diagram
+        const diagramManager = assetsTreeProvider.getDiagramManagerForList(list.name);
+        if (diagramManager) {
+            diagramManager.addDiagram(name.trim());
+        }
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('acacia-erd.openDiagram', async (item) => {
+        if (!item) {
+            return;
+        }
+        const diagramManager = assetsTreeProvider.getDiagramManagerForList(item.parentListName);
+        if (!diagramManager) {
+            vscode.window.showErrorMessage(`Cannot find diagram data for entities list "${item.parentListName}".`);
+            return;
+        }
+        // Load the entities list into EntityManager first so the webview has the full entity data
+        const list = entitiesListManager.getLists().find(l => l.name === item.parentListName);
+        if (list) {
+            const absPath = entitiesListManager.resolveAbsolutePath(list);
+            const entityManager = EntityManager_1.EntityManager.getInstance();
+            // Only switch if not already on this entities list
+            if (entityManager.getEntitiesJsonPath() !== absPath) {
+                entityManager.setEntitiesJsonPath(absPath);
+            }
+        }
+        InteractiveERDPanel_1.InteractiveERDPanel.openDiagram(context.extensionPath, item.diagram, item.parentListName, diagramManager, dimensionManager, entitiesListManager);
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('acacia-erd.renameDiagram', async (item) => {
+        if (!item) {
+            return;
+        }
+        const newName = await vscode.window.showInputBox({
+            prompt: 'Enter new name for the diagram',
+            value: item.diagram.name,
+            validateInput: (value) => {
+                if (!value || !value.trim()) {
+                    return 'Name cannot be empty';
+                }
+                return undefined;
+            }
+        });
+        if (newName && newName.trim() !== item.diagram.name) {
+            const diagramManager = assetsTreeProvider.getDiagramManagerForList(item.parentListName);
+            if (diagramManager) {
+                diagramManager.renameDiagram(item.diagram.id, newName.trim());
+            }
+        }
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('acacia-erd.deleteDiagram', async (item) => {
+        if (!item) {
+            return;
+        }
+        const confirm = await vscode.window.showWarningMessage(`Delete diagram "${item.diagram.name}"?`, { modal: true }, 'Delete');
+        if (confirm === 'Delete') {
+            const diagramManager = assetsTreeProvider.getDiagramManagerForList(item.parentListName);
+            if (diagramManager) {
+                diagramManager.deleteDiagram(item.diagram.id);
+            }
+        }
+    }));
+    context.subscriptions.push(vscode.commands.registerCommand('acacia-erd.duplicateDiagram', async (item) => {
+        if (!item) {
+            return;
+        }
+        const newName = await vscode.window.showInputBox({
+            prompt: 'Enter name for the duplicate diagram',
+            value: `${item.diagram.name} (copy)`,
+            validateInput: (value) => {
+                if (!value || !value.trim()) {
+                    return 'Name cannot be empty';
+                }
+                return undefined;
+            }
+        });
+        if (newName) {
+            const diagramManager = assetsTreeProvider.getDiagramManagerForList(item.parentListName);
+            if (diagramManager) {
+                diagramManager.duplicateDiagram(item.diagram.id, newName.trim());
+            }
+        }
+    }));
     context.subscriptions.push(vscode.commands.registerCommand('acacia-erd.refreshAssets', () => {
         assetsTreeProvider.refresh();
     }));
     // Dimension Editor command
     context.subscriptions.push(vscode.commands.registerCommand('acacia-erd.openDimensionEditor', () => {
         DimensionEditorPanel_1.DimensionEditorPanel.createOrShow(context.extensionPath, dimensionManager, sourceFolderManager, dbConnectionManager, entitiesListManager);
+    }));
+    // Assign Dimensions context menu command
+    context.subscriptions.push(vscode.commands.registerCommand('acacia-erd.assignDimensions', (item) => {
+        if (!item) {
+            return;
+        }
+        let assetType;
+        let assetName;
+        if (item instanceof AssetsTreeProvider_1.SourceFolderItem) {
+            assetType = 'sourceFolder';
+            assetName = item.folder.name;
+        }
+        else if (item instanceof AssetsTreeProvider_1.DbConnectionItem) {
+            assetType = 'dbConnection';
+            assetName = item.connection.name;
+        }
+        else if (item instanceof AssetsTreeProvider_1.EntitiesListItem) {
+            assetType = 'entitiesList';
+            assetName = item.list.name;
+        }
+        else {
+            return;
+        }
+        DimensionEditorPanel_1.DimensionEditorPanel.focusAsset(context.extensionPath, dimensionManager, sourceFolderManager, dbConnectionManager, entitiesListManager, assetType, assetName);
     }));
     // Filter Assets commands
     context.subscriptions.push(vscode.commands.registerCommand('acacia-erd.filterAssets', async () => {

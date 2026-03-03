@@ -4,6 +4,31 @@ All notable changes to the "acacia-erd" extension will be documented in this fil
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [2.3.2] - 2026-03-03
+
+### Added
+- **ERD Diagram Management** — Named diagrams are now first-class objects in the Assets tree, nested under their parent Entities List with full lifecycle management
+- **DiagramManager** utility — New `DiagramManager` class for CRUD operations on diagram configurations, file-based persistence (`*.diagrams.json`), and `FileSystemWatcher` for external changes
+- **DiagramItem** tree node — New `DiagramItem` in the Assets tree showing diagram name, entity count badge, and double-click to open
+- **Add/Open/Rename/Delete/Duplicate Diagram** commands — Five new commands registered in `package.json` with context menus on Entities List and Diagram tree items
+- **Diagram data model** — `DiagramConfig` type storing `id`, `name`, `entityIds`, and entity `positions` (x/y coordinates)
+- **Save Diagram** — Persists the current canvas state (entity selection and positions) back to the diagram JSON file, plus an SVG snapshot alongside
+- **Save As Diagram** — Creates a new named diagram from the current ERD canvas, with auto-detection of the parent entities list and auto-generated `diagramsPath`
+- **Open Diagram** — Loads a saved diagram into the Interactive ERD Editor: filters entities, applies saved positions, updates panel title
+- **Entity Sync Detection** — `EntitySyncChecker` utility compares a diagram's entity references against the current entities list and warns about missing entities on open
+- **Auto-Repair** — "Remove Missing & Open" option in the sync warning dialog strips stale entity references and saves the cleaned diagram
+- **Webview diagram toolbar** — "Save Diagram" and "Save As Diagram" buttons in the Interactive ERD toolbar, diagram name display in the status bar
+- **Webview diagram functions** — `collectDiagramState()` reads entity IDs, positions, and SVG from the canvas; `loadDiagramIntoCanvas()` filters and positions entities; `updateDiagramStatusBar()` shows the loaded diagram name
+- **`diagramsPath` on EntitiesListConfig** — Optional field linking an entities list to its diagrams JSON file, with `setDiagramsPath()` method and schema update
+- **DiagramManager test suite** — Comprehensive tests for diagram CRUD, file persistence, and watcher events
+- **EntitySyncChecker test suite** — Tests for sync detection, message formatting, truncation, and `repairDiagram()` pure function
+- **EntitiesListManager `diagramsPath` tests** — Tests for `setDiagramsPath()` added to existing test suite
+
+### Improved
+- **AssetsTreeProvider** — Entities list items are now collapsible when `diagramsPath` is configured; `getChildren()` returns `DiagramItem` children; `DiagramManager` cache with `getDiagramManagerForList()` accessor
+- **InteractiveERDPanel** — Tracks `_currentDiagram`, `_currentListName`, and `_currentDiagramManager` state; new `openDiagram()` static method with entity sync check; `handleSaveDiagram()` and `handleSaveAsDiagram()` handlers; proper cleanup on dispose
+- **extension.ts** — Six new command handlers for diagram CRUD with auto-generated `diagramsPath` and `QuickPick` fallbacks when invoked from the Command Palette
+
 ## [2.3.1] - 2026-02-27
 
 ### Added

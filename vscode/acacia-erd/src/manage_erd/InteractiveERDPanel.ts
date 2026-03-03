@@ -7,6 +7,8 @@ import * as em from '../utils/EntityManager';
 import { HtmlExporter } from '../utils/HtmlExporter';
 import { DimensionManager } from '../utils/DimensionManager';
 import { EntitiesListManager } from '../utils/EntitiesListManager';
+import { DiagramManager, DiagramConfig } from '../utils/DiagramManager';
+import { checkEntitySync, buildSyncWarningMessage, repairDiagram } from '../utils/EntitySyncChecker';
 
 /** Data structure for usage items */
 interface UsageData {
@@ -29,7 +31,10 @@ type InteractiveERDMessage =
     | { command: 'loadSVG' }
     | { command: 'chooseJSON' }
     | { command: 'chooseEntitiesList' }
-    | { command: 'deleteEntity'; entityId: string };
+    | { command: 'deleteEntity'; entityId: string }
+    | { command: 'saveDiagram'; entityIds: string[]; positions: Record<string, { x: number; y: number }>; svgContent: string }
+    | { command: 'saveAsDiagram'; entityIds: string[]; positions: Record<string, { x: number; y: number }>; svgContent: string }
+    | { command: 'getDiagramState' };
 
 /** Messages received from the Edit Entity webview */
 type EditEntityMessage =
@@ -48,6 +53,73 @@ export class InteractiveERDPanel {
     private mgr: em.EntityManager = em.EntityManager.getInstance();
     private dimensionManager?: DimensionManager;
     private entitiesListManager?: EntitiesListManager;
+    /** The currently open diagram, or undefined if no diagram is loaded (freeform mode). */
+    private _currentDiagram: DiagramConfig | undefined;
+    /** The name of the entities list this diagram belongs to. */
+    private _currentListName: string | undefined;
+    /** The DiagramManager for the current diagram's entities list. */
+    private _currentDiagramManager: DiagramManager | undefined;
+
+    /**
+     * Open a specific diagram in the ERD panel.
+     * Creates the panel if needed, then loads the diagram data into the webview.
+     */
+    public static async openDiagram(
+        extensionPath: string,
+        diagram: DiagramConfig,
+        listName: string,
+        diagramManager: DiagramManager,
+        dimensionManager?: DimensionManager,
+        entitiesListManager?: EntitiesListManager
+    ): Promise<void> {
+        // Ensure the panel exists
+        InteractiveERDPanel.createOrShow(extensionPath, dimensionManager, entitiesListManager);
+
+        const panel = InteractiveERDPanel.currentPanel;
+        if (panel) {
+            // Check for entity sync mismatches before opening
+            const entities = em.EntityManager.getInstance().getEntities();
+            const syncResult = checkEntitySync(diagram, entities);
+
+            if (syncResult.hasMismatches) {
+                const warningMessage = buildSyncWarningMessage(syncResult);
+                const action = await vscode.window.showWarningMessage(
+                    warningMessage!,
+                    'Open Anyway',
+                    'Remove Missing & Open',
+                    'Cancel'
+                );
+                if (action === 'Cancel' || !action) {
+                    return; // Cancel or dismissed
+                }
+                if (action === 'Remove Missing & Open') {
+                    diagram = repairDiagram(diagram, syncResult);
+                    diagramManager.updateDiagram(diagram.id, {
+                        entityIds: diagram.entityIds,
+                        positions: diagram.positions,
+                    });
+                }
+            }
+
+            panel._currentDiagram = diagram;
+            panel._currentListName = listName;
+            panel._currentDiagramManager = diagramManager;
+
+            // Update panel title to show diagram name
+            panel._panel.title = `ERD: ${diagram.name}`;
+
+            // Send diagram data to webview
+            panel._panel.webview.postMessage({
+                command: 'loadDiagram',
+                diagram: {
+                    id: diagram.id,
+                    name: diagram.name,
+                    entityIds: diagram.entityIds,
+                    positions: diagram.positions
+                }
+            });
+        }
+    }
 
     public static createOrShow(
         extensionPath: string,
@@ -180,13 +252,32 @@ export class InteractiveERDPanel {
                     break;     
                 case 'deleteEntity':
                     deleteEntity(message.entityId);
-                    break;       
+                    break;
+                case 'saveDiagram':
+                    await this.handleSaveDiagram(message.entityIds, message.positions, message.svgContent);
+                    break;
+                case 'saveAsDiagram':
+                    await this.handleSaveAsDiagram(message.entityIds, message.positions, message.svgContent);
+                    break;
+                case 'getDiagramState':
+                    // Webview is requesting current diagram info (e.g., after being restored)
+                    if (this._currentDiagram) {
+                        this._panel.webview.postMessage({
+                            command: 'diagramInfo',
+                            diagram: this._currentDiagram,
+                            listName: this._currentListName
+                        });
+                    }
+                    break;
             }
         });
     }
 
     public dispose() {
         InteractiveERDPanel.currentPanel = undefined;
+        this._currentDiagram = undefined;
+        this._currentListName = undefined;
+        this._currentDiagramManager = undefined;
         this._panel.dispose();
     }
 
@@ -420,6 +511,161 @@ export class InteractiveERDPanel {
             command: 'updateDimensions',
             dimensions
         });
+    }
+
+    private async handleSaveDiagram(
+        entityIds: string[],
+        positions: Record<string, { x: number; y: number }>,
+        svgContent: string
+    ): Promise<void> {
+        if (!this._currentDiagram || !this._currentDiagramManager) {
+            // No diagram context — offer to create a new diagram
+            vscode.window.showWarningMessage(
+                'No diagram is currently open. Use "Add ERD Diagram" from the Assets tree to create one first.'
+            );
+            return;
+        }
+
+        try {
+            // Update the diagram data
+            this._currentDiagramManager.updateDiagram(this._currentDiagram.id, {
+                entityIds,
+                positions
+            });
+
+            // Also save the SVG alongside the diagrams file
+            const diagramsFilePath = this._currentDiagramManager.getFilePath();
+            const svgFileName = `${this._currentDiagram.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.svg`;
+            const svgPath = path.join(path.dirname(diagramsFilePath), svgFileName);
+
+            const svgWithDimensions = svgContent.replace(
+                '<svg ',
+                '<svg width="1000" height="1000" style="background-color: white;" '
+            );
+            fs.writeFileSync(svgPath, svgWithDimensions);
+
+            // Refresh the in-memory diagram reference
+            this._currentDiagram = this._currentDiagramManager.getDiagram(this._currentDiagram.id);
+
+            vscode.window.showInformationMessage(`Diagram "${this._currentDiagram?.name}" saved`);
+        } catch (error) {
+            const msg = error instanceof Error ? error.message : 'Unknown error';
+            vscode.window.showErrorMessage(`Failed to save diagram: ${msg}`);
+        }
+    }
+
+    private async handleSaveAsDiagram(
+        entityIds: string[],
+        positions: Record<string, { x: number; y: number }>,
+        svgContent: string
+    ): Promise<void> {
+        // Ask user for diagram name
+        const name = await vscode.window.showInputBox({
+            prompt: 'Enter a name for the new ERD diagram',
+            placeHolder: 'e.g., Overview, User Module, Full Schema',
+            validateInput: (value) => {
+                if (!value || !value.trim()) {
+                    return 'Name cannot be empty';
+                }
+                return undefined;
+            }
+        });
+        if (!name) { return; }
+
+        // Determine which entities list to save under
+        let listName: string | undefined = this._currentListName;
+        let diagramMgr: DiagramManager | undefined = this._currentDiagramManager;
+
+        if (!listName || !diagramMgr) {
+            // No diagram context — need to determine the entities list
+            // Try to match current entities path to a configured list
+            if (this.entitiesListManager) {
+                const currentPath = this.mgr.getEntitiesJsonPath();
+                const lists = this.entitiesListManager.getLists();
+                const matchedList = lists.find(l => {
+                    const absPath = this.entitiesListManager!.resolveAbsolutePath(l);
+                    return this.normalizePath(absPath) === this.normalizePath(currentPath);
+                });
+
+                if (matchedList) {
+                    listName = matchedList.name;
+
+                    // Ensure the list has a diagramsPath
+                    if (!matchedList.diagramsPath) {
+                        const baseName = path.basename(matchedList.jsonPath, path.extname(matchedList.jsonPath));
+                        const dir = path.dirname(this.entitiesListManager.resolveAbsolutePath(matchedList));
+                        const diagramsFileName = `${baseName}.diagrams.json`;
+                        const diagramsAbsPath = path.join(dir, diagramsFileName);
+                        await this.entitiesListManager.setDiagramsPath(matchedList.name, diagramsAbsPath);
+                    }
+
+                    // Re-read the list to get updated config with diagramsPath
+                    const updatedList = this.entitiesListManager.getLists().find(l => l.name === listName);
+                    if (updatedList?.diagramsPath) {
+                        const absPath = path.isAbsolute(updatedList.diagramsPath)
+                            ? updatedList.diagramsPath
+                            : path.resolve(
+                                vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '',
+                                updatedList.diagramsPath
+                            );
+                        diagramMgr = new DiagramManager(absPath);
+                    }
+                } else {
+                    vscode.window.showWarningMessage(
+                        'Cannot save diagram: the current entities list is not registered in the Assets tree. Add it first.'
+                    );
+                    return;
+                }
+            } else {
+                vscode.window.showWarningMessage('Cannot save diagram: no entities list manager available.');
+                return;
+            }
+        }
+
+        if (!diagramMgr || !listName) { return; }
+
+        try {
+            // Create the new diagram
+            const newDiagram = diagramMgr.addDiagram(name.trim(), entityIds, positions);
+
+            // Save SVG alongside
+            const diagramsFilePath = diagramMgr.getFilePath();
+            const svgFileName = `${name.trim().replace(/[^a-zA-Z0-9_-]/g, '_')}.svg`;
+            const svgPath = path.join(path.dirname(diagramsFilePath), svgFileName);
+            const svgWithDimensions = svgContent.replace(
+                '<svg ',
+                '<svg width="1000" height="1000" style="background-color: white;" '
+            );
+            fs.writeFileSync(svgPath, svgWithDimensions);
+
+            // Update panel state to track the newly created diagram
+            this._currentDiagram = newDiagram;
+            this._currentListName = listName;
+            this._currentDiagramManager = diagramMgr;
+            this._panel.title = `ERD: ${newDiagram.name}`;
+
+            vscode.window.showInformationMessage(`Diagram "${newDiagram.name}" created and saved`);
+
+            // Notify webview about the new diagram context
+            this._panel.webview.postMessage({
+                command: 'diagramInfo',
+                diagram: newDiagram,
+                listName: listName
+            });
+        } catch (error) {
+            const msg = error instanceof Error ? error.message : 'Unknown error';
+            vscode.window.showErrorMessage(`Failed to create diagram: ${msg}`);
+        }
+    }
+
+    /** Get the currently loaded diagram, if any. */
+    public getCurrentDiagram(): DiagramConfig | undefined {
+        return this._currentDiagram;
+    }
+
+    /** Get the entities list name for the current diagram. */
+    public getCurrentListName(): string | undefined {
+        return this._currentListName;
     }
 
     

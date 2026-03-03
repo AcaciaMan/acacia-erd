@@ -39,7 +39,8 @@
                 "schema": [
                     "relational"
                 ]
-            }
+            },
+            "diagramsPath": "redmine_entities.diagrams.json"
         }
     ]
 }

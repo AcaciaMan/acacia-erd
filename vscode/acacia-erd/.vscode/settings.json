@@ -12,6 +12,11 @@
     "typescript.tsc.autoDetect": "off",
     "chat.tools.terminal.autoApprove": {
         "npx tsc": true,
-        "npx vscode-test": true
+        "npx vscode-test": true,
+        "/^node -e \"JSON\\.parse\\(require\\('fs'\\)\\.readFileSync\\('package\\.json','utf8'\\)\\); console\\.log\\('Valid JSON'\\)\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "npx mocha": true
     }
 }

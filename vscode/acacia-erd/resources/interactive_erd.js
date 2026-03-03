@@ -407,3 +407,106 @@ function updateEntity(entity) {
         console.log('text content:', text.textContent);
     }
 }
+
+/**
+ * Collect the current diagram state from the canvas.
+ * Reads all entity positions and IDs from the SVG.
+ */
+function collectDiagramState() {
+    const entities = getERDEntities();
+    const entityIds = [];
+    const positions = {};
+
+    document.querySelectorAll('.entity').forEach(entityElement => {
+        const entityData = JSON.parse(entityElement.getAttribute('data-entity'));
+        const transform = entityElement.getAttribute('transform');
+        const match = transform ? transform.match(/translate\(([^,]+),\s*([^)]+)\)/) : null;
+
+        const id = entityData.id || entityData.name;
+        entityIds.push(id);
+
+        if (match) {
+            positions[id] = {
+                x: parseFloat(match[1]),
+                y: parseFloat(match[2])
+            };
+        } else {
+            positions[id] = { x: entityData.x || 0, y: entityData.y || 0 };
+        }
+    });
+
+    const svgElement = document.getElementById('erd-svg');
+    const svgContent = svgElement ? svgElement.outerHTML : '';
+
+    return { entityIds, positions, svgContent };
+}
+
+/**
+ * Load a diagram into the canvas.
+ * Filters the current entities list to show only the diagram's entities,
+ * and positions them according to the saved positions.
+ */
+function loadDiagramIntoCanvas(diagram) {
+    // Get all currently available entities (from the loaded entities list)
+    const allEntities = getERDEntities();
+
+    // If there are entities in the diagram, filter and position them
+    if (diagram.entityIds && diagram.entityIds.length > 0) {
+        const diagramEntityIds = new Set(diagram.entityIds);
+
+        // Filter entities to only those in the diagram
+        let diagramEntities = allEntities.filter(e =>
+            diagramEntityIds.has(e.id) || diagramEntityIds.has(e.name)
+        );
+
+        // Apply saved positions
+        if (diagram.positions) {
+            diagramEntities = diagramEntities.map(entity => {
+                const key = entity.id || entity.name;
+                const pos = diagram.positions[key] || diagram.positions[entity.name];
+                if (pos) {
+                    entity.x = pos.x;
+                    entity.y = pos.y;
+                }
+                return entity;
+            });
+        }
+
+        // Render the filtered and positioned entities
+        generateSVG(diagramEntities);
+    } else {
+        // Empty diagram — just show a blank canvas
+        generateSVG([]);
+    }
+
+    attachSVGEntityEventListeners();
+    attachEntityEventListeners();
+    attachSVGUsageEventListeners();
+    attachUsageEventListeners();
+    updateStatusBar();
+
+    // Show the save diagram button and update status
+    const saveDiagramBtn = document.getElementById('save-diagram-button');
+    if (saveDiagramBtn) {
+        saveDiagramBtn.style.display = 'inline-block';
+    }
+
+    // Update diagram name display
+    const diagramNameDisplay = document.getElementById('diagram-name-display');
+    if (diagramNameDisplay && diagram.name) {
+        diagramNameDisplay.textContent = '\uD83D\uDCCA ' + diagram.name;
+        diagramNameDisplay.style.display = 'inline';
+    }
+
+    setStatusMessage('Diagram "' + (diagram.name || 'Untitled') + '" loaded');
+}
+
+/**
+ * Update the status bar area to show current diagram info.
+ */
+function updateDiagramStatusBar(diagram, listName) {
+    // Update status bar with diagram name
+    if (diagram && diagram.name) {
+        setStatusMessage('Diagram: ' + diagram.name + ' (' + listName + ')');
+    }
+}

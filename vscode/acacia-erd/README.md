@@ -49,7 +49,17 @@ Create, visualize, and share Entity Relationship Diagrams (ERDs) in VS Code. Des
 
 ![Redmine database Entity Relationship Diagram](https://github.com/user-attachments/assets/47b84e7a-323d-470c-8509-918468181418)
 
-## What's New in v2.3.1
+## What's New in v2.3.2
+
+### ERD Diagram Management — Named, Persistent Diagrams
+- **Diagrams in the Assets tree** — Named ERD diagrams appear as children of their Entities List, with entity count badges and double-click to open
+- **Full CRUD** — Add, open, rename, delete, and duplicate diagrams from the Assets tree context menu
+- **Save & Save As** — Save the current canvas state (entity selection + positions) as a named diagram, or create a new one from any ERD
+- **Entity Sync Detection** — When opening a diagram, missing entities are detected and you're warned with options to "Open Anyway", "Remove Missing & Open", or "Cancel"
+- **Auto-generated storage** — Diagrams are stored in a `*.diagrams.json` file alongside the entities JSON, created automatically on first use
+- **SVG snapshots** — Each save also produces an SVG file alongside the diagram data
+
+### Previously in v2.3.1
 
 ### Dimensions — Categorize & Filter Your Assets
 - **Dimension Manager** — Define custom dimensions (Level, Environment, Schema, etc.) with configurable values, persisted to a JSON file

@@ -300,6 +300,78 @@ suite('EntitiesListManager', () => {
             manager.dispose();
         });
     });
+    suite('setDiagramsPath()', () => {
+        test('sets diagramsPath on an existing list and saves', async () => {
+            const existing = [{ name: 'Main Schema', jsonPath: 'resources/entities.json' }];
+            const { mock, updateStub } = createVscodeStub(existing);
+            const ManagerClass = loadEntitiesListManager(mock);
+            const manager = new ManagerClass();
+            const absPath = path.join(MOCK_WORKSPACE, 'diagrams', 'main.diagrams.json');
+            await manager.setDiagramsPath('Main Schema', absPath);
+            assert.ok(updateStub.calledOnce);
+            const savedLists = updateStub.firstCall.args[1];
+            const expectedRelative = path.join('diagrams', 'main.diagrams.json');
+            assert.strictEqual(savedLists[0].diagramsPath, expectedRelative);
+            manager.dispose();
+        });
+        test('stores workspace-relative path when file is inside workspace', async () => {
+            const existing = [{ name: 'Main Schema', jsonPath: 'resources/entities.json' }];
+            const { mock, updateStub } = createVscodeStub(existing);
+            const ManagerClass = loadEntitiesListManager(mock);
+            const manager = new ManagerClass();
+            const absPath = path.join(MOCK_WORKSPACE, 'diagrams', 'main.diagrams.json');
+            await manager.setDiagramsPath('Main Schema', absPath);
+            assert.ok(updateStub.calledOnce);
+            const savedLists = updateStub.firstCall.args[1];
+            const expectedRelative = path.join('diagrams', 'main.diagrams.json');
+            assert.strictEqual(savedLists[0].diagramsPath, expectedRelative);
+            manager.dispose();
+        });
+        test('stores absolute path when file is outside workspace', async () => {
+            const existing = [{ name: 'Main Schema', jsonPath: 'resources/entities.json' }];
+            const { mock, updateStub } = createVscodeStub(existing);
+            const ManagerClass = loadEntitiesListManager(mock);
+            const manager = new ManagerClass();
+            const outsidePath = '/other/location/diagrams.json';
+            await manager.setDiagramsPath('Main Schema', outsidePath);
+            assert.ok(updateStub.calledOnce);
+            const savedLists = updateStub.firstCall.args[1];
+            assert.strictEqual(savedLists[0].diagramsPath, outsidePath);
+            manager.dispose();
+        });
+        test('does not error when list name not found', async () => {
+            const existing = [{ name: 'Main Schema', jsonPath: 'resources/entities.json' }];
+            const { mock, updateStub } = createVscodeStub(existing);
+            const ManagerClass = loadEntitiesListManager(mock);
+            const manager = new ManagerClass();
+            await manager.setDiagramsPath('NonExistent', '/some/path.json');
+            assert.ok(updateStub.notCalled);
+            manager.dispose();
+        });
+        test('fires onDidChange event after setting path', async () => {
+            const existing = [{ name: 'Main Schema', jsonPath: 'resources/entities.json' }];
+            const { mock } = createVscodeStub(existing);
+            const ManagerClass = loadEntitiesListManager(mock);
+            const manager = new ManagerClass();
+            let eventFired = false;
+            manager.onDidChange(() => { eventFired = true; });
+            await manager.setDiagramsPath('Main Schema', '/some/diagrams.json');
+            assert.ok(eventFired);
+            manager.dispose();
+        });
+        test('preserves existing diagramsPath when using other methods', async () => {
+            const existing = [{ name: 'Main Schema', jsonPath: 'resources/entities.json', diagramsPath: 'diagrams/main.json' }];
+            const { mock, updateStub } = createVscodeStub(existing);
+            const ManagerClass = loadEntitiesListManager(mock);
+            const manager = new ManagerClass();
+            await manager.renameList('Main Schema', 'Primary Schema');
+            assert.ok(updateStub.calledOnce);
+            const savedLists = updateStub.firstCall.args[1];
+            assert.strictEqual(savedLists[0].name, 'Primary Schema');
+            assert.strictEqual(savedLists[0].diagramsPath, 'diagrams/main.json');
+            manager.dispose();
+        });
+    });
     suite('resolveAbsolutePath()', () => {
         test('returns absolute path unchanged', () => {
             const { mock } = createVscodeStub();

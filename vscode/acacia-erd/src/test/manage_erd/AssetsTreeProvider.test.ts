@@ -18,6 +18,16 @@ const sampleEntitiesLists = [
     { name: 'Auth Module', jsonPath: '/absolute/auth-entities.json' },
 ];
 
+const sampleDiagrams = [
+    { id: 'diag-1', name: 'Overview Diagram', entityIds: ['entity-1', 'entity-2'], positions: { 'entity-1': { x: 100, y: 200 }, 'entity-2': { x: 300, y: 400 } } },
+    { id: 'diag-2', name: 'User Module', entityIds: ['entity-3'], positions: { 'entity-3': { x: 50, y: 50 } } },
+];
+
+const sampleEntitiesListsWithDiagramsPath = [
+    { name: 'Main Schema', jsonPath: 'resources/entities.json', diagramsPath: 'resources/entities.diagrams.json' },
+    { name: 'Auth Module', jsonPath: '/absolute/auth-entities.json' },
+];
+
 function createMockSourceFolderManager(folders: any[] = sampleFolders) {
     const changeListeners: Function[] = [];
     return {
@@ -109,7 +119,13 @@ function createVscodeMock() {
     };
 }
 
-function loadAssetsTreeProvider(vscodeMock: any, fsMock?: any, entityManagerMock?: any) {
+function loadAssetsTreeProvider(vscodeMock: any, fsMock?: any, entityManagerMock?: any, diagramsMock?: any) {
+    const DiagramManagerMock = diagramsMock || class {
+        getDiagrams() { return []; }
+        onDidChange() { return { dispose: sinon.stub() }; }
+        dispose() {}
+    };
+
     const mod = proxyquire('../../manage_erd/AssetsTreeProvider', {
         'vscode': vscodeMock,
         'fs': fsMock || { existsSync: sinon.stub().returns(true), '@noCallThru': true },
@@ -117,6 +133,10 @@ function loadAssetsTreeProvider(vscodeMock: any, fsMock?: any, entityManagerMock
         '../utils/DbConnectionManager': { '@noCallThru': true },
         '../utils/EntitiesListManager': { '@noCallThru': true },
         '../utils/DimensionManager': { '@noCallThru': true },
+        '../utils/DiagramManager': {
+            DiagramManager: DiagramManagerMock,
+            '@noCallThru': true,
+        },
         '../utils/EntityManager': {
             EntityManager: {
                 getInstance: () => entityManagerMock || {
@@ -133,6 +153,7 @@ function loadAssetsTreeProvider(vscodeMock: any, fsMock?: any, entityManagerMock
         SourceFolderItem: mod.SourceFolderItem,
         DbConnectionItem: mod.DbConnectionItem,
         EntitiesListItem: mod.EntitiesListItem,
+        DiagramItem: mod.DiagramItem,
     };
 }
 
@@ -1242,6 +1263,248 @@ suite('AssetsTreeProvider', () => {
                 // Unassigned has no dimensions → no dimension summary
                 assert.ok(!(lists[2].tooltip as string).includes('Level:'));
             });
+        });
+    });
+
+    suite('DiagramItem', () => {
+        test('has correct contextValue erdDiagram', () => {
+            const vscodeMock = createVscodeMock();
+            const { DiagramItem } = loadAssetsTreeProvider(vscodeMock);
+            const diagram = sampleDiagrams[0];
+            const item = new DiagramItem(diagram, 'Main Schema');
+            assert.strictEqual(item.contextValue, 'erdDiagram');
+        });
+
+        test('has correct label (diagram name)', () => {
+            const vscodeMock = createVscodeMock();
+            const { DiagramItem } = loadAssetsTreeProvider(vscodeMock);
+            const diagram = sampleDiagrams[0];
+            const item = new DiagramItem(diagram, 'Main Schema');
+            assert.strictEqual(item.label, 'Overview Diagram');
+        });
+
+        test('has correct description showing entity count', () => {
+            const vscodeMock = createVscodeMock();
+            const { DiagramItem } = loadAssetsTreeProvider(vscodeMock);
+            const diagram = sampleDiagrams[0];
+            const item = new DiagramItem(diagram, 'Main Schema');
+            assert.strictEqual(item.description, '2 entities');
+        });
+
+        test('has correct icon', () => {
+            const vscodeMock = createVscodeMock();
+            const { DiagramItem } = loadAssetsTreeProvider(vscodeMock);
+            const diagram = sampleDiagrams[0];
+            const item = new DiagramItem(diagram, 'Main Schema');
+            assert.strictEqual(item.iconPath.id, 'type-hierarchy-sub');
+        });
+
+        test('has command to open diagram', () => {
+            const vscodeMock = createVscodeMock();
+            const { DiagramItem } = loadAssetsTreeProvider(vscodeMock);
+            const diagram = sampleDiagrams[0];
+            const item = new DiagramItem(diagram, 'Main Schema');
+            assert.strictEqual(item.command?.command, 'acacia-erd.openDiagram');
+            assert.strictEqual(item.command?.arguments?.[0], item);
+        });
+
+        test('stores parentListName', () => {
+            const vscodeMock = createVscodeMock();
+            const { DiagramItem } = loadAssetsTreeProvider(vscodeMock);
+            const diagram = sampleDiagrams[0];
+            const item = new DiagramItem(diagram, 'Main Schema');
+            assert.strictEqual(item.parentListName, 'Main Schema');
+        });
+
+        test('stores diagram config reference', () => {
+            const vscodeMock = createVscodeMock();
+            const { DiagramItem } = loadAssetsTreeProvider(vscodeMock);
+            const diagram = sampleDiagrams[0];
+            const item = new DiagramItem(diagram, 'Main Schema');
+            assert.strictEqual(item.diagram, diagram);
+            assert.strictEqual(item.diagram.id, 'diag-1');
+            assert.deepStrictEqual(item.diagram.entityIds, ['entity-1', 'entity-2']);
+        });
+    });
+
+    suite('EntitiesListItem — collapsibility', () => {
+        test('has CollapsibleState.Collapsed when diagramsPath is set', () => {
+            const vscodeMock = createVscodeMock();
+            const { EntitiesListItem } = loadAssetsTreeProvider(vscodeMock);
+            const list = { name: 'With Diagrams', jsonPath: 'resources/entities.json', diagramsPath: 'resources/entities.diagrams.json' };
+            const item = new EntitiesListItem(list, '/mock/workspace/resources/entities.json');
+            assert.strictEqual(item.collapsibleState, vscodeMock.TreeItemCollapsibleState.Collapsed);
+        });
+
+        test('has CollapsibleState.None when diagramsPath is not set', () => {
+            const vscodeMock = createVscodeMock();
+            const { EntitiesListItem } = loadAssetsTreeProvider(vscodeMock);
+            const list = { name: 'No Diagrams', jsonPath: 'resources/entities.json' };
+            const item = new EntitiesListItem(list, '/mock/workspace/resources/entities.json');
+            assert.strictEqual(item.collapsibleState, vscodeMock.TreeItemCollapsibleState.None);
+        });
+
+        test('has CollapsibleState.None when diagramsPath is undefined', () => {
+            const vscodeMock = createVscodeMock();
+            const { EntitiesListItem } = loadAssetsTreeProvider(vscodeMock);
+            const list = { name: 'Undefined Diagrams', jsonPath: 'resources/entities.json', diagramsPath: undefined };
+            const item = new EntitiesListItem(list, '/mock/workspace/resources/entities.json');
+            assert.strictEqual(item.collapsibleState, vscodeMock.TreeItemCollapsibleState.None);
+        });
+    });
+
+    suite('getChildren() — Diagram children of EntitiesListItem', () => {
+        function createDiagramManagerMock(diagrams: any[] = []) {
+            const changeListeners: Function[] = [];
+            return class MockDiagramManager {
+                private _diagrams = diagrams;
+                private _changeListeners: Function[] = changeListeners;
+                getDiagrams() { return this._diagrams; }
+                onDidChange(listener: Function) {
+                    this._changeListeners.push(listener);
+                    return { dispose: sinon.stub() };
+                }
+                dispose() {}
+                static _changeListeners = changeListeners;
+            };
+        }
+
+        test('returns DiagramItem[] for an entities list with diagrams', () => {
+            const vscodeMock = createVscodeMock();
+            vscodeMock.workspace.workspaceFolders = [{ uri: { fsPath: '/mock/workspace' } }];
+            const DiagMgrMock = createDiagramManagerMock(sampleDiagrams);
+            const { AssetsTreeProvider, DiagramItem } = loadAssetsTreeProvider(vscodeMock, undefined, undefined, DiagMgrMock);
+            const sfm = createMockSourceFolderManager();
+            const dcm = createMockDbConnectionManager();
+            const elm = createMockEntitiesListManager(sampleEntitiesListsWithDiagramsPath);
+            const provider = new AssetsTreeProvider(sfm, dcm, elm);
+
+            const roots = provider.getChildren(undefined);
+            const lists = provider.getChildren(roots[0]);
+            // First list has diagramsPath
+            const diagramChildren = provider.getChildren(lists[0]);
+            assert.strictEqual(diagramChildren.length, 2);
+            assert.ok(diagramChildren[0] instanceof DiagramItem);
+            assert.ok(diagramChildren[1] instanceof DiagramItem);
+        });
+
+        test('returns correct diagram labels', () => {
+            const vscodeMock = createVscodeMock();
+            vscodeMock.workspace.workspaceFolders = [{ uri: { fsPath: '/mock/workspace' } }];
+            const DiagMgrMock = createDiagramManagerMock(sampleDiagrams);
+            const { AssetsTreeProvider } = loadAssetsTreeProvider(vscodeMock, undefined, undefined, DiagMgrMock);
+            const sfm = createMockSourceFolderManager();
+            const dcm = createMockDbConnectionManager();
+            const elm = createMockEntitiesListManager(sampleEntitiesListsWithDiagramsPath);
+            const provider = new AssetsTreeProvider(sfm, dcm, elm);
+
+            const roots = provider.getChildren(undefined);
+            const lists = provider.getChildren(roots[0]);
+            const diagramChildren = provider.getChildren(lists[0]);
+            assert.strictEqual(diagramChildren[0].label, 'Overview Diagram');
+            assert.strictEqual(diagramChildren[1].label, 'User Module');
+        });
+
+        test('returns empty array when entities list has diagramsPath but no diagrams', () => {
+            const vscodeMock = createVscodeMock();
+            vscodeMock.workspace.workspaceFolders = [{ uri: { fsPath: '/mock/workspace' } }];
+            const DiagMgrMock = createDiagramManagerMock([]);
+            const { AssetsTreeProvider } = loadAssetsTreeProvider(vscodeMock, undefined, undefined, DiagMgrMock);
+            const sfm = createMockSourceFolderManager();
+            const dcm = createMockDbConnectionManager();
+            const elm = createMockEntitiesListManager(sampleEntitiesListsWithDiagramsPath);
+            const provider = new AssetsTreeProvider(sfm, dcm, elm);
+
+            const roots = provider.getChildren(undefined);
+            const lists = provider.getChildren(roots[0]);
+            const diagramChildren = provider.getChildren(lists[0]);
+            assert.strictEqual(diagramChildren.length, 0);
+        });
+
+        test('returns empty array when entities list has no diagramsPath', () => {
+            const vscodeMock = createVscodeMock();
+            vscodeMock.workspace.workspaceFolders = [{ uri: { fsPath: '/mock/workspace' } }];
+            const DiagMgrMock = createDiagramManagerMock(sampleDiagrams);
+            const { AssetsTreeProvider } = loadAssetsTreeProvider(vscodeMock, undefined, undefined, DiagMgrMock);
+            const sfm = createMockSourceFolderManager();
+            const dcm = createMockDbConnectionManager();
+            const elm = createMockEntitiesListManager(sampleEntitiesListsWithDiagramsPath);
+            const provider = new AssetsTreeProvider(sfm, dcm, elm);
+
+            const roots = provider.getChildren(undefined);
+            const lists = provider.getChildren(roots[0]);
+            // Second list (Auth Module) has no diagramsPath
+            const diagramChildren = provider.getChildren(lists[1]);
+            assert.strictEqual(diagramChildren.length, 0);
+        });
+
+        test('diagram items have correct parentListName set to list name', () => {
+            const vscodeMock = createVscodeMock();
+            vscodeMock.workspace.workspaceFolders = [{ uri: { fsPath: '/mock/workspace' } }];
+            const DiagMgrMock = createDiagramManagerMock(sampleDiagrams);
+            const { AssetsTreeProvider } = loadAssetsTreeProvider(vscodeMock, undefined, undefined, DiagMgrMock);
+            const sfm = createMockSourceFolderManager();
+            const dcm = createMockDbConnectionManager();
+            const elm = createMockEntitiesListManager(sampleEntitiesListsWithDiagramsPath);
+            const provider = new AssetsTreeProvider(sfm, dcm, elm);
+
+            const roots = provider.getChildren(undefined);
+            const lists = provider.getChildren(roots[0]);
+            const diagramChildren = provider.getChildren(lists[0]);
+            assert.strictEqual(diagramChildren[0].parentListName, 'Main Schema');
+            assert.strictEqual(diagramChildren[1].parentListName, 'Main Schema');
+        });
+
+        test('diagram items have correct entity count in description', () => {
+            const vscodeMock = createVscodeMock();
+            vscodeMock.workspace.workspaceFolders = [{ uri: { fsPath: '/mock/workspace' } }];
+            const DiagMgrMock = createDiagramManagerMock(sampleDiagrams);
+            const { AssetsTreeProvider } = loadAssetsTreeProvider(vscodeMock, undefined, undefined, DiagMgrMock);
+            const sfm = createMockSourceFolderManager();
+            const dcm = createMockDbConnectionManager();
+            const elm = createMockEntitiesListManager(sampleEntitiesListsWithDiagramsPath);
+            const provider = new AssetsTreeProvider(sfm, dcm, elm);
+
+            const roots = provider.getChildren(undefined);
+            const lists = provider.getChildren(roots[0]);
+            const diagramChildren = provider.getChildren(lists[0]);
+            assert.strictEqual(diagramChildren[0].description, '2 entities');
+            assert.strictEqual(diagramChildren[1].description, '1 entities');
+        });
+    });
+
+    suite('DiagramManager change triggers tree refresh', () => {
+        test('tree refreshes when DiagramManager fires onDidChange', () => {
+            const vscodeMock = createVscodeMock();
+            vscodeMock.workspace.workspaceFolders = [{ uri: { fsPath: '/mock/workspace' } }];
+            const changeListeners: Function[] = [];
+            const DiagMgrMock = class {
+                getDiagrams() { return sampleDiagrams; }
+                onDidChange(listener: Function) {
+                    changeListeners.push(listener);
+                    return { dispose: sinon.stub() };
+                }
+                dispose() {}
+            };
+            const { AssetsTreeProvider } = loadAssetsTreeProvider(vscodeMock, undefined, undefined, DiagMgrMock);
+            const sfm = createMockSourceFolderManager();
+            const dcm = createMockDbConnectionManager();
+            const elm = createMockEntitiesListManager(sampleEntitiesListsWithDiagramsPath);
+            const provider = new AssetsTreeProvider(sfm, dcm, elm);
+
+            // Trigger getChildren to cause the DiagramManager to be instantiated
+            const roots = provider.getChildren(undefined);
+            const lists = provider.getChildren(roots[0]);
+            provider.getChildren(lists[0]); // This creates the DiagramManager
+
+            // Listen for tree data change
+            let treeRefreshed = false;
+            provider.onDidChangeTreeData(() => { treeRefreshed = true; });
+
+            // Fire the DiagramManager change event
+            assert.ok(changeListeners.length > 0, 'DiagramManager should have registered a change listener');
+            changeListeners[0]([]);
+            assert.strictEqual(treeRefreshed, true, 'Tree should have refreshed when DiagramManager changed');
         });
     });
 });

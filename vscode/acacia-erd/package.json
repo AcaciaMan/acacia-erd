@@ -6,7 +6,7 @@
     "type": "git",
     "url": "https://github.com/AcaciaMan/acacia-erd"
   },
-  "version": "2.3.1",
+  "version": "2.3.2",
   "publisher": "manacacia",
   "icon": "icon.png",
   "galleryBanner": {
@@ -184,6 +184,35 @@
         "title": "Clear Asset Filters",
         "category": "Acacia ERD",
         "icon": "$(clear-all)"
+      },
+      {
+        "command": "acacia-erd.addDiagram",
+        "title": "Add ERD Diagram",
+        "category": "Acacia ERD",
+        "icon": "$(add)"
+      },
+      {
+        "command": "acacia-erd.openDiagram",
+        "title": "Open ERD Diagram",
+        "category": "Acacia ERD"
+      },
+      {
+        "command": "acacia-erd.renameDiagram",
+        "title": "Rename ERD Diagram",
+        "category": "Acacia ERD",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "acacia-erd.deleteDiagram",
+        "title": "Delete ERD Diagram",
+        "category": "Acacia ERD",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "acacia-erd.duplicateDiagram",
+        "title": "Duplicate ERD Diagram",
+        "category": "Acacia ERD",
+        "icon": "$(copy)"
       }
     ],
     "viewsContainers": {
@@ -252,6 +281,22 @@
         },
         {
           "command": "acacia-erd.editEntitiesListPath",
+          "when": "false"
+        },
+        {
+          "command": "acacia-erd.openDiagram",
+          "when": "false"
+        },
+        {
+          "command": "acacia-erd.renameDiagram",
+          "when": "false"
+        },
+        {
+          "command": "acacia-erd.deleteDiagram",
+          "when": "false"
+        },
+        {
+          "command": "acacia-erd.duplicateDiagram",
           "when": "false"
         },
         {
@@ -363,6 +408,26 @@
           "command": "acacia-erd.assignDimensions",
           "when": "view == acaciaAssets && viewItem == entitiesList",
           "group": "1_dimensions"
+        },
+        {
+          "command": "acacia-erd.addDiagram",
+          "when": "view == acaciaAssets && viewItem == entitiesList",
+          "group": "inline"
+        },
+        {
+          "command": "acacia-erd.renameDiagram",
+          "when": "view == acaciaAssets && viewItem == erdDiagram",
+          "group": "inline"
+        },
+        {
+          "command": "acacia-erd.deleteDiagram",
+          "when": "view == acaciaAssets && viewItem == erdDiagram",
+          "group": "inline"
+        },
+        {
+          "command": "acacia-erd.duplicateDiagram",
+          "when": "view == acaciaAssets && viewItem == erdDiagram",
+          "group": "2_diagram"
         }
       ]
     },
@@ -457,6 +522,10 @@
                     "type": "string"
                   }
                 }
+              },
+              "diagramsPath": {
+                "type": "string",
+                "description": "Path to the diagrams JSON file for this entities list. Relative paths resolve from the workspace root."
               }
             },
             "required": ["name", "jsonPath"]

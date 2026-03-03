@@ -33,11 +33,12 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AssetsTreeProvider = exports.EntitiesListItem = exports.DbConnectionItem = exports.SourceFolderItem = exports.AssetCategoryItem = void 0;
+exports.AssetsTreeProvider = exports.DiagramItem = exports.EntitiesListItem = exports.DbConnectionItem = exports.SourceFolderItem = exports.AssetCategoryItem = void 0;
 const vscode = __importStar(require("vscode"));
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const EntityManager_1 = require("../utils/EntityManager");
+const DiagramManager_1 = require("../utils/DiagramManager");
 class AssetCategoryItem extends vscode.TreeItem {
     categoryId;
     constructor(label, categoryId, iconId, description) {
@@ -90,7 +91,9 @@ class EntitiesListItem extends vscode.TreeItem {
     absolutePath;
     isActive;
     constructor(list, absolutePath, isActive = false) {
-        super(list.name, vscode.TreeItemCollapsibleState.None);
+        super(list.name, list.diagramsPath
+            ? vscode.TreeItemCollapsibleState.Collapsed
+            : vscode.TreeItemCollapsibleState.None);
         this.list = list;
         this.absolutePath = absolutePath;
         this.isActive = isActive;
@@ -108,6 +111,26 @@ class EntitiesListItem extends vscode.TreeItem {
     }
 }
 exports.EntitiesListItem = EntitiesListItem;
+class DiagramItem extends vscode.TreeItem {
+    diagram;
+    parentListName;
+    constructor(diagram, parentListName) {
+        super(diagram.name, vscode.TreeItemCollapsibleState.None);
+        this.diagram = diagram;
+        this.parentListName = parentListName;
+        this.description = `${diagram.entityIds.length} entities`;
+        this.tooltip = `${diagram.name}\n${diagram.entityIds.length} entities`;
+        this.contextValue = 'erdDiagram';
+        this.iconPath = new vscode.ThemeIcon('type-hierarchy-sub');
+        // Double-click opens the diagram in the ERD editor
+        this.command = {
+            command: 'acacia-erd.openDiagram',
+            title: 'Open Diagram',
+            arguments: [this]
+        };
+    }
+}
+exports.DiagramItem = DiagramItem;
 class AssetsTreeProvider {
     sourceFolderManager;
     dbConnectionManager;
@@ -118,6 +141,8 @@ class AssetsTreeProvider {
     /** Active dimension filters. Key = dimensionId, Value = set of selected valueIds.
      *  Special value '__unspecified__' matches assets with no values for that dimension. */
     _filters = new Map();
+    /** Cache of DiagramManager instances, keyed by absolute diagramsPath. */
+    _diagramManagers = new Map();
     constructor(sourceFolderManager, dbConnectionManager, entitiesListManager, dimensionManager) {
         this.sourceFolderManager = sourceFolderManager;
         this.dbConnectionManager = dbConnectionManager;
@@ -140,6 +165,12 @@ class AssetsTreeProvider {
         entityManager.onDidChangeEntitiesPath(() => {
             this._onDidChangeTreeData.fire();
         });
+        // Refresh tree when dimension definitions change (badges/tooltips need updating)
+        if (this.dimensionManager) {
+            this.dimensionManager.onDidChangeDimensions(() => {
+                this._onDidChangeTreeData.fire();
+            });
+        }
     }
     getTreeItem(element) {
         return element;
@@ -180,6 +211,10 @@ class AssetsTreeProvider {
                         if (dimSummary) {
                             item.tooltip = `${item.tooltip}\n\n${dimSummary}`;
                         }
+                        const badges = this.getDimensionBadges(list.dimensions);
+                        if (badges) {
+                            item.description = `${item.description}  ${badges}`;
+                        }
                         return item;
                     });
                 }
@@ -193,6 +228,10 @@ class AssetsTreeProvider {
                         if (dimSummary) {
                             item.tooltip = `${item.tooltip}\n\n${dimSummary}`;
                         }
+                        const badges = this.getDimensionBadges(folder.dimensions);
+                        if (badges) {
+                            item.description = `${item.description}  ${badges}`;
+                        }
                         return item;
                     });
                 }
@@ -205,10 +244,23 @@ class AssetsTreeProvider {
                         if (dimSummary) {
                             item.tooltip = `${item.tooltip}\n\n${dimSummary}`;
                         }
+                        const badges = this.getDimensionBadges(conn.dimensions);
+                        if (badges) {
+                            item.description = `${item.description}  ${badges}`;
+                        }
                         return item;
                     });
                 }
             }
+        }
+        if (element instanceof EntitiesListItem) {
+            const list = element.list;
+            if (!list.diagramsPath) {
+                return [];
+            }
+            const absPath = this.resolveDiagramsPath(list.diagramsPath);
+            const diagramManager = this.getDiagramManager(absPath);
+            return diagramManager.getDiagrams().map(diagram => new DiagramItem(diagram, list.name));
         }
         return [];
     }
@@ -254,6 +306,37 @@ class AssetsTreeProvider {
         }
         return path.resolve(currentPath);
     }
+    /** Get or create a DiagramManager for a given diagrams file path. */
+    getDiagramManager(absoluteDiagramsPath) {
+        let manager = this._diagramManagers.get(absoluteDiagramsPath);
+        if (!manager) {
+            manager = new DiagramManager_1.DiagramManager(absoluteDiagramsPath);
+            manager.onDidChange(() => {
+                this._onDidChangeTreeData.fire();
+            });
+            this._diagramManagers.set(absoluteDiagramsPath, manager);
+        }
+        return manager;
+    }
+    /** Get a DiagramManager for a specific entities list (by list name). Returns undefined if the list has no diagramsPath. */
+    getDiagramManagerForList(listName) {
+        const list = this.entitiesListManager.getLists().find(l => l.name === listName);
+        if (!list?.diagramsPath) {
+            return undefined;
+        }
+        const absPath = this.resolveDiagramsPath(list.diagramsPath);
+        return this._diagramManagers.get(absPath);
+    }
+    resolveDiagramsPath(diagramsPath) {
+        if (path.isAbsolute(diagramsPath)) {
+            return diagramsPath;
+        }
+        const wsFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+        if (wsFolder) {
+            return path.resolve(wsFolder, diagramsPath);
+        }
+        return path.resolve(diagramsPath);
+    }
     normalizePath(p) {
         const normalized = path.normalize(p);
         // On Windows, paths are case-insensitive
@@ -286,6 +369,24 @@ class AssetsTreeProvider {
             }
         }
         return true; // passed all dimension filters
+    }
+    /** Build compact dimension badge text for tree item description.
+     *  Returns something like "[Physical] [Dev]" or empty string. */
+    getDimensionBadges(dimensions) {
+        if (!this.dimensionManager || !dimensions) {
+            return '';
+        }
+        const badges = [];
+        for (const dim of this.dimensionManager.getDimensions()) {
+            const values = dimensions[dim.id];
+            if (values && values.length > 0) {
+                const labels = values
+                    .map(vid => dim.values.find(v => v.id === vid)?.label || vid)
+                    .join(', ');
+                badges.push(`[${labels}]`);
+            }
+        }
+        return badges.join(' ');
     }
     /** Build a short dimension summary string for an asset's tooltip. */
     getDimensionSummary(dimensions) {

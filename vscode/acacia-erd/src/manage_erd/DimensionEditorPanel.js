@@ -46,6 +46,29 @@ class DimensionEditorPanel {
     _dbConnectionManager;
     _entitiesListManager;
     _disposables = [];
+    /**
+     * Opens the Dimension Editor and scrolls to / highlights a specific asset.
+     * @param assetType  'sourceFolder' | 'dbConnection' | 'entitiesList'
+     * @param assetName  The name of the asset to focus
+     */
+    static focusAsset(extensionPath, dimensionManager, sourceFolderManager, dbConnectionManager, entitiesListManager, assetType, assetName) {
+        // Ensure panel is open
+        DimensionEditorPanel.createOrShow(extensionPath, dimensionManager, sourceFolderManager, dbConnectionManager, entitiesListManager);
+        // Post focusAsset message once the webview is ready
+        if (DimensionEditorPanel.currentPanel) {
+            DimensionEditorPanel.currentPanel.focusAssetInWebview(assetType, assetName);
+        }
+    }
+    /** Send a focusAsset message to the webview to scroll/highlight a specific asset. */
+    focusAssetInWebview(assetType, assetName) {
+        setTimeout(() => {
+            this._panel.webview.postMessage({
+                command: 'focusAsset',
+                assetType,
+                assetName,
+            });
+        }, 300);
+    }
     static createOrShow(extensionPath, dimensionManager, sourceFolderManager, dbConnectionManager, entitiesListManager) {
         const column = vscode.window.activeTextEditor
             ? vscode.window.activeTextEditor.viewColumn

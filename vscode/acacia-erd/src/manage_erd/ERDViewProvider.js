@@ -45,11 +45,13 @@ class ERDViewProvider {
     sourceFolderManager;
     dbConnectionManager;
     entitiesListManager;
-    constructor(context, sourceFolderManager, dbConnectionManager, entitiesListManager) {
+    dimensionManager;
+    constructor(context, sourceFolderManager, dbConnectionManager, entitiesListManager, dimensionManager) {
         this.context = context;
         this.sourceFolderManager = sourceFolderManager;
         this.dbConnectionManager = dbConnectionManager;
         this.entitiesListManager = entitiesListManager;
+        this.dimensionManager = dimensionManager;
     }
     resolveWebviewView(webviewView) {
         webviewView.webview.options = {
@@ -63,7 +65,7 @@ class ERDViewProvider {
             switch (message.command) {
                 case 'createERD':
                     vscode.window.showInformationMessage('Opening ERD Editor...');
-                    InteractiveERDPanel_1.InteractiveERDPanel.createOrShow(this.context.extensionPath);
+                    InteractiveERDPanel_1.InteractiveERDPanel.createOrShow(this.context.extensionPath, this.dimensionManager, this.entitiesListManager);
                     break;
                 case 'generateERD':
                     vscode.window.showInformationMessage('Opening ERD Generator...');

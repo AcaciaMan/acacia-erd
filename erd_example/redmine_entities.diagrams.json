@@ -1,0 +1,280 @@
+{
+  "diagrams": [
+    {
+      "id": "2814e4ee-a07f-4438-a6b5-668b58934888",
+      "name": "user module",
+      "entityIds": [
+        "roles",
+        "permissions",
+        "members",
+        "versions",
+        "issue_categories",
+        "issue_histories",
+        "issue_statuses",
+        "member_roles",
+        "permissions_roles",
+        "projects",
+        "users",
+        "attachments",
+        "auth_sources",
+        "custom_fields",
+        "custom_fields_projects",
+        "custom_fields_trackers",
+        "documents",
+        "enabled_modules",
+        "custom_values",
+        "enumerations",
+        "issues",
+        "news",
+        "trackers",
+        "tokens",
+        "workflows",
+        "settings"
+      ],
+      "positions": {
+        "roles": {
+          "x": 197.125,
+          "y": 257.9000015258789
+        },
+        "permissions": {
+          "x": 511.8671875,
+          "y": 279
+        },
+        "members": {
+          "x": 192.0712890625,
+          "y": 107.9000015258789
+        },
+        "versions": {
+          "x": 682.82421875,
+          "y": 279
+        },
+        "issue_categories": {
+          "x": 658.49609375,
+          "y": 129
+        },
+        "issue_histories": {
+          "x": 344.44677734375,
+          "y": 279
+        },
+        "issue_statuses": {
+          "x": 345.46875,
+          "y": 129
+        },
+        "member_roles": {
+          "x": 17.27490234375,
+          "y": 265.0999984741211
+        },
+        "permissions_roles": {
+          "x": 174.1005859375,
+          "y": 429
+        },
+        "projects": {
+          "x": 356.38818359375,
+          "y": 400.70000076293945
+        },
+        "users": {
+          "x": 501.8046875,
+          "y": 79.0999984741211
+        },
+        "attachments": {
+          "x": 510.41455078125,
+          "y": 429
+        },
+        "auth_sources": {
+          "x": 659.9296875,
+          "y": 371.9000015258789
+        },
+        "custom_fields": {
+          "x": 346.5625,
+          "y": 71.79321910536729
+        },
+        "custom_fields_projects": {
+          "x": 399.0751953125,
+          "y": 357.92116985352914
+        },
+        "custom_fields_trackers": {
+          "x": 239.5126953125,
+          "y": 8.772911011007611
+        },
+        "documents": {
+          "x": 34.05810546875,
+          "y": 129
+        },
+        "enabled_modules": {
+          "x": 166.74755859375,
+          "y": 530.2295438431838
+        },
+        "custom_values": {
+          "x": 503.69482421875,
+          "y": 553.7910096508982
+        },
+        "enumerations": {
+          "x": 346.10107421875,
+          "y": 527.7327866593666
+        },
+        "issues": {
+          "x": 530.2421875,
+          "y": 493.4533681802326
+        },
+        "news": {
+          "x": 52.8193359375,
+          "y": 429
+        },
+        "trackers": {
+          "x": 524.32568359375,
+          "y": 34.6940849230039
+        },
+        "tokens": {
+          "x": 687.9248046875,
+          "y": 36.21559802058783
+        },
+        "workflows": {
+          "x": 516.88037109375,
+          "y": 233.1880526833972
+        },
+        "settings": {
+          "x": 676.34619140625,
+          "y": 539.2359587411836
+        }
+      }
+    },
+    {
+      "id": "10744a96-be7e-4d4e-8312-8c992a4a36ef",
+      "name": "user module (copy)",
+      "entityIds": [
+        "roles",
+        "permissions",
+        "members",
+        "versions",
+        "issue_categories",
+        "issue_histories",
+        "issue_statuses",
+        "member_roles",
+        "permissions_roles",
+        "projects",
+        "users",
+        "attachments",
+        "auth_sources",
+        "custom_fields",
+        "custom_fields_projects",
+        "custom_fields_trackers",
+        "documents",
+        "enabled_modules",
+        "custom_values",
+        "enumerations",
+        "issues",
+        "news",
+        "trackers",
+        "tokens",
+        "workflows",
+        "settings"
+      ],
+      "positions": {
+        "roles": {
+          "x": 197.125,
+          "y": 257.9000015258789
+        },
+        "permissions": {
+          "x": 511.8671875,
+          "y": 279
+        },
+        "members": {
+          "x": 192.0712890625,
+          "y": 107.9000015258789
+        },
+        "versions": {
+          "x": 682.82421875,
+          "y": 279
+        },
+        "issue_categories": {
+          "x": 658.49609375,
+          "y": 129
+        },
+        "issue_histories": {
+          "x": 344.44677734375,
+          "y": 279
+        },
+        "issue_statuses": {
+          "x": 345.46875,
+          "y": 129
+        },
+        "member_roles": {
+          "x": 17.27490234375,
+          "y": 265.0999984741211
+        },
+        "permissions_roles": {
+          "x": 174.1005859375,
+          "y": 429
+        },
+        "projects": {
+          "x": 356.38818359375,
+          "y": 400.70000076293945
+        },
+        "users": {
+          "x": 501.8046875,
+          "y": 79.0999984741211
+        },
+        "attachments": {
+          "x": 510.41455078125,
+          "y": 429
+        },
+        "auth_sources": {
+          "x": 659.9296875,
+          "y": 371.9000015258789
+        },
+        "custom_fields": {
+          "x": 346.5625,
+          "y": 71.79321910536729
+        },
+        "custom_fields_projects": {
+          "x": 399.0751953125,
+          "y": 357.92116985352914
+        },
+        "custom_fields_trackers": {
+          "x": 239.5126953125,
+          "y": 8.772911011007611
+        },
+        "documents": {
+          "x": 34.05810546875,
+          "y": 129
+        },
+        "enabled_modules": {
+          "x": 166.74755859375,
+          "y": 530.2295438431838
+        },
+        "custom_values": {
+          "x": 503.69482421875,
+          "y": 553.7910096508982
+        },
+        "enumerations": {
+          "x": 346.10107421875,
+          "y": 527.7327866593666
+        },
+        "issues": {
+          "x": 530.2421875,
+          "y": 493.4533681802326
+        },
+        "news": {
+          "x": 52.8193359375,
+          "y": 429
+        },
+        "trackers": {
+          "x": 524.32568359375,
+          "y": 34.6940849230039
+        },
+        "tokens": {
+          "x": 687.9248046875,
+          "y": 36.21559802058783
+        },
+        "workflows": {
+          "x": 516.88037109375,
+          "y": 233.1880526833972
+        },
+        "settings": {
+          "x": 676.34619140625,
+          "y": 539.2359587411836
+        }
+      }
+    }
+  ]
+}
