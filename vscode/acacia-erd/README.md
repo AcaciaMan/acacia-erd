@@ -49,7 +49,17 @@ Create, visualize, and share Entity Relationship Diagrams (ERDs) in VS Code. Des
 
 ![Redmine database Entity Relationship Diagram](https://github.com/user-attachments/assets/47b84e7a-323d-470c-8509-918468181418)
 
-## What's New in v2.3.3
+## What's New in v2.3.4
+
+### AI Review Prompt — Phase 1 (Entities)
+- **Generate paste-ready prompts** — New action that builds a self-contained Markdown prompt asking an external AI chat (ChatGPT, Claude, Gemini, …) to review the **entities only** of your ERD: naming consistency, granularity, missing/duplicate concepts, and coverage
+- **Dimension-aware** — The generated prompt includes the entities list's assigned dimensions (Level, Environment, Schema, custom ones) so the AI critiques the model against its declared positioning
+- **Tagged findings** — Responses are guided into a `[category | severity] Title` format (`naming` / `structure` / `completeness` / `convention` / `risk` × `info` / `warn` / `error`) for actionable, scannable feedback
+- **Three entry points** — Right-click an Entities List in the Assets tree, click the new **AI → Entities Review Prompt** button in the ERD toolbar, or run the command from the Command Palette
+- **Copy + open** — The prompt is copied to the clipboard and opened in a new untitled Markdown editor; a toast reminds you that the prompt will be sent to a third-party AI service
+- **Phased roadmap** — Phase 1 covers entities; Phase 2 (entities + columns) and Phase 3 (relations) will follow
+
+### Previously in v2.3.3
 
 ### Open Diagram — Reliable Entity Loading
 - **Saved entities always shown** — Clicking an ERD diagram in the Assets tree now reliably renders all saved entities with their saved positions, even when the ERD Editor is opened fresh

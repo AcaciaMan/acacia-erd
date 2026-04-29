@@ -10,6 +10,8 @@ import { AssetsTreeProvider, AssetTreeItem, SourceFolderItem, DbConnectionItem, 
 import { EntitiesListManager } from './utils/EntitiesListManager';
 import { DimensionManager } from './utils/DimensionManager';
 import { DimensionEditorPanel } from './manage_erd/DimensionEditorPanel';
+import { buildEntitiesReviewPrompt } from './utils/PromptGenerator';
+import * as fs from 'fs';
 
 export function activate(context: vscode.ExtensionContext) {
 
@@ -289,6 +291,90 @@ export function activate(context: vscode.ExtensionContext) {
 				// Focus the Entity Tree so user sees the loaded entities
 				vscode.commands.executeCommand('openEntityTree.focus');
 			}
+		})
+	);
+
+	// Generate Phase 1 (entities-only) AI review prompt for an entities list.
+	// Output: copies a paste-ready Markdown prompt to the clipboard AND opens it
+	// in a new untitled Markdown editor.
+	context.subscriptions.push(
+		vscode.commands.registerCommand('acacia-erd.generateEntitiesReviewPrompt', async (item?: EntitiesListItem) => {
+			// Resolve which entities list to use.
+			let list = item?.list;
+			let absPath = item?.absolutePath;
+
+			if (!list || !absPath) {
+				const lists = entitiesListManager.getLists();
+				if (lists.length === 0) {
+					vscode.window.showWarningMessage('No entities lists configured. Add an entities list first.');
+					return;
+				}
+				// Prefer the currently active entities list if it matches one of the configured lists.
+				const activePath = EntityManager.getInstance().getEntitiesJsonPath();
+				const activeNorm = activePath ? path.resolve(activePath).toLowerCase() : '';
+				const activeMatch = lists.find(l => {
+					const ap = entitiesListManager.resolveAbsolutePath(l);
+					return ap && path.resolve(ap).toLowerCase() === activeNorm;
+				});
+
+				if (activeMatch && lists.length === 1) {
+					list = activeMatch;
+					absPath = entitiesListManager.resolveAbsolutePath(activeMatch);
+				} else {
+					const picked = await vscode.window.showQuickPick(
+						lists.map(l => ({
+							label: l.name,
+							description: l === activeMatch ? '(active)' : undefined,
+							list: l,
+						})),
+						{ placeHolder: 'Select the entities list to review' }
+					);
+					if (!picked) { return; }
+					list = picked.list;
+					absPath = entitiesListManager.resolveAbsolutePath(picked.list);
+				}
+			}
+
+			if (!fs.existsSync(absPath)) {
+				vscode.window.showErrorMessage(`Entities file not found: ${absPath}`);
+				return;
+			}
+
+			let entities: import('./utils/EntityManager').Entity[];
+			try {
+				const raw = fs.readFileSync(absPath, 'utf8');
+				const parsed = JSON.parse(raw);
+				if (!Array.isArray(parsed)) {
+					vscode.window.showErrorMessage(`Entities file is not a JSON array: ${absPath}`);
+					return;
+				}
+				entities = parsed;
+			} catch (err) {
+				vscode.window.showErrorMessage(`Failed to read entities file: ${(err as Error).message}`);
+				return;
+			}
+
+			if (entities.length === 0) {
+				vscode.window.showWarningMessage(`Entities list "${list.name}" is empty — nothing to review.`);
+				return;
+			}
+
+			const prompt = buildEntitiesReviewPrompt({
+				listName: list.name,
+				dimensions: dimensionManager.getDimensions(),
+				assignments: list.dimensions,
+				entities,
+			});
+
+			await vscode.env.clipboard.writeText(prompt);
+			const doc = await vscode.workspace.openTextDocument({
+				language: 'markdown',
+				content: prompt,
+			});
+			await vscode.window.showTextDocument(doc, { preview: false });
+			vscode.window.showInformationMessage(
+				`Phase 1 prompt for "${list.name}" copied to clipboard (${entities.length} entities). Note: pasting it into a third-party AI sends entity names and descriptions to that service.`
+			);
 		})
 	);
 

@@ -34,7 +34,8 @@ type InteractiveERDMessage =
     | { command: 'deleteEntity'; entityId: string }
     | { command: 'saveDiagram'; entityIds: string[]; positions: Record<string, { x: number; y: number }>; svgContent: string }
     | { command: 'saveAsDiagram'; entityIds: string[]; positions: Record<string, { x: number; y: number }>; svgContent: string }
-    | { command: 'getDiagramState' };
+    | { command: 'getDiagramState' }
+    | { command: 'generateEntitiesReviewPrompt' };
 
 /** Messages received from the Edit Entity webview */
 type EditEntityMessage =
@@ -270,6 +271,10 @@ export class InteractiveERDPanel {
                             listName: this._currentListName
                         });
                     }
+                    break;
+                case 'generateEntitiesReviewPrompt':
+                    // Delegate to the registered command (no args → uses active list / picker).
+                    vscode.commands.executeCommand('acacia-erd.generateEntitiesReviewPrompt');
                     break;
             }
         });

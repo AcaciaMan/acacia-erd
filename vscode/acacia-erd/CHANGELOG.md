@@ -4,6 +4,19 @@ All notable changes to the "acacia-erd" extension will be documented in this fil
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [2.3.4] - 2026-04-29
+
+### Added
+- **AI Review Prompt — Phase 1 (Entities)** — New command `acacia-erd.generateEntitiesReviewPrompt` builds a self-contained, paste-ready Markdown prompt that asks an external AI chat (ChatGPT, Claude, Gemini, …) to review the **entities only** of an ERD (no columns, no relations) for naming, granularity, missing/duplicate concepts, and coverage
+- **Tagged findings format** — The generated prompt instructs the AI to tag every concrete finding as `[category | severity] Title` where `category ∈ naming | structure | completeness | convention | risk` and `severity ∈ info | warn | error`, grouped under the four review lenses
+- **Dimension-aware context** — Generated prompt includes the entities list's assigned dimensions (Level, Environment, Schema, plus any custom ones) with human-readable labels so the AI critiques the model against its declared positioning
+- **Three entry points** —
+  - Assets tree: right-click an Entities List → *Generate AI Review Prompt (Phase 1: Entities)*
+  - Interactive ERD toolbar: new **AI → Entities Review Prompt** button
+  - Command Palette: *Acacia ERD: Generate AI Review Prompt (Phase 1: Entities)*
+- **Dual output** — The generated prompt is copied to the clipboard **and** opened in a new untitled Markdown editor; a toast confirms the entity count and reminds the user that pasting it into a third-party AI sends entity names and descriptions to that service
+- **PromptGenerator utility** — New `src/utils/PromptGenerator.ts` exposing `buildEntitiesReviewPrompt({ listName, dimensions, assignments, entities })`, designed to be extended for Phase 2 (entities + columns) and Phase 3 (relations) in future releases
+
 ## [2.3.3] - 2026-03-03
 
 ### Fixed

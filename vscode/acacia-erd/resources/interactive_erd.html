@@ -394,6 +394,16 @@
         </div>
 
         <div class="toolbar-group">
+            <span class="toolbar-label">AI</span>
+            <button id="entities-review-prompt-button" title="Generate a Phase 1 (entities-only) AI review prompt — copies to clipboard and opens in editor">
+                <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 1l1.5 4.5L14 7l-4.5 1.5L8 13l-1.5-4.5L2 7l4.5-1.5L8 1z"/>
+                </svg>
+                <span>Entities Review Prompt</span>
+            </button>
+        </div>
+
+        <div class="toolbar-group">
             <span class="toolbar-label">Entities</span>
             <button id="entities-list-button" title="Load a list of entities from a JSON file">
                 <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
@@ -592,6 +602,14 @@
                 title: title
             });
             setStatusMessage('Exporting as interactive HTML...');
+        });
+
+        // Generate Phase 1 (entities-only) AI review prompt
+        document.getElementById('entities-review-prompt-button').addEventListener('click', () => {
+            vscode.postMessage({
+                command: 'generateEntitiesReviewPrompt'
+            });
+            setStatusMessage('Generating entities review prompt...');
         });
 
         // Save Diagram

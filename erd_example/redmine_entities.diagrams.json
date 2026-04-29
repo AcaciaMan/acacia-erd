@@ -4,137 +4,137 @@
       "id": "2814e4ee-a07f-4438-a6b5-668b58934888",
       "name": "user module",
       "entityIds": [
-        "roles",
-        "permissions",
-        "members",
-        "versions",
-        "issue_categories",
-        "issue_histories",
-        "issue_statuses",
-        "member_roles",
-        "permissions_roles",
-        "projects",
-        "users",
         "attachments",
         "auth_sources",
         "custom_fields",
         "custom_fields_projects",
         "custom_fields_trackers",
-        "documents",
-        "enabled_modules",
         "custom_values",
+        "documents",
         "enumerations",
+        "issue_categories",
+        "issue_histories",
+        "issue_statuses",
         "issues",
+        "members",
+        "member_roles",
         "news",
+        "permissions",
+        "permissions_roles",
+        "projects",
+        "roles",
         "trackers",
         "tokens",
+        "users",
+        "versions",
         "workflows",
+        "enabled_modules",
         "settings"
       ],
       "positions": {
-        "roles": {
-          "x": 197.125,
-          "y": 257.9000015258789
-        },
-        "permissions": {
-          "x": 511.8671875,
-          "y": 279
-        },
-        "members": {
-          "x": 192.0712890625,
-          "y": 107.9000015258789
-        },
-        "versions": {
-          "x": 682.82421875,
-          "y": 279
-        },
-        "issue_categories": {
-          "x": 658.49609375,
-          "y": 129
-        },
-        "issue_histories": {
-          "x": 344.44677734375,
-          "y": 279
-        },
-        "issue_statuses": {
-          "x": 345.46875,
-          "y": 129
-        },
-        "member_roles": {
-          "x": 17.27490234375,
-          "y": 265.0999984741211
-        },
-        "permissions_roles": {
-          "x": 174.1005859375,
-          "y": 429
-        },
-        "projects": {
-          "x": 356.38818359375,
-          "y": 400.70000076293945
-        },
-        "users": {
-          "x": 501.8046875,
-          "y": 79.0999984741211
-        },
         "attachments": {
-          "x": 510.41455078125,
-          "y": 429
+          "x": 350.41455078125,
+          "y": 279
         },
         "auth_sources": {
-          "x": 659.9296875,
-          "y": 371.9000015258789
+          "x": 499.9296875,
+          "y": 221.9000015258789
         },
         "custom_fields": {
-          "x": 346.5625,
-          "y": 71.79321910536729
+          "x": 506.5625,
+          "y": 129
         },
         "custom_fields_projects": {
-          "x": 399.0751953125,
-          "y": 357.92116985352914
+          "x": 79.0751953125,
+          "y": 279
         },
         "custom_fields_trackers": {
           "x": 239.5126953125,
-          "y": 8.772911011007611
-        },
-        "documents": {
-          "x": 34.05810546875,
           "y": 129
         },
-        "enabled_modules": {
-          "x": 166.74755859375,
-          "y": 530.2295438431838
-        },
         "custom_values": {
-          "x": 503.69482421875,
-          "y": 553.7910096508982
+          "x": 183.69482421875,
+          "y": 429
+        },
+        "documents": {
+          "x": 194.05810546875,
+          "y": 46.55506469892312
         },
         "enumerations": {
-          "x": 346.10107421875,
-          "y": 527.7327866593666
+          "x": 26.10107421875,
+          "y": 129
+        },
+        "issue_categories": {
+          "x": 178.49609375,
+          "y": 179.7610413341828
+        },
+        "issue_histories": {
+          "x": 504.44677734375,
+          "y": 429
+        },
+        "issue_statuses": {
+          "x": 345.46875,
+          "y": 429
         },
         "issues": {
           "x": 530.2421875,
-          "y": 493.4533681802326
+          "y": 514.5778148328516
+        },
+        "members": {
+          "x": 672.0712890625,
+          "y": 257.9000015258789
+        },
+        "member_roles": {
+          "x": 497.27490234375,
+          "y": 7.349616607047138
         },
         "news": {
-          "x": 52.8193359375,
-          "y": 429
+          "x": 532.8193359375,
+          "y": 175.76268414719473
+        },
+        "permissions": {
+          "x": 671.8671875,
+          "y": 129
+        },
+        "permissions_roles": {
+          "x": 334.1005859375,
+          "y": 34.76377156615962
+        },
+        "projects": {
+          "x": 36.38818359375,
+          "y": 400.70000076293945
+        },
+        "roles": {
+          "x": 197.125,
+          "y": 507.24790314782246
         },
         "trackers": {
-          "x": 524.32568359375,
-          "y": 34.6940849230039
+          "x": 204.32568359375,
+          "y": 229.26034325046786
         },
         "tokens": {
           "x": 687.9248046875,
-          "y": 36.21559802058783
+          "y": 429
+        },
+        "users": {
+          "x": 821.8046875,
+          "y": 229.0999984741211
+        },
+        "versions": {
+          "x": 522.82421875,
+          "y": 383.27358076682026
         },
         "workflows": {
-          "x": 516.88037109375,
-          "y": 233.1880526833972
+          "x": 356.88037109375,
+          "y": 587.1022867609856
+        },
+        "enabled_modules": {
+          "x": 646.74755859375,
+          "y": 557.2615302338426
         },
         "settings": {
-          "x": 676.34619140625,
-          "y": 539.2359587411836
+          "x": 36.34619140625,
+          "y": 203.38508142076782
         }
       }
     },

@@ -6,7 +6,7 @@
     "type": "git",
     "url": "https://github.com/AcaciaMan/acacia-erd"
   },
-  "version": "2.3.3",
+  "version": "2.3.4",
   "publisher": "manacacia",
   "icon": "icon.png",
   "galleryBanner": {
@@ -160,6 +160,12 @@
         "command": "acacia-erd.selectEntitiesList",
         "title": "Select Entities List",
         "category": "Acacia ERD"
+      },
+      {
+        "command": "acacia-erd.generateEntitiesReviewPrompt",
+        "title": "Generate AI Review Prompt (Phase 1: Entities)",
+        "category": "Acacia ERD",
+        "icon": "$(sparkle)"
       },
       {
         "command": "acacia-erd.openDimensionEditor",
@@ -393,6 +399,11 @@
           "command": "acacia-erd.removeEntitiesList",
           "when": "view == acaciaAssets && viewItem == entitiesList",
           "group": "inline"
+        },
+        {
+          "command": "acacia-erd.generateEntitiesReviewPrompt",
+          "when": "view == acaciaAssets && viewItem == entitiesList",
+          "group": "3_prompt"
         },
         {
           "command": "acacia-erd.assignDimensions",
