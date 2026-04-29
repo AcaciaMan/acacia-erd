@@ -5,3 +5,10 @@ Python/msdyn_entities.json
 *.vsix
 /vscode/acacia-erd/.vscode-test
 /vscode/acacia-erd/out
+
+# Compiled TypeScript output co-located with sources.
+# The extension ships exclusively via the esbuild bundle in dist/.
+# Hand-authored webview scripts under vscode/acacia-erd/resources/*.js are
+# intentionally NOT ignored (no .ts sibling, loaded directly by webviews).
+/vscode/acacia-erd/src/**/*.js
+/vscode/acacia-erd/src/**/*.js.map
