@@ -2,6 +2,10 @@
 
 Create, visualize, and share Entity Relationship Diagrams (ERDs) in VS Code. Design database schemas with drag-and-drop, auto-discover table relationships, and export interactive HTML diagrams that anyone can explore in a browser.
 
+Acacia ERD also supports AI-assisted ERD review workflows for entity naming, granularity, and coverage checks.
+
+See [ERD Review - Twenty CRM](../../wiki/erd-review-twenty-crm.md) for a short example of the review output.
+
 [![Version](https://img.shields.io/visual-studio-marketplace/v/manacacia.acacia-erd)](https://marketplace.visualstudio.com/items?itemName=manacacia.acacia-erd)
 [![Installs](https://img.shields.io/visual-studio-marketplace/i/manacacia.acacia-erd)](https://marketplace.visualstudio.com/items?itemName=manacacia.acacia-erd)
 [![Rating](https://img.shields.io/visual-studio-marketplace/r/manacacia.acacia-erd)](https://marketplace.visualstudio.com/items?itemName=manacacia.acacia-erd)

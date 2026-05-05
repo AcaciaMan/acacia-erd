@@ -1,5 +1,9 @@
 # acacia-erd
-Visual Studio Code extension for Entity Relationship Diagram (ERD) with grid layout
+Acacia ERD is a toolkit for building, reviewing, and sharing Entity Relationship Diagrams from JSON entity definitions and database metadata.
+
+The VS Code extension provides an interactive ERD editor with grid layout, entity management, and export options for sharing diagrams.
+
+See [ERD Review - Twenty CRM](wiki/erd-review-twenty-crm.md) for an example review generated from the ERD review workflow.
 
 ![Screenshot_erd](https://github.com/user-attachments/assets/d7fe0279-8503-4494-9580-92dbe970bdf4)
 
